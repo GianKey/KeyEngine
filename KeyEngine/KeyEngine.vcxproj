@@ -19,12 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Key\Events\ApplicationEvent.h" />
+    <ClInclude Include="src\Key\Events\Event.h" />
+    <ClInclude Include="src\Key\Events\KeyBoardEvent.h" />
     <ClInclude Include="src\Key\Log.h" />
     <ClInclude Include="src\Key.h" />
     <ClInclude Include="src\Key\Application.h" />
     <ClInclude Include="src\Key\EntryPoint.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Key\Events\MouseEvent.h" />
     <ClCompile Include="src\Key\Log.cpp" />
     <ClCompile Include="src\Key\Application.cpp" />
     <ClCompile Include="src\Key\Core.h" />
