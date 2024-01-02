@@ -4,7 +4,7 @@
 
 extern Key::Application* Key::CreateApplication();
 
- 
+
 int main(int argc, char** argv) {
 	Key::Log::Init();
 	KEY_CORE_ERROR("create a key app");
