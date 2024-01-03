@@ -18,6 +18,9 @@ project "KeyEngine"
 	targetdir("bin/" ..outputdir.. "/%{prj.name}")
 	objdir("bin-int/" ..outputdir.. "/%{prj.name}")
 
+	pchheader "Kpch.h"
+	pchsource "KeyEngine/src/Kpch.cpp"
+
 	files
 	{
 		"%{prj.name}/src/**.h",
@@ -26,7 +29,8 @@ project "KeyEngine"
 
 	includedirs
 	{
-		"%{prj.name}/vendor/spdlog/include"
+		"%{prj.name}/vendor/spdlog/include",
+		"%{prj.name}/src"
 	}
 	filter "system:windows"
 		cppdialect "C++17"

@@ -4,6 +4,9 @@
     <Filter Include="Key">
       <UniqueIdentifier>{6EFF870B-DA08-887C-6384-9E7CCF8C937C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Key\Events">
+      <UniqueIdentifier>{924372D0-7EFB-B31D-E702-8D79D3D94E0E}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Key.h" />
@@ -16,13 +19,22 @@
     <ClInclude Include="src\Key\EntryPoint.h">
       <Filter>Key</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Events\ApplicationEvent.h">
+      <Filter>Key\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Events\Event.h">
+      <Filter>Key\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Events\KeyBoardEvent.h">
+      <Filter>Key\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Events\MouseEvent.h">
+      <Filter>Key\Events</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\Log.h">
       <Filter>Key</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\Events\ApplicationEvent.h" />
-    <ClInclude Include="src\Key\Events\Event.h" />
-    <ClInclude Include="src\Key\Events\KeyBoardEvent.h" />
-    <ClInclude Include="src\Key\Events\MouseEvent.h" />
+    <ClInclude Include="src\Kpch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Key\Application.cpp">
@@ -31,5 +43,6 @@
     <ClCompile Include="src\Key\Log.cpp">
       <Filter>Key</Filter>
     </ClCompile>
+    <ClCompile Include="src\Kpch.cpp" />
   </ItemGroup>
 </Project>
