@@ -150,6 +150,10 @@
     <ClInclude Include="src\Key\Application.h" />
     <ClInclude Include="src\Key\Core.h" />
     <ClInclude Include="src\Key\EntryPoint.h" />
+    <ClInclude Include="src\Key\Events\ApplicationEvent.h" />
+    <ClInclude Include="src\Key\Events\Event.h" />
+    <ClInclude Include="src\Key\Events\KeyBoardEvent.h" />
+    <ClInclude Include="src\Key\Events\MouseEvent.h" />
     <ClInclude Include="src\Key\Log.h" />
   </ItemGroup>
   <ItemGroup>
