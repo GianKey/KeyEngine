@@ -9,3 +9,5 @@
 #else
 	#error KeyEngine only supprt Windows!
 #endif // KEY_PALTFORM_WINDOWS
+
+#define BIT(x) (1 << x)
