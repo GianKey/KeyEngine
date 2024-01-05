@@ -8,7 +8,12 @@ workspace "KeyEngine"
 		"Release",
 		"Dist"
 	}
-	outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+
+-- Include directories relative to root folder
+IncludeDir = {}
+IncludeDir["GLFW"] = "KeyEngine/vendor/GLFW/include"
+include "KeyEngine/vendor/GLFW"
 
 project "KeyEngine"
 	location "KeyEngine"
@@ -27,15 +32,24 @@ project "KeyEngine"
 		"%{prj.name}/src/**.cpp"
 	}
 
+	
 	includedirs
 	{
+		"%{prj.name}/src",
 		"%{prj.name}/vendor/spdlog/include",
-		"%{prj.name}/src"
+		"%{IncludeDir.GLFW}"
 	}
+
+	links{
+		"GLFW",
+		"opengl32.lib"
+	}
+
+
 	filter "system:windows"
 		cppdialect "C++17"
 		staticruntime "On"
-		systemversion "10.0"
+		systemversion "latest"
 
 	defines
 	{
@@ -49,14 +63,17 @@ project "KeyEngine"
 
 	filter "configurations:Debug"
 		defines "KE_DEBUG"
+		buildoptions "/MDd"
 		symbols "On"
 
 	filter "configurations:Release"
 		defines "KE_RELEASE"
+		buildoptions "/MD"
 		optimize "On"
 
 	filter "configurations:Dist"
 		defines "KE_DIST"
+		buildoptions "/MD"
 		optimize "On"
 
 project "Sandbox"
@@ -78,15 +95,16 @@ project "Sandbox"
 		"KeyEngine/vendor/spdlog/include",
 		"KeyEngine/src/"
 	}
-	filter "system:windows"
-		cppdialect "C++17"
-		staticruntime "On"
-		systemversion "10.0"
 
 	links
 	{
 		"KeyEngine"
 	}
+
+	filter "system:windows"
+		cppdialect "C++17"
+		staticruntime "On"
+		systemversion "latest"
 
 	defines
 	{
