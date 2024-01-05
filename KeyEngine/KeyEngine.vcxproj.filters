@@ -7,6 +7,12 @@
     <Filter Include="Key\Events">
       <UniqueIdentifier>{924372D0-7EFB-B31D-E702-8D79D3D94E0E}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Key\PlatForm">
+      <UniqueIdentifier>{62EB1DD2-4E4E-AD76-F7D3-E52CE31579F9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Key\PlatForm\Windows">
+      <UniqueIdentifier>{9CD789F8-8866-13C2-3185-27BD1DF32368}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Key.h" />
@@ -31,7 +37,19 @@
     <ClInclude Include="src\Key\Events\MouseEvent.h">
       <Filter>Key\Events</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Layer.h">
+      <Filter>Key</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\LayerStack.h">
+      <Filter>Key</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\Log.h">
+      <Filter>Key</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Windows\WindowsWindow.h">
+      <Filter>Key\PlatForm\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Window.h">
       <Filter>Key</Filter>
     </ClInclude>
     <ClInclude Include="src\Kpch.h" />
@@ -40,8 +58,17 @@
     <ClCompile Include="src\Key\Application.cpp">
       <Filter>Key</Filter>
     </ClCompile>
+    <ClCompile Include="src\Key\Layer.cpp">
+      <Filter>Key</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\LayerStack.cpp">
+      <Filter>Key</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\Log.cpp">
       <Filter>Key</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Windows\WindowsWindow.cpp">
+      <Filter>Key\PlatForm\Windows</Filter>
     </ClCompile>
     <ClCompile Include="src\Kpch.cpp" />
   </ItemGroup>
