@@ -10,6 +10,7 @@ int main(int argc, char** argv) {
 	KEY_CORE_ERROR("create a key app");
 	int a = 7;
 	KEY_INFO("ÄãºÃ key master, ÎÒÊÇ {0}", a);
+
 	auto app = Key::CreateApplication();
 	app->Run();
 	delete app;

@@ -1,9 +1,11 @@
 #include "Kpch.h"
 #include "WindowsWindow.h"
+#include "Key/Application.h"
 #include "Key/Events/KeyBoardEvent.h"
 #include "Key/Events/MouseEvent.h"
 #include "Key/Events/ApplicationEvent.h"
 
+#include "glad/glad.h"
 namespace Key {
 
 	static bool s_GLFWInitialized = false;
@@ -47,6 +49,8 @@ namespace Key {
 
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 		glfwMakeContextCurrent(m_Window);
+		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		KEY_CORE_ASSERT(status,"initialize Glad failed")
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
 
@@ -148,7 +152,9 @@ namespace Key {
 
 	void WindowsWindow::OnUpdate()
 	{
+	
 		glfwPollEvents();
+		
 		glfwSwapBuffers(m_Window);
 	}
 
@@ -168,4 +174,40 @@ namespace Key {
 		return m_Data.VSync;
 	}
 
+	Input* Input::s_Instance = new WindowsInput(); //先初始化静态成员变量
+
+	bool WindowsInput::IsKeyPressedImpl(int KeyCode)
+	{
+		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		auto state = glfwGetKey(window, KeyCode);
+		return state == GLFW_PRESS || state == GLFW_REPEAT;
+	}
+
+	bool WindowsInput::IsMouseButtonPressedImpl(int button)
+	{
+		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		auto state = glfwGetKey(window, button);
+		return state == GLFW_PRESS;
+	}
+
+	std::pair<float, float> WindowsInput::GetMousePositionImpl()
+	{
+		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		double xpos, ypos;
+		glfwGetCursorPos(window, &xpos, &ypos);
+		return std::pair<float, float>(xpos, ypos);
+	}
+
+	float WindowsInput::GetMouseXImpl()
+	{
+		auto [x, y] = GetMousePositionImpl();
+		return x;
+		//return GetMousePositionImpl().first;
+	}
+
+	float WindowsInput::GetMouseYImpl()
+	{
+		auto [x, y] = GetMousePositionImpl();
+		return y;
+	}
 }

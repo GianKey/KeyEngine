@@ -1,13 +1,17 @@
 #include "Kpch.h"
 #include "Application.h"
-
+#include "Key/input.h"
 #include <GLFW/glfw3.h>
-
+#include <glad/glad.h>
 namespace Key {
 
 #define BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
+
+	Application* Application::s_Instance = nullptr;
 	
 	Application::Application() {
+
+		s_Instance = this;
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 	}
@@ -52,8 +56,13 @@ namespace Key {
 
 		while (m_Running)
 		{
+			glClearColor(0.2, 0.7, 0.2, 1);
+			glClear(GL_COLOR_BUFFER_BIT);
 			for (Layer* layer : m_LayerStack)
 				layer->OnUpdate();
+
+			//auto [x, y] = Input::GetMousPosition();
+			//KEY_CORE_TRACE("{0}, {1}", x, y);
 			m_Window->OnUpdate();
 		}
 	}

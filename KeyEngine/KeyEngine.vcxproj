@@ -79,11 +79,11 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Kpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>KEY_PLATFORM_WINDOWS;KEY_BUILD_DLL;KE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>KEY_PLATFORM_WINDOWS;KEY_BUILD_DLL;GLFW_INCLUDE_NONE;KE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;vendor\GLad\include;vendor\imgui;..\Hazel\vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>/MDd %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -103,8 +103,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Kpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>KEY_PLATFORM_WINDOWS;KEY_BUILD_DLL;KE_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>KEY_PLATFORM_WINDOWS;KEY_BUILD_DLL;GLFW_INCLUDE_NONE;KE_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;vendor\GLad\include;vendor\imgui;..\Hazel\vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -131,8 +131,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Kpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>KEY_PLATFORM_WINDOWS;KEY_BUILD_DLL;KE_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>KEY_PLATFORM_WINDOWS;KEY_BUILD_DLL;GLFW_INCLUDE_NONE;KE_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;vendor\GLad\include;vendor\imgui;..\Hazel\vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -163,19 +163,27 @@
     <ClInclude Include="src\Key\Events\Event.h" />
     <ClInclude Include="src\Key\Events\KeyBoardEvent.h" />
     <ClInclude Include="src\Key\Events\MouseEvent.h" />
+    <ClInclude Include="src\Key\ImGui\ImGuiLayer.h" />
+    <ClInclude Include="src\Key\KeyCodes.h" />
     <ClInclude Include="src\Key\Layer.h" />
     <ClInclude Include="src\Key\LayerStack.h" />
     <ClInclude Include="src\Key\Log.h" />
+    <ClInclude Include="src\Key\MouseButtonCodes.h" />
+    <ClInclude Include="src\Key\PlatForm\OpenGL\ImGuiOpenGLRenderer.h" />
     <ClInclude Include="src\Key\PlatForm\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Key\Window.h" />
+    <ClInclude Include="src\Key\input.h" />
     <ClInclude Include="src\Kpch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Key\Application.cpp" />
+    <ClCompile Include="src\Key\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="src\Key\Layer.cpp" />
     <ClCompile Include="src\Key\LayerStack.cpp" />
     <ClCompile Include="src\Key\Log.cpp" />
+    <ClCompile Include="src\Key\PlatForm\OpenGL\ImGuiOpenGLRenderer.cpp" />
     <ClCompile Include="src\Key\PlatForm\Windows\WindowsWindow.cpp" />
+    <ClCompile Include="src\Key\Window.cpp" />
     <ClCompile Include="src\Kpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -183,6 +191,12 @@
   <ItemGroup>
     <ProjectReference Include="vendor\GLFW\GLFW.vcxproj">
       <Project>{154B857C-0182-860D-AA6E-6C109684020F}</Project>
+    </ProjectReference>
+    <ProjectReference Include="vendor\GLad\GLad.vcxproj">
+      <Project>{9D4E857C-8985-860D-3272-6C101E88020F}</Project>
+    </ProjectReference>
+    <ProjectReference Include="vendor\imgui\ImGui.vcxproj">
+      <Project>{C0FF640D-2C14-8DBE-F595-301E616989EF}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
