@@ -2,6 +2,7 @@
 
 #include "Key/Window.h"
 #include <GLFW/glfw3.h>
+#include "Key/input.h"
 
 namespace Key {
 
@@ -21,6 +22,7 @@ namespace Key {
 		void SetVSync(bool enabled) override;
 		bool IsVSync() const override;
 
+		inline virtual void* GetNativeWindow() const { return m_Window; }
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
@@ -38,5 +40,13 @@ namespace Key {
 
 		WindowData m_Data;
 	};
-
+	class WindowsInput : public Input
+	{
+	protected:
+		virtual bool IsKeyPressedImpl(int KeyCode) override;
+		virtual bool IsMouseButtonPressedImpl(int button) override;
+		virtual std::pair<float, float> GetMousePositionImpl() override;
+		virtual float GetMouseXImpl() override;
+		virtual float GetMouseYImpl() override;
+	};
 }

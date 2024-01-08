@@ -13,7 +13,12 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 -- Include directories relative to root folder
 IncludeDir = {}
 IncludeDir["GLFW"] = "KeyEngine/vendor/GLFW/include"
+IncludeDir["GLad"] = "KeyEngine/vendor/GLad/include"
+IncludeDir["imGui"] = "KeyEngine/vendor/imgui"
+IncludeDir["glm"] = "Hazel/vendor/glm"
 include "KeyEngine/vendor/GLFW"
+include "KeyEngine/vendor/GLad"
+include "KeyEngine/vendor/imgui"
 
 project "KeyEngine"
 	location "KeyEngine"
@@ -29,7 +34,9 @@ project "KeyEngine"
 	files
 	{
 		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.cpp"
+		"%{prj.name}/src/**.cpp",
+		"%{prj.name}/vendor/glm/glm/**.hpp",
+		"%{prj.name}/vendor/glm/glm/**.inl"
 	}
 
 	
@@ -37,11 +44,16 @@ project "KeyEngine"
 	{
 		"%{prj.name}/src",
 		"%{prj.name}/vendor/spdlog/include",
-		"%{IncludeDir.GLFW}"
+		"%{IncludeDir.GLFW}",
+		"%{IncludeDir.GLad}",
+		"%{IncludeDir.imGui}",
+		"%{IncludeDir.glm}"
 	}
 
 	links{
 		"GLFW",
+		"GLad",
+		"ImGui",
 		"opengl32.lib"
 	}
 
@@ -54,7 +66,8 @@ project "KeyEngine"
 	defines
 	{
 		"KEY_PLATFORM_WINDOWS",
-		"KEY_BUILD_DLL"
+		"KEY_BUILD_DLL",
+		"GLFW_INCLUDE_NONE"
 	}
 	postbuildcommands
 	{
@@ -93,7 +106,8 @@ project "Sandbox"
 	includedirs
 	{
 		"KeyEngine/vendor/spdlog/include",
-		"KeyEngine/src/"
+		"KeyEngine/src/",
+		"%{IncludeDir.glm}"
 	}
 
 	links
@@ -115,6 +129,7 @@ project "Sandbox"
 	filter "configurations:Debug"
 		defines "KE_DEBUG"
 		symbols "On"
+		buildoptions "/MDd"
 
 	filter "configurations:Release"
 		defines "KE_RELEASE"

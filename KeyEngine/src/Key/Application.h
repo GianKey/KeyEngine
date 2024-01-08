@@ -6,7 +6,6 @@
 #include "Events/Event.h"
 #include "Events/ApplicationEvent.h"
 
-
 namespace Key {
 	class KEY_API Application
 	{
@@ -20,6 +19,8 @@ namespace Key {
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
 
+		Window& GetWindow() { return *m_Window; }
+		static Application& Get() { return *s_Instance; }
 
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
@@ -28,7 +29,7 @@ namespace Key {
 		bool m_Running = true;
 
 		LayerStack m_LayerStack;
-	
+		static Application* s_Instance;
 	};
 	Application* CreateApplication();
 }
