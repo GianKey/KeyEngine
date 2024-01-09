@@ -107,6 +107,7 @@ project "Sandbox"
 	{
 		"KeyEngine/vendor/spdlog/include",
 		"KeyEngine/src/",
+		"KeyEngine/vendor",
 		"%{IncludeDir.glm}"
 	}
 

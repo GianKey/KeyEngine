@@ -17,17 +17,11 @@ namespace Key {
 
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
-		virtual void OnEvent(Event& e) override;
-		virtual void OnUpdate() override;
+		virtual void OnImGuiRender() override;
 
-		bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& e);
-		bool OnMouseButtonReleasedEvent(MouseButtonReleasedEvent& e);
-		bool OnKeyPressedEvent(KeyPressedEvent& e);
-		bool OnKeyReleasedEvent(KeyReleasedEvent& e);
-		bool OnMouseScrolledEvent(MouseScrolledEvent& e);
-		bool OnMouseMovedEvent(MouseMovedEvent& e);
-		bool OnWindowResizeEvent(WindowResizeEvent& e);
-		bool OnKeyTypedEvent(KeyTypedEvent& e);
+		void Begin();
+		void End();
+
 	private:
 		float m_Time = 0;
 	};

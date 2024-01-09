@@ -12,6 +12,8 @@
 
 #include "Key/KeyCodes.h"
 #include "Key/MouseButtonCodes.h"
+#include "imgui/imgui.h"
+
 // --- Entry Point -----------------
 #include "Key/EntryPoint.h"
 // --- Entry Point -----------------

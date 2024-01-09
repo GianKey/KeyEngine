@@ -169,7 +169,6 @@
     <ClInclude Include="src\Key\LayerStack.h" />
     <ClInclude Include="src\Key\Log.h" />
     <ClInclude Include="src\Key\MouseButtonCodes.h" />
-    <ClInclude Include="src\Key\PlatForm\OpenGL\ImGuiOpenGLRenderer.h" />
     <ClInclude Include="src\Key\PlatForm\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Key\Window.h" />
     <ClInclude Include="src\Key\input.h" />
@@ -177,11 +176,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Key\Application.cpp" />
+    <ClCompile Include="src\Key\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="src\Key\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="src\Key\Layer.cpp" />
     <ClCompile Include="src\Key\LayerStack.cpp" />
     <ClCompile Include="src\Key\Log.cpp" />
-    <ClCompile Include="src\Key\PlatForm\OpenGL\ImGuiOpenGLRenderer.cpp" />
     <ClCompile Include="src\Key\PlatForm\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Key\Window.cpp" />
     <ClCompile Include="src\Kpch.cpp">
