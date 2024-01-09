@@ -1,6 +1,7 @@
 #include <Key.h>
 
 
+
 class ExampleLayer : public Key::Layer {
 public:
 	ExampleLayer() : Layer("Example") {}
@@ -25,7 +26,6 @@ public:
 	SandBox()
 	{
 		PushLayer(new ExampleLayer());
-		PushLayer(new Key::ImGuiLayer());
 	}
 
 	~SandBox() {
