@@ -160,6 +160,7 @@
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLContext.h" />
     <ClInclude Include="src\Key\PlatForm\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Key\Renderer\GraphicsContext.h" />
+    <ClInclude Include="src\Key\Renderer\Shader.h" />
     <ClInclude Include="src\Key\Window.h" />
     <ClInclude Include="src\Key\input.h" />
     <ClInclude Include="src\Kpch.h" />
@@ -173,6 +174,7 @@
     <ClCompile Include="src\Key\Log.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLContext.cpp" />
     <ClCompile Include="src\Key\PlatForm\Windows\WindowsWindow.cpp" />
+    <ClCompile Include="src\Key\Renderer\Shader.cpp" />
     <ClCompile Include="src\Key\Window.cpp" />
     <ClCompile Include="src\Kpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
