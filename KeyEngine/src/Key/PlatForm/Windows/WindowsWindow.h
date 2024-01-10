@@ -3,6 +3,7 @@
 #include "Key/Window.h"
 #include <GLFW/glfw3.h>
 #include "Key/input.h"
+#include "Key/Renderer/GraphicsContext.h"
 
 namespace Key {
 
@@ -39,6 +40,7 @@ namespace Key {
 		};
 
 		WindowData m_Data;
+		GraphicsContext* m_Context;
 	};
 	class WindowsInput : public Input
 	{
