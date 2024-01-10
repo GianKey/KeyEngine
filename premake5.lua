@@ -22,8 +22,10 @@ include "KeyEngine/vendor/imgui"
 
 project "KeyEngine"
 	location "KeyEngine"
-	kind "SharedLib"
+	kind "StaticLib"
 	language "C++"
+	cppdialect "C++17"
+	staticruntime "on"
 
 	targetdir("bin/" ..outputdir.. "/%{prj.name}")
 	objdir("bin-int/" ..outputdir.. "/%{prj.name}")
@@ -39,6 +41,10 @@ project "KeyEngine"
 		"%{prj.name}/vendor/glm/glm/**.inl"
 	}
 
+	defines
+	{
+		"_CRT_SECURE_NO_WARNINGS"
+	}
 	
 	includedirs
 	{
@@ -59,8 +65,6 @@ project "KeyEngine"
 
 
 	filter "system:windows"
-		cppdialect "C++17"
-		staticruntime "On"
 		systemversion "latest"
 
 	defines
@@ -69,30 +73,28 @@ project "KeyEngine"
 		"KEY_BUILD_DLL",
 		"GLFW_INCLUDE_NONE"
 	}
-	postbuildcommands
-	{
-		("{COPY} %{cfg.buildtarget.relpath} ../bin/" ..outputdir.. "/Sandbox")
-	}
 
 	filter "configurations:Debug"
 		defines "KE_DEBUG"
-		buildoptions "/MDd"
-		symbols "On"
+		runtime "Debug"
+		symbols "on"
 
 	filter "configurations:Release"
 		defines "KE_RELEASE"
-		buildoptions "/MD"
-		optimize "On"
+		runtime "Release"
+		optimize "on"
 
 	filter "configurations:Dist"
 		defines "KE_DIST"
-		buildoptions "/MD"
-		optimize "On"
+		runtime "Release"
+		optimize "on"
 
 project "Sandbox"
 	location "Sandbox"
 	kind "ConsoleApp"
 	language "C++"
+	cppdialect "C++17"
+	staticruntime "on"
 
 	targetdir("bin/" ..outputdir.. "/%{prj.name}")
 	objdir("bin-int/" ..outputdir.. "/%{prj.name}")
@@ -117,26 +119,26 @@ project "Sandbox"
 	}
 
 	filter "system:windows"
-		cppdialect "C++17"
-		staticruntime "On"
 		systemversion "latest"
 
-	defines
-	{
-		"KEY_PLATFORM_WINDOWS"
-	}
+		defines
+		{
+			"KEY_PLATFORM_WINDOWS"
+		}
 
 
 	filter "configurations:Debug"
 		defines "KE_DEBUG"
-		symbols "On"
-		buildoptions "/MDd"
+		runtime "Debug"
+		symbols "on"
 
 	filter "configurations:Release"
 		defines "KE_RELEASE"
-		optimize "On"
+		runtime "Release"
+		optimize "on"
 
 	filter "configurations:Dist"
 		defines "KE_DIST"
-		optimize "On"
+		runtime "Release"
+		optimize "on"
 

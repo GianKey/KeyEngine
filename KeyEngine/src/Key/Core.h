@@ -1,14 +1,19 @@
 #pragma once
 
 #ifdef KEY_PLATFORM_WINDOWS
+#if KEY_DYNAIMC_LINK
 	#ifdef KEY_BUILD_DLL
 		#define KEY_API __declspec(dllexport)
 	#else
 		#define KEY_API __declspec(dllimport)
 	#endif KEY_BUILD_DLL
 #else
+	#define KEY_API
+#endif 
+#else
 	#error KeyEngine only supprt Windows!
 #endif // KEY_PALTFORM_WINDOWS
+
 
 #ifdef KEY_ENABLE_ASSERTS
 	#define KEY_ASSERT(x, ...) {if(!x) {KEY_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak();}}
