@@ -1,6 +1,7 @@
 #include "Kpch.h"
 #include "Buffer.h"
 #include "Renderer.h"
+#include "Key/PlatForm/OpenGL/OpenGLBuffer.h"
 
 namespace Key {
 	VertexBuffer* VertexBuffer::Create(float* vertices, uint32_t size)
