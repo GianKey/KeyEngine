@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLBuffer.h" />
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLVertexArray.h" />
     <ClInclude Include="src\Key\Renderer\Buffer.h" />
     <ClInclude Include="src\Key\Renderer\Renderer.h" />
     <ClInclude Include="src\Key.h" />
@@ -164,12 +165,14 @@
     <ClInclude Include="src\Key\PlatForm\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Key\Renderer\GraphicsContext.h" />
     <ClInclude Include="src\Key\Renderer\Shader.h" />
+    <ClInclude Include="src\Key\Renderer\VertexArray.h" />
     <ClInclude Include="src\Key\Window.h" />
     <ClInclude Include="src\Key\input.h" />
     <ClInclude Include="src\Kpch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLBuffer.cpp" />
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLVertexArray.cpp" />
     <ClCompile Include="src\Key\Renderer\Buffer.cpp" />
     <ClCompile Include="src\Key\Renderer\Renderer.cpp" />
     <ClCompile Include="src\Key\Application.cpp" />
@@ -181,6 +184,7 @@
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLContext.cpp" />
     <ClCompile Include="src\Key\PlatForm\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Key\Renderer\Shader.cpp" />
+    <ClCompile Include="src\Key\Renderer\VertexArray.cpp" />
     <ClCompile Include="src\Key\Window.cpp" />
     <ClCompile Include="src\Kpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>

@@ -1,6 +1,7 @@
 #include "Kpch.h"
 #include "VertexArray.h"
 #include "Key/Renderer/Renderer.h"
+#include "Key/PlatForm/OpenGL/OpenGLVertexArray.h"
 
 namespace Key {
 
