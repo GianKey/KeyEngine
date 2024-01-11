@@ -143,6 +143,9 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLBuffer.h" />
+    <ClInclude Include="src\Key\Renderer\Buffer.h" />
+    <ClInclude Include="src\Key\Renderer\Renderer.h" />
     <ClInclude Include="src\Key.h" />
     <ClInclude Include="src\Key\Application.h" />
     <ClInclude Include="src\Key\Core.h" />
@@ -166,6 +169,9 @@
     <ClInclude Include="src\Kpch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLBuffer.cpp" />
+    <ClCompile Include="src\Key\Renderer\Buffer.cpp" />
+    <ClCompile Include="src\Key\Renderer\Renderer.cpp" />
     <ClCompile Include="src\Key\Application.cpp" />
     <ClCompile Include="src\Key\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="src\Key\ImGui\ImGuiLayer.cpp" />
