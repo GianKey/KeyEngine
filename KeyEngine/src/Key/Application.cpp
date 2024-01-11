@@ -9,6 +9,26 @@ namespace Key {
 #define BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
 
 	Application* Application::s_Instance = nullptr;
+	static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
+	{
+		switch (type)
+		{
+		case Key::ShaderDataType::Float:		return GL_FLOAT;
+		case Key::ShaderDataType::Float2:		return GL_FLOAT;
+		case Key::ShaderDataType::Float3:		return GL_FLOAT;
+		case Key::ShaderDataType::Float4:		return GL_FLOAT;
+		case Key::ShaderDataType::Mat3:		return GL_FLOAT;
+		case Key::ShaderDataType::Mat4:		return GL_FLOAT;
+		case Key::ShaderDataType::Int:		return GL_INT;
+		case Key::ShaderDataType::Int2:		return GL_INT;
+		case Key::ShaderDataType::Int3:		return GL_INT;
+		case Key::ShaderDataType::Int4:		return GL_INT;
+		case Key::ShaderDataType::Bool:		return GL_BOOL;
+		}
+
+		KEY_CORE_ASSERT(false, "Unknown ShaderDataType!");
+		return 0;
+	}
 	
 	Application::Application() {
 
@@ -23,25 +43,45 @@ namespace Key {
 		//Vertex Buffer
 		//Index Buffer
 		//Shader
+	
+		//创建顶点数组
+		float vertices[3 * 7] = {									//一共有 3 个顶点，每个顶点两个属性，七个浮点值组成
+		-0.5f,-0.5f,0.0f,	1.0f,0.0f,0.0f,1.0f,	//前三个 float 代表顶点位置，之后四个代表顶点对应颜色
+		 0.5f,-0.5f,0.0f,	0.0f,1.0f,0.0f,1.0f,
+		 0.0f, 0.5f,0.0f,	0.0f,0.0f,1.0f,1.0f,
+
+		};
+
 		glGenVertexArrays(1, &m_VertexArray);		//产生并绑定 VertexArray
 		glBindVertexArray(m_VertexArray);
 
-	
-
-		//创建顶点数组
-		float vertices[3 * 3] =
-		{
-			-0.5f, -0.5f, 0.0f,
-			 0.5f, -0.5f, 0.0f,
-			 0.0f,  0.5f, 0.0f
-		};
-
 		m_VertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
-		glEnableVertexAttribArray(0);//允许顶点着色器读取GPU（服务器端）数据。
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+		{
+			BufferLayout layout = {
+				{ ShaderDataType::Float3, "a_Position", false},
+				{ ShaderDataType::Float4, "a_Color", false}
+			};
 
-		unsigned int indices[3] = { 0, 1, 2 };	//索引数组
-		m_IndexBuffer.reset(IndexBuffer::Create(indices,sizeof(indices)/sizeof(unsigned)));
+			m_VertexBuffer->SetLayout(layout);
+		}
+
+
+		uint32_t index = 0;
+		const auto& layout = m_VertexBuffer->GetLayout();
+		for (const auto& element : layout)
+		{
+			glEnableVertexAttribArray(index);
+			glVertexAttribPointer(index,
+				element.GetComponentCount(),
+				ShaderDataTypeToOpenGLBaseType(element.Type),
+				element.Normalized ? GL_TRUE : GL_FALSE,
+				layout.GetStride(),
+				(const void*)element.Offset);
+			index++;
+		}
+
+		uint32_t indices[3] = { 0, 1, 2 };
+		m_IndexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
 
 		std::string VertexSrc = R"(
 			#version 410 core
