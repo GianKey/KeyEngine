@@ -1,6 +1,7 @@
 #include "Kpch.h"
 #include "Application.h"
 #include "Key/input.h"
+
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 namespace Key {
@@ -19,14 +20,13 @@ namespace Key {
 		PushOverlay(m_ImGuiLayer);
 
 		//Vertex Array
-//Vertex Buffer
-//Index Buffer
-//Shader
+		//Vertex Buffer
+		//Index Buffer
+		//Shader
 		glGenVertexArrays(1, &m_VertexArray);		//产生并绑定 VertexArray
 		glBindVertexArray(m_VertexArray);
 
-		glGenBuffers(1, &m_VertexBuffer);				//产生并绑定 VertexBuffer
-		glBindBuffer(GL_ARRAY_BUFFER, m_VertexBuffer);
+	
 
 		//创建顶点数组
 		float vertices[3 * 3] =
@@ -35,15 +35,13 @@ namespace Key {
 			 0.5f, -0.5f, 0.0f,
 			 0.0f,  0.5f, 0.0f
 		};
-		//指定缓冲区的内容，长度，数据，以及绘制方式
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		m_VertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
 		glEnableVertexAttribArray(0);//允许顶点着色器读取GPU（服务器端）数据。
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-		glGenBuffers(1, &m_IndexBuffer);  			//索引缓冲区建立和绑定
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IndexBuffer);
 
 		unsigned int indices[3] = { 0, 1, 2 };	//索引数组
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+		m_IndexBuffer.reset(IndexBuffer::Create(indices,sizeof(indices)/sizeof(unsigned)));
 
 		std::string VertexSrc = R"(
 			#version 410 core
