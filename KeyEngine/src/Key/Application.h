@@ -9,6 +9,7 @@
 #include "Renderer/Shader.h"
 #include "Renderer/Buffer.h"
 #include "Renderer/VertexArray.h"
+#include "Renderer/OrthographicCamera.h"
 namespace Key {
 	class KEY_API Application
 	{
@@ -40,7 +41,7 @@ namespace Key {
 		std::shared_ptr<VertexArray> m_VertexArray;
 		std::shared_ptr<VertexArray> m_SquareVA;
 		
-	
+		OrthographicCamera m_Camera;
 	};
 	Application* CreateApplication();
 }

@@ -89,6 +89,7 @@
     <ClInclude Include="src\Key\Renderer\RendererAPI.h" />
     <ClInclude Include="src\Key\Renderer\Shader.h" />
     <ClInclude Include="src\Key\Renderer\VertexArray.h" />
+    <ClInclude Include="src\Key\Renderer\OrthographicCamera.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Key\Application.cpp">
@@ -128,5 +129,6 @@
     <ClCompile Include="src\Key\Renderer\Shader.cpp" />
     <ClCompile Include="src\Key\Renderer\VertexArray.cpp" />
     <ClCompile Include="src\Key\Renderer\RendererAPI.cpp" />
+    <ClCompile Include="src\Key\Renderer\OrthographicCamera.cpp" />
   </ItemGroup>
 </Project>
