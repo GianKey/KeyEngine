@@ -11,7 +11,7 @@ namespace Key {
 
 	Application* Application::s_Instance = nullptr;
 	
-	Application::Application() {
+	Application::Application() :m_Camera(-1.6f, 1.6f, -0.9f, 0.9f) {
 
 		s_Instance = this;
 		m_Window = std::unique_ptr<Window>(Window::Create());
@@ -19,6 +19,8 @@ namespace Key {
 
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
+
+			
 
 		//Vertex Array
 		//Vertex Buffer
@@ -56,14 +58,14 @@ namespace Key {
 			#version 410 core
 			
 			layout(location = 0) in vec3 a_Position;
-
+			uniform mat4 u_ViewProjection;
 			out vec3 v_Position;
-
 			void main()
 			{
 				v_Position = a_Position;
-				gl_Position = vec4(a_Position, 1.0);
+				gl_Position = u_ViewProjection * vec4(a_Position, 1.0);	
 			}
+		
 			)";
 		std::string FragmentSrc = R"(
 			#version 410 core
@@ -105,13 +107,13 @@ namespace Key {
 			#version 330 core
 			
 			layout(location = 0) in vec3 a_Position;
-
+			uniform mat4 u_ViewProjection;
 			out vec3 v_Position;
 
 			void main()
 			{
 				v_Position = a_Position;
-				gl_Position = vec4(a_Position, 1.0);	
+				gl_Position = u_ViewProjection * vec4(a_Position, 1.0);	
 			}
 		)";
 
@@ -176,13 +178,14 @@ namespace Key {
 		{
 			RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 			RenderCommand::Clear();
+			m_Camera.SetPosition(glm::vec3(-0.5f, 0.0f, 0.0f));
+			m_Camera.SetRotation(45);
 
-			Renderer::BeginScene();
-			m_blueShader->Bind();
-			Renderer::Submit(m_SquareVA);
+			Renderer::BeginScene(m_Camera);
 
-			m_Shader->Bind();
-			Renderer::Submit(m_VertexArray);
+			Renderer::Submit(m_blueShader,m_SquareVA);
+
+			Renderer::Submit(m_Shader,m_VertexArray);
 
 			Renderer::EndScene();
 
