@@ -143,6 +143,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\Key\Core\TimeStep.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLRendererAPI.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLBuffer.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLVertexArray.h" />
