@@ -1,8 +1,8 @@
 #include "Kpch.h"
 #include "Application.h"
 #include "Key/input.h"
-
-
+#include "Key/Core/TimeStep.h"
+#include <GLFW/glfw3.h>
 
 namespace Key {
 
@@ -35,7 +35,7 @@ namespace Key {
 				break;
 		}
 
-	}
+	}  
 
 	void Application::PushLayer(Layer* layer)
 	{
@@ -60,9 +60,12 @@ namespace Key {
 
 		while (m_Running)
 		{
+			float time = (float)glfwGetTime(); //Platform GetTime()
+			TimeStep timeStep(time - m_LastFrameTime);
+			m_LastFrameTime = time;
 
 			for (Layer* layer : m_LayerStack)
-				layer->OnUpdate();
+				layer->OnUpdate(timeStep);
 
 			m_ImGuiLayer->Begin();
 			for (Layer* layer : m_LayerStack)

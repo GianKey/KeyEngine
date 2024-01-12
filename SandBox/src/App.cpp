@@ -1,4 +1,5 @@
 #include <Key.h>
+#include <Key/Core/TimeStep.h>
 
 
 
@@ -113,21 +114,23 @@ public:
 	}
 
 
-	void OnUpdate() override {
+	void OnUpdate(Key::TimeStep  ts) override {
+
+		KEY_TRACE("Delta time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliseconds());
 		if (Key::Input::IsKeyPressed(KEY_KEY_LEFT))
-			m_CameraPosition.x -= m_CameraMoveSpeed;
+			m_CameraPosition.x -= m_CameraMoveSpeed * ts;
 		else if (Key::Input::IsKeyPressed(KEY_KEY_RIGHT))
-			m_CameraPosition.x += m_CameraMoveSpeed;
+			m_CameraPosition.x += m_CameraMoveSpeed * ts;
 
 		if (Key::Input::IsKeyPressed(KEY_KEY_DOWN))
-			m_CameraPosition.y -= m_CameraMoveSpeed;
+			m_CameraPosition.y -= m_CameraMoveSpeed * ts;
 		else if (Key::Input::IsKeyPressed(KEY_KEY_UP))
-			m_CameraPosition.y += m_CameraMoveSpeed;
+			m_CameraPosition.y += m_CameraMoveSpeed * ts;
 
 		if (Key::Input::IsKeyPressed(KEY_KEY_Q))
-			m_CameraRotation += m_CameraRotationSpeed;
+			m_CameraRotation += m_CameraRotationSpeed * ts;
 		else if (Key::Input::IsKeyPressed(KEY_KEY_E))
-			m_CameraRotation -= m_CameraRotationSpeed;
+			m_CameraRotation -= m_CameraRotationSpeed * ts;
 
 		Key::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		Key::RenderCommand::Clear();
@@ -162,10 +165,10 @@ private:
 
 	Key::OrthographicCamera m_Camera;
 	glm::vec3 m_CameraPosition;
-	float m_CameraMoveSpeed = 0.1f;			//控制相机移动
+	float m_CameraMoveSpeed = 1.0f;			//控制相机移动
 
 	float m_CameraRotation = 0.0f;
-	float m_CameraRotationSpeed = 2.0f; //控制相机旋转
+	float m_CameraRotationSpeed = 30.0f; //控制相机旋转
 
 };
 class SandBox : public Key::Application {

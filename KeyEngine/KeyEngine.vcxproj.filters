@@ -90,6 +90,7 @@
     <ClInclude Include="src\Key\Renderer\Shader.h" />
     <ClInclude Include="src\Key\Renderer\VertexArray.h" />
     <ClInclude Include="src\Key\Renderer\OrthographicCamera.h" />
+    <ClInclude Include="src\Key\Core\TimeStep.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Key\Application.cpp">

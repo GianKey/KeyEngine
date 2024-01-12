@@ -2,7 +2,7 @@
 
 #include "Key/Core.h"
 #include "Key/Events/Event.h"
-
+#include "Key/Core/TimeStep.h"
 namespace Key {
 
 	class KEY_API Layer
@@ -13,7 +13,7 @@ namespace Key {
 
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
-		virtual void OnUpdate() {}
+		virtual void OnUpdate(TimeStep ts) {}
 		virtual void OnEvent(Event& event) {}
 		virtual void OnImGuiRender() {}
 		const std::string& GetName() const { return m_DebugName; }
