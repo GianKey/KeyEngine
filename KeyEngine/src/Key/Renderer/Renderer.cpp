@@ -1,5 +1,6 @@
 #include "Kpch.h"
 #include "Renderer.h"
+#include "Key/PlatForm/OpenGL/OpenGLShader.h"
 
 
 namespace Key {
@@ -11,12 +12,12 @@ namespace Key {
 	void Renderer::EndScene()
 	{
 	}
-	void Renderer::Submit(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray)
+	void Renderer::Submit(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray, const glm::mat4 transform)
 	{
 		//在OpenGL 中 Bind 顺序不分先后
 		shader->Bind();
-		shader->UpLoadUniformMat4("u_ViewProjection", m_SceneData->ViewProjectionMatrix);
-
+		std::dynamic_pointer_cast<OpenGLShader>(shader)->UpLoadUniformMat4("u_ViewProjection", m_SceneData->ViewProjectionMatrix);
+		std::dynamic_pointer_cast<OpenGLShader>(shader)->UpLoadUniformMat4("u_Transform", transform);
 		vertexArray->Bind();
 		RenderCommand::DrawIndexed(vertexArray);
 	}
