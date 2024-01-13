@@ -1,12 +1,12 @@
 #include <Key.h>
 #include <Key/Core/TimeStep.h>
-
-
-
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include "Key/PlatForm/OpenGL/OpenGLShader.h"
 class ExampleLayer : public Key::Layer {
 public:
 	ExampleLayer()
-		: Layer("Example"), m_Camera(-1.6f, 1.6f, -0.9f, 0.9f), m_CameraPosition(0.0f)
+		: Layer("Example"), m_Camera(-1.6f, 1.6f, -0.9f, 0.9f), m_CameraPosition(0.0f), m_SquarePosition(0.0f)
 	{
 		m_VertexArray.reset(Key::VertexArray::Create());
 
@@ -61,13 +61,14 @@ public:
 			layout(location = 0) in vec3 a_Position;
 			layout(location = 1) in vec4 a_Color;
 			uniform mat4 u_ViewProjection;
+			uniform mat4 u_Transform;
 			out vec3 v_Position;
 			out vec4 v_Color;
 			void main()
 			{
 				v_Position = a_Position;
 				v_Color = a_Color;
-				gl_Position = u_ViewProjection * vec4(a_Position, 1.0);	
+				gl_Position = u_ViewProjection *  u_Transform * vec4(a_Position, 1.0);	
 			}
 		)";
 
@@ -83,18 +84,19 @@ public:
 			}
 		)";
 
-		m_Shader.reset(new Key::Shader(vertexSrc, fragmentSrc));
+		m_Shader.reset(Key::Shader::Create(vertexSrc, fragmentSrc));
 
 		std::string blue_vertexSrc = R"(
 			#version 330 core
 			
 			layout(location = 0) in vec3 a_Position;
 			uniform mat4 u_ViewProjection;
+			uniform mat4 u_Transform;
 			out vec3 v_Position;
 			void main()
 			{
 				v_Position = a_Position;
-				gl_Position = u_ViewProjection *  vec4(a_Position, 1.0);	
+				gl_Position = u_ViewProjection * u_Transform *   vec4(a_Position, 1.0);	
 			}
 		)";
 
@@ -102,15 +104,16 @@ public:
 			#version 330 core
 			
 			layout(location = 0) out vec4 color;
+			uniform vec4 u_Color;
 			in vec3 v_Position;
 			void main()
 			{
-				color = vec4(0.2, 0.3, 0.8, 1.0);
+				color = u_Color;
 			}
 		)";
 
-		m_blueShader.reset(new Key::Shader(blue_vertexSrc, blue_fragmentSrc));
-
+		m_FlatColorShader.reset(Key::Shader::Create(blue_vertexSrc, blue_fragmentSrc));
+		
 	}
 
 
@@ -132,6 +135,17 @@ public:
 		else if (Key::Input::IsKeyPressed(KEY_KEY_E))
 			m_CameraRotation -= m_CameraRotationSpeed * ts;
 
+		if (Key::Input::IsKeyPressed(KEY_KEY_A))
+			m_SquarePosition.x -= m_CameraMoveSpeed * ts;
+		else if (Key::Input::IsKeyPressed(KEY_KEY_D))
+			m_SquarePosition.x += m_CameraMoveSpeed * ts;
+
+		if (Key::Input::IsKeyPressed(KEY_KEY_W))
+			m_SquarePosition.y -= m_CameraMoveSpeed * ts;
+		else if (Key::Input::IsKeyPressed(KEY_KEY_S))
+			m_SquarePosition.y += m_CameraMoveSpeed * ts;
+
+
 		Key::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		Key::RenderCommand::Clear();
 
@@ -139,10 +153,29 @@ public:
 		m_Camera.SetRotation(m_CameraRotation);
 		Key::Renderer::BeginScene(m_Camera);
 
-		Key::Renderer::Submit(m_blueShader, m_SquareVA);
+		static glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.06f));
+		glm::vec4 redColor(0.8f, 0.2f, 0.3f, 1.0f);
+		glm::vec4 blueColor(0.2f, 0.3f, 0.8f, 1.0f);
 
-		//m_Shader->Bind();
-		//m_Shader->UpLoadUniformMat4("u_ViewProjection", m_Camera.GetViewProjectionMatrix());
+		std::dynamic_pointer_cast<Key::OpenGLShader>(m_FlatColorShader)->Bind();
+
+		for (int y = 0; y < 20; y++)
+		{
+			for (int x = 0; x < 20; x++)
+			{
+				glm::vec3 pos(x * 0.11f, y * 0.11f, 0.0f);
+				glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;
+				if (x % 2 == 0)
+					std::dynamic_pointer_cast<Key::OpenGLShader>(m_FlatColorShader)->UpLoadUniformFloat4("u_Color", m_FlatColor);
+				else
+					std::dynamic_pointer_cast<Key::OpenGLShader>(m_FlatColorShader)->UpLoadUniformFloat4("u_Color", blueColor);
+
+				Key::Renderer::Submit(m_FlatColorShader, m_SquareVA, transform);
+			}
+		}
+		//glm::mat4 transform = glm::translate(glm::mat4(1.0f), m_SquarePosition);
+		//Key::Renderer::Submit(m_blueShader, m_SquareVA, transform);
+
 		Key::Renderer::Submit(m_Shader, m_VertexArray);
 
 		Key::Renderer::EndScene();
@@ -156,11 +189,18 @@ public:
 			KEY_TRACE("{0}", (char)e.GetKeyCode());
 		}
 	}
+
+	virtual void OnImGuiRender() override {
+		ImGui::Begin("Settings");
+		ImGui::ColorEdit3("Flat Color", glm::value_ptr(m_FlatColor));
+
+		ImGui::End();
+	}
 private:
 	std::shared_ptr<Key::Shader> m_Shader;
 	std::shared_ptr<Key::VertexArray> m_VertexArray;
 
-	std::shared_ptr<Key::Shader> m_blueShader;
+	std::shared_ptr<Key::Shader> m_FlatColorShader;
 	std::shared_ptr<Key::VertexArray> m_SquareVA;
 
 	Key::OrthographicCamera m_Camera;
@@ -169,6 +209,9 @@ private:
 
 	float m_CameraRotation = 0.0f;
 	float m_CameraRotationSpeed = 30.0f; //控制相机旋转
+
+	glm::vec3 m_SquarePosition; 
+	glm::vec4 m_FlatColor;
 
 };
 class SandBox : public Key::Application {

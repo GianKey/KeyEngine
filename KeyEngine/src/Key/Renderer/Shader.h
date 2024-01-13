@@ -5,15 +5,12 @@ namespace Key {
 	class Shader
 	{
 	public:
-		Shader(const std::string& VertexSrc, const std::string& FragmentSrc);
-		~Shader();
+		virtual ~Shader() = default;
 
-		void Bind() const;				//绑定Shader 到 Program
-		void UnBind() const;			//解绑Shader
+		virtual void Bind() const = 0;				
+		virtual void UnBind() const = 0;			
 
-		void UpLoadUniformMat4(const std::string& name,const glm::mat4& matrix);
-	private:
-		uint32_t m_RendererID;		//渲染程序ID
+		static Shader* Create(const std::string& vertexSrc, const std::string& fragmentSrc);
 	};
 }
 
