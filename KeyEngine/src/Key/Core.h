@@ -1,5 +1,5 @@
 #pragma once
-
+#include <memory>
 #ifdef KEY_PLATFORM_WINDOWS
 #if KEY_DYNAIMC_LINK
 	#ifdef KEY_BUILD_DLL
@@ -27,3 +27,11 @@
 #define BIT(x) (1 << x)
 
 #define KEY_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
+
+namespace Key {
+	template<typename T>
+	using Ref = std::shared_ptr<T>;
+
+	template<typename T>
+	using Scope = std::unique_ptr<T>;
+}
