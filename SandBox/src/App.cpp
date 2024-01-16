@@ -151,6 +151,7 @@ public:
 
 		m_TextureShader.reset(Key::Shader::Create(texturevertexSrc, texturefragmentSrc));
 		m_Texture = Key::Texture2D::Create("assets/textures/Checkerboard.png");
+		m_logoTexture = Key::Texture2D::Create("assets/textures/ChernoLogo.png");
 		std::dynamic_pointer_cast<Key::OpenGLShader>(m_TextureShader)->Bind();
 		std::dynamic_pointer_cast<Key::OpenGLShader>(m_TextureShader)->UpLoadUniformInt("u_Texture",0);
 
@@ -219,6 +220,8 @@ public:
 		//Key::Renderer::Submit(m_Shader, m_VertexArray);
 		m_Texture->Bind();
 		Key::Renderer::Submit(m_TextureShader, m_SquareVA);
+		m_logoTexture->Bind();
+		Key::Renderer::Submit(m_TextureShader, m_SquareVA);
 			//glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 
 		Key::Renderer::EndScene();
@@ -256,7 +259,7 @@ private:
 	float m_CameraRotation = 0.0f;
 	float m_CameraRotationSpeed = 30.0f; //控制相机旋转
 
-	std::shared_ptr<Key::Texture2D> m_Texture;
+	std::shared_ptr<Key::Texture2D> m_Texture,m_logoTexture;
 
 	glm::vec3 m_SquarePosition; 
 	glm::vec4 m_FlatColor;
