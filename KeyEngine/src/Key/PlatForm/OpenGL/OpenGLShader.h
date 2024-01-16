@@ -20,6 +20,7 @@ namespace Key {
 		void Compile(const std::unordered_map<GLenum, std::string>& shaderSources);
 
 		void UpLoadUniformInt(const std::string& name, int value);
+		virtual const std::string& GetName() const override { return m_Name; }
 
 
 		void UpLoadUniformFloat(const std::string& name, float value);
@@ -31,7 +32,7 @@ namespace Key {
 		void UpLoadUniformMat4(const std::string& name, const glm::mat4& matrix);
 	private:
 		uint32_t m_RendererID;
-
+		std::string m_Name;
 	};
 
 }

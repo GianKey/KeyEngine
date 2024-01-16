@@ -89,7 +89,7 @@ public:
 		)";
 
 		//m_Shader.reset(Key::Shader::Create(vertexSrc, fragmentSrc));
-		m_Shader.reset(Key::Shader::Create("assets/shaders/FlatColor.glsl"));
+		//m_Shader.reset(Key::Shader::Create("assets/shaders/FlatColor.glsl"));
 		
 		std::string blue_vertexSrc = R"(
 			#version 330 core
@@ -118,7 +118,8 @@ public:
 		)";
 
 		//m_FlatColorShader.reset(Key::Shader::Create(blue_vertexSrc, blue_fragmentSrc));
-		m_FlatColorShader.reset(Key::Shader::Create("assets/shaders/FlatColor.glsl"));
+		//m_FlatColorShader.reset(Key::Shader::Create("assets/shaders/FlatColor.glsl"));
+		auto FlatShader = m_ShaderLibrary.Load("assets/Shaders/FlatColor.glsl");
 
 		std::string texturevertexSrc = R"(
 			#version 330 core
@@ -152,12 +153,12 @@ public:
 		)";
 
 		//m_TextureShader.reset(Key::Shader::Create(texturevertexSrc, texturefragmentSrc));
-		m_TextureShader.reset(Key::Shader::Create("assets/shaders/Texture.glsl"));
-
+		auto textureShader = m_ShaderLibrary.Load("assets/Shaders/Texture.glsl");
 		m_Texture = Key::Texture2D::Create("assets/textures/Checkerboard.png");
 		m_logoTexture = Key::Texture2D::Create("assets/textures/ChernoLogo.png");
-		std::dynamic_pointer_cast<Key::OpenGLShader>(m_TextureShader)->Bind();
-		std::dynamic_pointer_cast<Key::OpenGLShader>(m_TextureShader)->UpLoadUniformInt("u_Texture",0);
+		std::dynamic_pointer_cast<Key::OpenGLShader>(textureShader)->Bind();
+		std::dynamic_pointer_cast<Key::OpenGLShader>(textureShader)->UpLoadUniformInt("u_Texture", 0);
+
 
 	}
 
@@ -202,7 +203,7 @@ public:
 		glm::vec4 redColor(0.8f, 0.2f, 0.3f, 1.0f);
 		glm::vec4 blueColor(0.2f, 0.3f, 0.8f, 1.0f);
 
-		std::dynamic_pointer_cast<Key::OpenGLShader>(m_FlatColorShader)->Bind();
+		std::dynamic_pointer_cast<Key::OpenGLShader>(m_ShaderLibrary.Get("FlatColor"))->Bind();
 
 		for (int y = 0; y < 20; y++)
 		{
@@ -211,11 +212,11 @@ public:
 				glm::vec3 pos(x * 0.11f, y * 0.11f, 0.0f);
 				glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;
 				if (x % 2 == 0)
-					std::dynamic_pointer_cast<Key::OpenGLShader>(m_FlatColorShader)->UpLoadUniformFloat4("u_Color", m_FlatColor);
+					std::dynamic_pointer_cast<Key::OpenGLShader>(m_ShaderLibrary.Get("FlatColor"))->UpLoadUniformFloat4("u_Color", m_FlatColor);
 				else
-					std::dynamic_pointer_cast<Key::OpenGLShader>(m_FlatColorShader)->UpLoadUniformFloat4("u_Color", blueColor);
+					std::dynamic_pointer_cast<Key::OpenGLShader>(m_ShaderLibrary.Get("FlatColor"))->UpLoadUniformFloat4("u_Color", blueColor);
 
-				Key::Renderer::Submit(m_FlatColorShader, m_SquareVA, transform);
+				Key::Renderer::Submit(m_ShaderLibrary.Get("FlatColor"), m_SquareVA, transform);
 			}
 		}
 		//glm::mat4 transform = glm::translate(glm::mat4(1.0f), m_SquarePosition);
@@ -223,9 +224,9 @@ public:
 
 		//Key::Renderer::Submit(m_Shader, m_VertexArray);
 		m_Texture->Bind();
-		Key::Renderer::Submit(m_TextureShader, m_SquareVA);
+		Key::Renderer::Submit(m_ShaderLibrary.Get("Texture"), m_SquareVA);
 		m_logoTexture->Bind();
-		Key::Renderer::Submit(m_TextureShader, m_SquareVA);
+		Key::Renderer::Submit(m_ShaderLibrary.Get("Texture"), m_SquareVA);
 			//glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 
 		Key::Renderer::EndScene();
@@ -254,6 +255,7 @@ private:
 	std::shared_ptr<Key::VertexArray> m_SquareVA;
 
 	std::shared_ptr<Key::Shader> m_TextureShader;
+	Key::ShaderLibrary m_ShaderLibrary;
 	std::shared_ptr<Key::VertexArray> m_TXSquareVA;
 
 	Key::OrthographicCamera m_Camera;
