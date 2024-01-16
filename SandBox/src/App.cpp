@@ -88,8 +88,9 @@ public:
 			}
 		)";
 
-		m_Shader.reset(Key::Shader::Create(vertexSrc, fragmentSrc));
-
+		//m_Shader.reset(Key::Shader::Create(vertexSrc, fragmentSrc));
+		m_Shader.reset(Key::Shader::Create("assets/shaders/FlatColor.glsl"));
+		
 		std::string blue_vertexSrc = R"(
 			#version 330 core
 			
@@ -116,7 +117,8 @@ public:
 			}
 		)";
 
-		m_FlatColorShader.reset(Key::Shader::Create(blue_vertexSrc, blue_fragmentSrc));
+		//m_FlatColorShader.reset(Key::Shader::Create(blue_vertexSrc, blue_fragmentSrc));
+		m_FlatColorShader.reset(Key::Shader::Create("assets/shaders/FlatColor.glsl"));
 
 		std::string texturevertexSrc = R"(
 			#version 330 core
@@ -149,7 +151,9 @@ public:
 			}
 		)";
 
-		m_TextureShader.reset(Key::Shader::Create(texturevertexSrc, texturefragmentSrc));
+		//m_TextureShader.reset(Key::Shader::Create(texturevertexSrc, texturefragmentSrc));
+		m_TextureShader.reset(Key::Shader::Create("assets/shaders/Texture.glsl"));
+
 		m_Texture = Key::Texture2D::Create("assets/textures/Checkerboard.png");
 		m_logoTexture = Key::Texture2D::Create("assets/textures/ChernoLogo.png");
 		std::dynamic_pointer_cast<Key::OpenGLShader>(m_TextureShader)->Bind();
