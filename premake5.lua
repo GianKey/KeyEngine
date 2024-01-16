@@ -15,10 +15,14 @@ IncludeDir = {}
 IncludeDir["GLFW"] = "KeyEngine/vendor/GLFW/include"
 IncludeDir["GLad"] = "KeyEngine/vendor/GLad/include"
 IncludeDir["imGui"] = "KeyEngine/vendor/imgui"
-IncludeDir["glm"] = "Hazel/vendor/glm"
-include "KeyEngine/vendor/GLFW"
-include "KeyEngine/vendor/GLad"
-include "KeyEngine/vendor/imgui"
+IncludeDir["glm"] = "KeyEngine/vendor/glm"
+IncludeDir["stb_image"] = "KeyEngine/vendor/stb_image"
+
+group "Dependencies"
+	include "KeyEngine/vendor/GLFW"
+	include "KeyEngine/vendor/GLad"
+	include "KeyEngine/vendor/imgui"
+group ""
 
 project "KeyEngine"
 	location "KeyEngine"
@@ -37,6 +41,8 @@ project "KeyEngine"
 	{
 		"%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.cpp",
+		"%{prj.name}/vendor/stb_image/**.h",
+		"%{prj.name}/vendor/stb_image/**.cpp",
 		"%{prj.name}/vendor/glm/glm/**.hpp",
 		"%{prj.name}/vendor/glm/glm/**.inl"
 	}
@@ -53,7 +59,8 @@ project "KeyEngine"
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.GLad}",
 		"%{IncludeDir.imGui}",
-		"%{IncludeDir.glm}"
+		"%{IncludeDir.glm}",
+		"%{IncludeDir.stb_image}",
 	}
 
 	links{

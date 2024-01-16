@@ -21,6 +21,7 @@
 #include "Key/Renderer/Buffer.h"
 #include "Key/Renderer/Shader.h"
 #include "Key/Renderer/VertexArray.h"
+#include "Key/Renderer/Texture.h"
 
 #include "Key/Renderer/OrthographicCamera.h"
 

@@ -3,6 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "Key/PlatForm/OpenGL/OpenGLShader.h"
+
 class ExampleLayer : public Key::Layer {
 public:
 	ExampleLayer()
@@ -36,19 +37,22 @@ public:
 
 		m_SquareVA.reset(Key::VertexArray::Create());
 
-		float squareVertices[3 * 4] = {
-			-0.75f, -0.75f, 0.0f,
-			 0.75f, -0.75f, 0.0f,
-			 0.75f,  0.75f, 0.0f,
-			-0.75f,  0.75f, 0.0f
+		float squareVertices[5 * 4] = {
+			-0.75f, -0.75f, 0.0f,0.0f, 0.0f,
+			 0.75f, -0.75f, 0.0f,1.0f, 0.0f,
+			 0.75f,  0.75f, 0.0f,1.0f, 1.0f,
+			-0.75f,  0.75f, 0.0f,0.0f, 1.0f,
 		};
+
 
 		std::shared_ptr<Key::VertexBuffer> squareVB;
 		squareVB.reset(Key::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
 		squareVB->SetLayout({
-			{ Key::ShaderDataType::Float3, "a_Position", false }
+			{ Key::ShaderDataType::Float3, "a_Position", false },
+			{ Key::ShaderDataType::Float2, "a_TexCoord", false },
 			});
 		m_SquareVA->AddVertexBuffer(squareVB);
+
 
 		uint32_t squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
 		std::shared_ptr<Key::IndexBuffer> squareIB;
@@ -113,7 +117,43 @@ public:
 		)";
 
 		m_FlatColorShader.reset(Key::Shader::Create(blue_vertexSrc, blue_fragmentSrc));
-		
+
+		std::string texturevertexSrc = R"(
+			#version 330 core
+			
+			layout(location = 0) in vec3 a_Position;
+			layout(location = 1) in vec2 a_TexCoord;
+
+			uniform mat4 u_ViewProjection;
+			uniform mat4 u_Transform;
+
+			out vec2 v_TexCoord;
+			void main()
+			{
+				v_TexCoord = a_TexCoord;
+				gl_Position = u_ViewProjection * u_Transform *   vec4(a_Position, 1.0);	
+			}
+		)";
+
+		std::string texturefragmentSrc = R"(
+			#version 330 core
+			
+			layout(location = 0) out vec4 color;
+
+			in vec2 v_TexCoord;
+			uniform sampler2D u_Texture;
+
+			void main()
+			{
+				color = texture(u_Texture, v_TexCoord);
+			}
+		)";
+
+		m_TextureShader.reset(Key::Shader::Create(texturevertexSrc, texturefragmentSrc));
+		m_Texture = Key::Texture2D::Create("assets/textures/Checkerboard.png");
+		std::dynamic_pointer_cast<Key::OpenGLShader>(m_TextureShader)->Bind();
+		std::dynamic_pointer_cast<Key::OpenGLShader>(m_TextureShader)->UpLoadUniformInt("u_Texture",0);
+
 	}
 
 
@@ -176,7 +216,10 @@ public:
 		//glm::mat4 transform = glm::translate(glm::mat4(1.0f), m_SquarePosition);
 		//Key::Renderer::Submit(m_blueShader, m_SquareVA, transform);
 
-		Key::Renderer::Submit(m_Shader, m_VertexArray);
+		//Key::Renderer::Submit(m_Shader, m_VertexArray);
+		m_Texture->Bind();
+		Key::Renderer::Submit(m_TextureShader, m_SquareVA);
+			//glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 
 		Key::Renderer::EndScene();
 
@@ -203,12 +246,17 @@ private:
 	std::shared_ptr<Key::Shader> m_FlatColorShader;
 	std::shared_ptr<Key::VertexArray> m_SquareVA;
 
+	std::shared_ptr<Key::Shader> m_TextureShader;
+	std::shared_ptr<Key::VertexArray> m_TXSquareVA;
+
 	Key::OrthographicCamera m_Camera;
 	glm::vec3 m_CameraPosition;
 	float m_CameraMoveSpeed = 1.0f;			//控制相机移动
 
 	float m_CameraRotation = 0.0f;
 	float m_CameraRotationSpeed = 30.0f; //控制相机旋转
+
+	std::shared_ptr<Key::Texture2D> m_Texture;
 
 	glm::vec3 m_SquarePosition; 
 	glm::vec4 m_FlatColor;
