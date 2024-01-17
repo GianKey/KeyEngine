@@ -166,6 +166,7 @@
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLVertexArray.h" />
     <ClInclude Include="src\Key\PlatForm\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Key\Renderer\Buffer.h" />
+    <ClInclude Include="src\Key\Renderer\CameraController.h" />
     <ClInclude Include="src\Key\Renderer\GraphicsContext.h" />
     <ClInclude Include="src\Key\Renderer\OrthographicCamera.h" />
     <ClInclude Include="src\Key\Renderer\RenderCommand.h" />
@@ -609,6 +610,7 @@
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLVertexArray.cpp" />
     <ClCompile Include="src\Key\PlatForm\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Key\Renderer\Buffer.cpp" />
+    <ClCompile Include="src\Key\Renderer\CameraController.cpp" />
     <ClCompile Include="src\Key\Renderer\OrthographicCamera.cpp" />
     <ClCompile Include="src\Key\Renderer\RenderCommand.cpp" />
     <ClCompile Include="src\Key\Renderer\Renderer.cpp" />
