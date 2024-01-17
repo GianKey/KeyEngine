@@ -3,11 +3,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "Key/PlatForm/OpenGL/OpenGLShader.h"
-
+#include "Key/Renderer/CameraController.h"
 class ExampleLayer : public Key::Layer {
 public:
 	ExampleLayer()
-		: Layer("Example"), m_Camera(-1.6f, 1.6f, -0.9f, 0.9f), m_CameraPosition(0.0f), m_SquarePosition(0.0f)
+		//: Layer("Example"), m_Camera(-1.6f, 1.6f, -0.9f, 0.9f), m_CameraPosition(0.0f), m_SquarePosition(0.0f)
+		: Layer("Example"), m_CameraController(1600.0f / 900.0f)
 	{
 		m_VertexArray.reset(Key::VertexArray::Create());
 
@@ -87,71 +88,12 @@ public:
 				color = v_Color;
 			}
 		)";
+	
 
-		//m_Shader.reset(Key::Shader::Create(vertexSrc, fragmentSrc));
-		//m_Shader.reset(Key::Shader::Create("assets/shaders/FlatColor.glsl"));
 		
-		std::string blue_vertexSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) in vec3 a_Position;
-			uniform mat4 u_ViewProjection;
-			uniform mat4 u_Transform;
-			out vec3 v_Position;
-			void main()
-			{
-				v_Position = a_Position;
-				gl_Position = u_ViewProjection * u_Transform *   vec4(a_Position, 1.0);	
-			}
-		)";
-
-		std::string blue_fragmentSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) out vec4 color;
-			uniform vec4 u_Color;
-			in vec3 v_Position;
-			void main()
-			{
-				color = u_Color;
-			}
-		)";
-
-		//m_FlatColorShader.reset(Key::Shader::Create(blue_vertexSrc, blue_fragmentSrc));
-		//m_FlatColorShader.reset(Key::Shader::Create("assets/shaders/FlatColor.glsl"));
 		auto FlatShader = m_ShaderLibrary.Load("assets/Shaders/FlatColor.glsl");
 
-		std::string texturevertexSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) in vec3 a_Position;
-			layout(location = 1) in vec2 a_TexCoord;
-
-			uniform mat4 u_ViewProjection;
-			uniform mat4 u_Transform;
-
-			out vec2 v_TexCoord;
-			void main()
-			{
-				v_TexCoord = a_TexCoord;
-				gl_Position = u_ViewProjection * u_Transform *   vec4(a_Position, 1.0);	
-			}
-		)";
-
-		std::string texturefragmentSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) out vec4 color;
-
-			in vec2 v_TexCoord;
-			uniform sampler2D u_Texture;
-
-			void main()
-			{
-				color = texture(u_Texture, v_TexCoord);
-			}
-		)";
-
+	
 		//m_TextureShader.reset(Key::Shader::Create(texturevertexSrc, texturefragmentSrc));
 		auto textureShader = m_ShaderLibrary.Load("assets/Shaders/Texture.glsl");
 		m_Texture = Key::Texture2D::Create("assets/textures/Checkerboard.png");
@@ -159,45 +101,21 @@ public:
 		std::dynamic_pointer_cast<Key::OpenGLShader>(textureShader)->Bind();
 		std::dynamic_pointer_cast<Key::OpenGLShader>(textureShader)->UpLoadUniformInt("u_Texture", 0);
 
-
 	}
 
 
 	void OnUpdate(Key::TimeStep  ts) override {
-
-		KEY_TRACE("Delta time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliseconds());
-		if (Key::Input::IsKeyPressed(KEY_KEY_LEFT))
-			m_CameraPosition.x -= m_CameraMoveSpeed * ts;
-		else if (Key::Input::IsKeyPressed(KEY_KEY_RIGHT))
-			m_CameraPosition.x += m_CameraMoveSpeed * ts;
-
-		if (Key::Input::IsKeyPressed(KEY_KEY_DOWN))
-			m_CameraPosition.y -= m_CameraMoveSpeed * ts;
-		else if (Key::Input::IsKeyPressed(KEY_KEY_UP))
-			m_CameraPosition.y += m_CameraMoveSpeed * ts;
-
-		if (Key::Input::IsKeyPressed(KEY_KEY_Q))
-			m_CameraRotation += m_CameraRotationSpeed * ts;
-		else if (Key::Input::IsKeyPressed(KEY_KEY_E))
-			m_CameraRotation -= m_CameraRotationSpeed * ts;
-
-		if (Key::Input::IsKeyPressed(KEY_KEY_A))
-			m_SquarePosition.x -= m_CameraMoveSpeed * ts;
-		else if (Key::Input::IsKeyPressed(KEY_KEY_D))
-			m_SquarePosition.x += m_CameraMoveSpeed * ts;
-
-		if (Key::Input::IsKeyPressed(KEY_KEY_W))
-			m_SquarePosition.y -= m_CameraMoveSpeed * ts;
-		else if (Key::Input::IsKeyPressed(KEY_KEY_S))
-			m_SquarePosition.y += m_CameraMoveSpeed * ts;
-
-
 		Key::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		Key::RenderCommand::Clear();
 
-		m_Camera.SetPosition(m_CameraPosition);
-		m_Camera.SetRotation(m_CameraRotation);
-		Key::Renderer::BeginScene(m_Camera);
+		//KEY_TRACE("Delta time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliseconds());
+		m_CameraController.OnUpdate(ts);
+
+
+		
+		/*m_Camera.SetPosition(m_CameraPosition);
+		m_Camera.SetRotation(m_CameraRotation);*/
+		Key::Renderer::BeginScene(m_CameraController.GetCamera());
 
 		static glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.06f));
 		glm::vec4 redColor(0.8f, 0.2f, 0.3f, 1.0f);
@@ -238,7 +156,11 @@ public:
 		{
 			Key::KeyPressedEvent& e = dynamic_cast<Key::KeyPressedEvent&>(event);
 			KEY_TRACE("{0}", (char)e.GetKeyCode());
+
+
 		}
+		
+		m_CameraController.OnEvent(event);
 	}
 
 	virtual void OnImGuiRender() override {
@@ -258,7 +180,7 @@ private:
 	Key::ShaderLibrary m_ShaderLibrary;
 	std::shared_ptr<Key::VertexArray> m_TXSquareVA;
 
-	Key::OrthographicCamera m_Camera;
+	//Key::OrthographicCamera m_Camera;
 	glm::vec3 m_CameraPosition;
 	float m_CameraMoveSpeed = 1.0f;			//控制相机移动
 
@@ -269,6 +191,9 @@ private:
 
 	glm::vec3 m_SquarePosition; 
 	glm::vec4 m_FlatColor;
+
+
+	Key::OrthographicCameraController m_CameraController;
 
 };
 class SandBox : public Key::Application {

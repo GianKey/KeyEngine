@@ -30,6 +30,7 @@ namespace Key {
 
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
+		dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(OnWindowResize));
 		//KEY_CORE_TRACE("{0}", e);
 		for (auto it = m_LayerStack.end(); it != m_LayerStack.begin(); ) {
 			(*--it)->OnEvent(e);
@@ -38,6 +39,19 @@ namespace Key {
 		}
 
 	}  
+	bool Application::OnWindowResize(WindowResizeEvent& e)
+	{
+		if (e.GetWidth() == 0 || e.GetHeight() == 0)
+		{
+			m_Minimized = true;
+			return false;
+		}
+
+		m_Minimized = false;
+		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+
+		return false;
+	}
 
 	void Application::PushLayer(Layer* layer)
 	{
@@ -66,13 +80,19 @@ namespace Key {
 			TimeStep timeStep(time - m_LastFrameTime);
 			m_LastFrameTime = time;
 
-			for (Layer* layer : m_LayerStack)
-				layer->OnUpdate(timeStep);
 
-			m_ImGuiLayer->Begin();
-			for (Layer* layer : m_LayerStack)
-				layer->OnImGuiRender();
-			m_ImGuiLayer->End();
+			if (!m_Minimized)
+			{
+				for (Layer* layer : m_LayerStack)
+					layer->OnUpdate(timeStep);
+				m_ImGuiLayer->Begin();
+				for (Layer* layer : m_LayerStack)
+					layer->OnImGuiRender();
+				m_ImGuiLayer->End();
+			}
+
+
+		
 
 			m_Window->OnUpdate();
 		}
