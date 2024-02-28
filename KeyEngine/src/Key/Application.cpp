@@ -91,9 +91,6 @@ namespace Key {
 				m_ImGuiLayer->End();
 			}
 
-
-		
-
 			m_Window->OnUpdate();
 		}
 	}
