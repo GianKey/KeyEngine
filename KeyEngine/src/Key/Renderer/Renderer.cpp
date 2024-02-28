@@ -16,7 +16,7 @@ namespace Key {
 	void Renderer::EndScene()
 	{
 	}
-	void Renderer::Submit(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray, const glm::mat4 transform)
+	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::mat4 transform)
 	{
 		//在OpenGL 中 Bind 顺序不分先后
 		shader->Bind();

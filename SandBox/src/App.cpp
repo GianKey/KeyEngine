@@ -18,7 +18,7 @@ public:
 			 0.0f,  0.5f, 0.0f, 0.3f, 0.8f, 0.0f, 1.0f
 		};
 
-		std::shared_ptr<Key::VertexBuffer> vertexBuffer;
+		Key::Ref<Key::VertexBuffer> vertexBuffer;
 		vertexBuffer.reset(Key::VertexBuffer::Create(vertices, sizeof(vertices)));
 
 
@@ -32,7 +32,7 @@ public:
 
 
 		uint32_t indices[3] = { 0, 1, 2 };
-		std::shared_ptr<Key::IndexBuffer> indexBuffer;
+		Key::Ref<Key::IndexBuffer> indexBuffer;
 		indexBuffer.reset(Key::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
 		m_VertexArray->SetIndexBuffer(indexBuffer);
 
@@ -46,7 +46,7 @@ public:
 		};
 
 
-		std::shared_ptr<Key::VertexBuffer> squareVB;
+		Key::Ref<Key::VertexBuffer> squareVB;
 		squareVB.reset(Key::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
 		squareVB->SetLayout({
 			{ Key::ShaderDataType::Float3, "a_Position", false },
@@ -56,7 +56,7 @@ public:
 
 
 		uint32_t squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
-		std::shared_ptr<Key::IndexBuffer> squareIB;
+		Key::Ref<Key::IndexBuffer> squareIB;
 		squareIB.reset(Key::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
 		m_SquareVA->SetIndexBuffer(squareIB);
 
@@ -170,15 +170,15 @@ public:
 		ImGui::End();
 	}
 private:
-	std::shared_ptr<Key::Shader> m_Shader;
-	std::shared_ptr<Key::VertexArray> m_VertexArray;
+	Key::Ref<Key::Shader> m_Shader;
+	Key::Ref<Key::VertexArray> m_VertexArray;
 
-	std::shared_ptr<Key::Shader> m_FlatColorShader;
-	std::shared_ptr<Key::VertexArray> m_SquareVA;
+	Key::Ref<Key::Shader> m_FlatColorShader;
+	Key::Ref<Key::VertexArray> m_SquareVA;
 
-	std::shared_ptr<Key::Shader> m_TextureShader;
+	Key::Ref<Key::Shader> m_TextureShader;
 	Key::ShaderLibrary m_ShaderLibrary;
-	std::shared_ptr<Key::VertexArray> m_TXSquareVA;
+	Key::Ref<Key::VertexArray> m_TXSquareVA;
 
 	//Key::OrthographicCamera m_Camera;
 	glm::vec3 m_CameraPosition;
@@ -187,7 +187,7 @@ private:
 	float m_CameraRotation = 0.0f;
 	float m_CameraRotationSpeed = 30.0f; //控制相机旋转
 
-	std::shared_ptr<Key::Texture2D> m_Texture,m_logoTexture;
+	Key::Ref<Key::Texture2D> m_Texture,m_logoTexture;
 
 	glm::vec3 m_SquarePosition; 
 	glm::vec4 m_FlatColor;
