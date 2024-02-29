@@ -4,16 +4,17 @@
 
 
 #include <stdio.h>
-#include "Key/Application.h"
-#include "Key/Log.h"
-#include "Key/Layer.h"
-#include "Key/ImGui/ImGuiLayer.h"
-#include "Key/input.h"
+#include "Key/Core/Application.h"
+#include "Key/Core/Log.h"
 
-#include "Key/KeyCodes.h"
-#include "Key/MouseButtonCodes.h"
+#include "Key/Core/Layer.h"
+#include "Key/ImGui/ImGuiLayer.h"
+#include "Key/Core/input.h"
+
+#include "Key/Core/KeyCodes.h"
+#include "Key/Core/MouseButtonCodes.h"
 #include "imgui/imgui.h"
-//--------Renderer ----------
+//--------Renderer API----------
 
 #include "Key/Renderer/Renderer.h"
 #include "Key/Renderer/RenderCommand.h"

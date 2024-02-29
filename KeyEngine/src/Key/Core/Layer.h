@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Key/Core.h"
-#include "Key/Events/Event.h"
+#include "Key/Core/Core.h"
+#include "Key/Core/Events/Event.h"
 #include "Key/Core/TimeStep.h"
 namespace Key {
 
