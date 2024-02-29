@@ -2,5 +2,5 @@
 #include "RendererAPI.h"
 
 namespace Key {
-	RendererAPI::API RendererAPI::s_API = RendererAPI::API::OpenGL;
+	RendererAPI::RendererAPIType RendererAPI::s_CurrentRendererAPI = RendererAPI::RendererAPIType::OpenGL;
 }

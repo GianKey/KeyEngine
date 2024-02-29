@@ -10,8 +10,8 @@
     <Filter Include="src\Key\Core">
       <UniqueIdentifier>{7DFBE95F-695E-7904-12E4-B1BAFE254587}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Key\Events">
-      <UniqueIdentifier>{49E07807-35AE-6C0D-1E42-DD330AAF4872}</UniqueIdentifier>
+    <Filter Include="src\Key\Core\Events">
+      <UniqueIdentifier>{C1381CF3-2D9A-F900-B607-40B3226830C0}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Key\ImGui">
       <UniqueIdentifier>{EF30945D-5BF1-0F94-242C-591190AB5470}</UniqueIdentifier>
@@ -57,47 +57,53 @@
     <ClInclude Include="src\Key.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\Application.h">
-      <Filter>src\Key</Filter>
+    <ClInclude Include="src\Key\Core\Application.h">
+      <Filter>src\Key\Core</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\Core.h">
-      <Filter>src\Key</Filter>
+    <ClInclude Include="src\Key\Core\Base.h">
+      <Filter>src\Key\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Core\Events\ApplicationEvent.h">
+      <Filter>src\Key\Core\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Core\Events\Event.h">
+      <Filter>src\Key\Core\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Core\Events\KeyBoardEvent.h">
+      <Filter>src\Key\Core\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Core\Events\MouseEvent.h">
+      <Filter>src\Key\Core\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Core\KeyCodes.h">
+      <Filter>src\Key\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Core\Layer.h">
+      <Filter>src\Key\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Core\LayerStack.h">
+      <Filter>src\Key\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Core\Log.h">
+      <Filter>src\Key\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Core\MouseButtonCodes.h">
+      <Filter>src\Key\Core</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Core\TimeStep.h">
+      <Filter>src\Key\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Core\Window.h">
+      <Filter>src\Key\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Core\input.h">
       <Filter>src\Key\Core</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\EntryPoint.h">
       <Filter>src\Key</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\Events\ApplicationEvent.h">
-      <Filter>src\Key\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\Events\Event.h">
-      <Filter>src\Key\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\Events\KeyBoardEvent.h">
-      <Filter>src\Key\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\Events\MouseEvent.h">
-      <Filter>src\Key\Events</Filter>
-    </ClInclude>
     <ClInclude Include="src\Key\ImGui\ImGuiLayer.h">
       <Filter>src\Key\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\KeyCodes.h">
-      <Filter>src\Key</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\Layer.h">
-      <Filter>src\Key</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\LayerStack.h">
-      <Filter>src\Key</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\Log.h">
-      <Filter>src\Key</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\MouseButtonCodes.h">
-      <Filter>src\Key</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLBuffer.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
@@ -119,9 +125,6 @@
     </ClInclude>
     <ClInclude Include="src\Key\PlatForm\Windows\WindowsWindow.h">
       <Filter>src\Key\PlatForm\Windows</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\Renderer\Buffer.h">
-      <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\CameraController.h">
       <Filter>src\Key\Renderer</Filter>
@@ -152,12 +155,6 @@
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\VertexArray.h">
       <Filter>src\Key\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\Window.h">
-      <Filter>src\Key</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\input.h">
-      <Filter>src\Key</Filter>
     </ClInclude>
     <ClInclude Include="src\Kpch.h">
       <Filter>src</Filter>
@@ -1410,25 +1407,37 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Renderer\RenderCommandQueue.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Renderer\Buffer.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Key\Application.cpp">
-      <Filter>src\Key</Filter>
+    <ClCompile Include="src\Key\Core\Application.cpp">
+      <Filter>src\Key\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Core\Base.cpp">
+      <Filter>src\Key\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Core\Layer.cpp">
+      <Filter>src\Key\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Core\LayerStack.cpp">
+      <Filter>src\Key\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Core\Log.cpp">
+      <Filter>src\Key\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Core\Window.cpp">
+      <Filter>src\Key\Core</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\ImGui\ImGuiBuild.cpp">
       <Filter>src\Key\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\ImGui\ImGuiLayer.cpp">
       <Filter>src\Key\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Key\Layer.cpp">
-      <Filter>src\Key</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Key\LayerStack.cpp">
-      <Filter>src\Key</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Key\Log.cpp">
-      <Filter>src\Key</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLBuffer.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
@@ -1450,9 +1459,6 @@
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\Windows\WindowsWindow.cpp">
       <Filter>src\Key\PlatForm\Windows</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Key\Renderer\Buffer.cpp">
-      <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\CameraController.cpp">
       <Filter>src\Key\Renderer</Filter>
@@ -1481,14 +1487,17 @@
     <ClCompile Include="src\Key\Renderer\VertexArray.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="src\Key\Window.cpp">
-      <Filter>src\Key</Filter>
-    </ClCompile>
     <ClCompile Include="src\Kpch.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Renderer\RenderCommandQueue.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Renderer\Buffer.cpp">
+      <Filter>src\Key\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

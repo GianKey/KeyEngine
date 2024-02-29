@@ -5,7 +5,7 @@ namespace Key {
 	class RendererAPI
 	{
 	public:
-		enum class API
+		enum class RendererAPIType
 		{
 			None = 0, OpenGL = 1
 		};
@@ -17,10 +17,10 @@ namespace Key {
 
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) = 0;
 
-		inline static API GetAPI() { return s_API; }
+		inline static RendererAPIType GetAPI() { return s_CurrentRendererAPI; }
 
 	private:
-		static API s_API;
+		static RendererAPIType s_CurrentRendererAPI;
 	};
 
 }

@@ -8,8 +8,8 @@ namespace Key {
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:    KEY_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:  return new OpenGLVertexBuffer(vertices, size);
+		case RendererAPI::RendererAPIType::None:    KEY_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RendererAPI::RendererAPIType::OpenGL:  return new OpenGLVertexBuffer(vertices, size);
 		}
 
 		KEY_CORE_ASSERT(false, "Unknown RendererAPI!");
@@ -20,8 +20,8 @@ namespace Key {
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:    KEY_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:  return new OpenGLIndexBuffer(indices, size);
+		case RendererAPI::RendererAPIType::None:    KEY_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RendererAPI::RendererAPIType::OpenGL:  return new OpenGLIndexBuffer(indices, size);
 		}
 
 		KEY_CORE_ASSERT(false, "Unknown RendererAPI!");

@@ -1,5 +1,5 @@
 #pragma once
-#include "Key/Renderer/Renderer.h"
+
 namespace Key {
 
 	enum class ShaderDataType

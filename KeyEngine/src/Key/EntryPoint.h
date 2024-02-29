@@ -6,7 +6,7 @@ extern Key::Application* Key::CreateApplication();
 
 
 int main(int argc, char** argv) {
-	Key::Log::Init();
+	Key::InitializeCore();
 	KEY_CORE_ERROR("create a key app");
 	int a = 7;
 	KEY_INFO("ÄãºÃ key master, ÎÒÊÇ {0}", a);
@@ -14,5 +14,6 @@ int main(int argc, char** argv) {
 	auto app = Key::CreateApplication();
 	app->Run();
 	delete app;
+	Key::ShutdownCore();
 }
 #endif // KEY_PALTFORM_WINDOWS
