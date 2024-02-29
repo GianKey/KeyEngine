@@ -3,6 +3,8 @@
 namespace Key {
 	class RenderCommand
 	{
+	private:
+		static RendererAPI* s_RendererAPI;
 	public:
 		inline static void Init() {
 			s_RendererAPI->Init();
@@ -25,9 +27,6 @@ namespace Key {
 		{
 			s_RendererAPI->SetViewport(x, y, width, height);
 		}
-
-	private:
-		static RendererAPI* s_RendererAPI;
 	};
 
 }

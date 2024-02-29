@@ -1,9 +1,9 @@
 #include "Kpch.h"
 #include "WindowsWindow.h"
-#include "Key/Application.h"
-#include "Key/Events/KeyBoardEvent.h"
-#include "Key/Events/MouseEvent.h"
-#include "Key/Events/ApplicationEvent.h"
+#include "Key/Core/Application.h"
+#include "Key/Core/Events/KeyBoardEvent.h"
+#include "Key/Core/Events/MouseEvent.h"
+#include "Key/Core/Events/ApplicationEvent.h"
 #include "Key/PlatForm/OpenGL/OpenGLContext.h"
 
 namespace Key {

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Key/Layer.h"
-#include "Key/Events/Event.h"
+#include "Key/Core/Layer.h"
+#include "Key/Core/Events/Event.h"
 //#include "Key/PlatForm/OpenGL/ImGuiOpenGLRenderer.h"
-#include "Key/Events/ApplicationEvent.h"
-#include "Key/Events/KeyBoardEvent.h"
-#include "Key/Events/MouseEvent.h"
+#include "Key/Core/Events/ApplicationEvent.h"
+#include "Key/Core/Events/KeyBoardEvent.h"
+#include "Key/Core/Events/MouseEvent.h"
 
 namespace Key {
 

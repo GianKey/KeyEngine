@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef KEY_PLATFORM_WINDOWS
+	#include <Windows.h>
+#endif
+
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -11,8 +15,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "Key/Core/Log.h"
-
-#ifdef HZ_PLATFORM_WINDOWS
-	#include <Windows.h>
-#endif
+#include <Key/Core/Base.h>
+#include <Key/Core/Log.h>
+#include <Key/Core/Events/Event.h>

@@ -10,8 +10,8 @@ namespace Key {
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::API::None:    KEY_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::API::OpenGL:  return CreateRef<OpenGLShader>(filepath);
+		case RendererAPI::RendererAPIType::None:    KEY_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RendererAPI::RendererAPIType::OpenGL:  return CreateRef<OpenGLShader>(filepath);
 		}
 
 		KEY_CORE_ASSERT(false, "Unknown RendererAPI!");

@@ -1,8 +1,8 @@
 #include "Kpch.h"
 #include "CameraController.h"
 
-#include "Key/Input.h"
-#include "Key/KeyCodes.h"
+#include "Key/Core/Input.h"
+#include "Key/Core/KeyCodes.h"
 #include <glm/ext/matrix_clip_space.hpp>
 namespace Key {
 

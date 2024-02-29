@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Key/Window.h"
+#include "Key/Core/Window.h"
 #include <GLFW/glfw3.h>
-#include "Key/input.h"
+#include "Key/Core/input.h"
 #include "Key/Renderer/GraphicsContext.h"
 
 namespace Key {

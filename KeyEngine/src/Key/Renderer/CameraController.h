@@ -3,8 +3,8 @@
 #include "Key/Renderer/OrthographicCamera.h"
 #include "Key/Core/Timestep.h"
 
-#include "Key/Events/ApplicationEvent.h"
-#include "Key/Events/MouseEvent.h"
+#include "Key/Core/Events/ApplicationEvent.h"
+#include "Key/Core/Events/MouseEvent.h"
 
 namespace Key {
 

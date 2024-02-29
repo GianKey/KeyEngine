@@ -1,5 +1,5 @@
 #pragma once
-#include "Key/Core.h"
+#include "Key/Core/Base.h"
 #include <string>
 namespace Key {
 	class Texture

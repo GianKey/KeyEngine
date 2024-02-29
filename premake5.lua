@@ -17,6 +17,7 @@ IncludeDir["GLad"] = "KeyEngine/vendor/GLad/include"
 IncludeDir["imGui"] = "KeyEngine/vendor/imgui"
 IncludeDir["glm"] = "KeyEngine/vendor/glm"
 IncludeDir["stb_image"] = "KeyEngine/vendor/stb_image"
+IncludeDir["assimp"] = "KeyEngine/vendor/assimp/include"
 
 group "Dependencies"
 	include "KeyEngine/vendor/GLFW"
@@ -55,12 +56,14 @@ project "KeyEngine"
 	includedirs
 	{
 		"%{prj.name}/src",
+		"%{prj.name}/vendor",
 		"%{prj.name}/vendor/spdlog/include",
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.GLad}",
 		"%{IncludeDir.imGui}",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.stb_image}",
+		"%{IncludeDir.assimp}",
 	}
 
 	links{
@@ -122,7 +125,8 @@ project "Sandbox"
 
 	links
 	{
-		"KeyEngine"
+		"KeyEngine",
+		"KeyEngine/vendor/assimp/win64/assimp-vc143-mtd.lib"
 	}
 
 	filter "system:windows"

@@ -1,5 +1,11 @@
 #pragma once
 #include <memory>
+
+namespace Key {
+	void InitializeCore();
+	void ShutdownCore();
+}
+
 #ifdef KEY_PLATFORM_WINDOWS
 #if KEY_DYNAIMC_LINK
 	#ifdef KEY_BUILD_DLL
