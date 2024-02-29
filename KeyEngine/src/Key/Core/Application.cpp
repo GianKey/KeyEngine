@@ -1,6 +1,6 @@
 #include "Kpch.h"
 #include "Application.h"
-#include "Key/input.h"
+#include "Key/Core/input.h"
 #include "Key/Core/TimeStep.h"
 #include <GLFW/glfw3.h>
 #include "Key/Renderer/Renderer.h"

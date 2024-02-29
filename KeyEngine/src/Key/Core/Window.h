@@ -1,7 +1,7 @@
 #pragma once
 #include "Kpch.h"
-#include "Key/Core.h"
-#include "Key/Events/Event.h"
+#include "Key/Core/Core.h"
+#include "Key/Core/Events/Event.h"
 
 namespace Key {
 

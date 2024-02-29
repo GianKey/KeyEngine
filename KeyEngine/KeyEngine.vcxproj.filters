@@ -129,6 +129,9 @@
     <ClInclude Include="src\Key\Renderer\GraphicsContext.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Renderer\Mesh.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\Renderer\OrthographicCamera.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
@@ -1452,6 +1455,9 @@
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\CameraController.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Renderer\Mesh.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\OrthographicCamera.cpp">
