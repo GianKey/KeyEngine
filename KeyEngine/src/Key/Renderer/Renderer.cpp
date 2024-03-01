@@ -1,34 +1,55 @@
 #include "Kpch.h"
 #include "Renderer.h"
+#include "Shader.h"
 #include "Key/PlatForm/OpenGL/OpenGLShader.h"
 
 
 namespace Key {
-	Renderer::SceneData* Renderer::m_SceneData = new Renderer::SceneData;
+
+	Renderer* Renderer::s_Instance = new Renderer();
+	RendererAPIType RendererAPI::s_CurrentRendererAPI = RendererAPIType::OpenGL;
+
 	void Renderer::Init()
 	{
-		RenderCommand::Init();
-	}
-	void Renderer::BeginScene(OrthographicCamera& camera)
-	{
-		m_SceneData->ViewProjectionMatrix = camera.GetViewProjectionMatrix();
-	}
-	void Renderer::EndScene()
-	{
-	}
-	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::mat4 transform)
-	{
-		//在OpenGL 中 Bind 顺序不分先后
-		shader->Bind();
-		std::dynamic_pointer_cast<OpenGLShader>(shader)->UpLoadUniformMat4("u_ViewProjection", m_SceneData->ViewProjectionMatrix);
-		std::dynamic_pointer_cast<OpenGLShader>(shader)->UpLoadUniformMat4("u_Transform", transform);
-		vertexArray->Bind();
-		RenderCommand::DrawIndexed(vertexArray);
+		s_Instance->m_ShaderLibrary = std::make_unique<ShaderLibrary>();
+		KEY_RENDER({ RendererAPI::Init(); });
+
+		Renderer::GetShaderLibrary()->Load("assets/shaders/KeyPBR_Static.glsl");
+		Renderer::GetShaderLibrary()->Load("assets/shaders/KeyPBR_Anim.glsl");
 	}
 
-	void Renderer::OnWindowResize(uint32_t width, uint32_t height)
+	void Renderer::Clear()
 	{
-		RenderCommand::SetViewport(0, 0, width, height);
+		KEY_RENDER({
+	RendererAPI::Clear(0.0f, 0.0f, 0.0f, 1.0f);
+			});
+	}
+	void Renderer::Clear(float r, float g, float b, float a)
+	{
+		KEY_RENDER_4(r, g, b, a, {
+			RendererAPI::Clear(r, g, b, a);
+			});
+	}
+
+	void Renderer::ClearMagenta()
+	{
+		Clear(1, 0, 1);
+	}
+
+	void Renderer::SetClearColor(float r, float g, float b, float a)
+	{
+	}
+
+	void Renderer::DrawIndexed(unsigned int count, bool depthTest)
+	{
+		KEY_RENDER_2(count, depthTest, {
+			RendererAPI::DrawIndexed(count, depthTest);
+			});
+	}
+
+	void Renderer::WaitAndRender()
+	{
+		s_Instance->m_CommandQueue.Execute();
 	}
 
 }

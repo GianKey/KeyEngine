@@ -63,6 +63,9 @@
     <ClInclude Include="src\Key\Core\Base.h">
       <Filter>src\Key\Core</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Core\Buffer.h">
+      <Filter>src\Key\Core</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\Core\Events\ApplicationEvent.h">
       <Filter>src\Key\Core\Events</Filter>
     </ClInclude>
@@ -111,10 +114,13 @@
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLContext.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLRendererAPI.h">
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLFramebuffer.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLShader.h">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLShaderUniform.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLTexture.h">
@@ -126,10 +132,22 @@
     <ClInclude Include="src\Key\PlatForm\Windows\WindowsWindow.h">
       <Filter>src\Key\PlatForm\Windows</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Renderer\Buffer.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Renderer\Camera.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\Renderer\CameraController.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Renderer\Framebuffer.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\Renderer\GraphicsContext.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Renderer\Material.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\Mesh.h">
@@ -138,7 +156,7 @@
     <ClInclude Include="src\Key\Renderer\OrthographicCamera.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\Renderer\RenderCommand.h">
+    <ClInclude Include="src\Key\Renderer\RenderCommandQueue.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\Renderer.h">
@@ -148,6 +166,9 @@
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\Shader.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Renderer\ShaderUniform.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\Texture.h">
@@ -1407,11 +1428,8 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\Renderer\RenderCommandQueue.h">
-      <Filter>src\Key\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\Renderer\Buffer.h">
-      <Filter>src\Key\Renderer</Filter>
+    <ClInclude Include="src\Key\PlatForm\Windows\WindowsInput.h">
+      <Filter>src\Key\PlatForm\Windows</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1445,10 +1463,16 @@
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLContext.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLFrameBbuffer.cpp">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLRendererAPI.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLShader.cpp">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLShaderUniform.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLTexture.cpp">
@@ -1460,7 +1484,19 @@
     <ClCompile Include="src\Key\PlatForm\Windows\WindowsWindow.cpp">
       <Filter>src\Key\PlatForm\Windows</Filter>
     </ClCompile>
+    <ClCompile Include="src\Key\Renderer\Buffer.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Renderer\Camera.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\Renderer\CameraController.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Renderer\Framebuffer.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Renderer\Material.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\Mesh.cpp">
@@ -1469,13 +1505,10 @@
     <ClCompile Include="src\Key\Renderer\OrthographicCamera.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="src\Key\Renderer\RenderCommand.cpp">
+    <ClCompile Include="src\Key\Renderer\RenderCommandQueue.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\Renderer.cpp">
-      <Filter>src\Key\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Key\Renderer\RendererAPI.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\Shader.cpp">
@@ -1493,11 +1526,8 @@
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="src\Key\Renderer\RenderCommandQueue.cpp">
-      <Filter>src\Key\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Key\Renderer\Buffer.cpp">
-      <Filter>src\Key\Renderer</Filter>
+    <ClCompile Include="src\Key\PlatForm\Windows\WindowsInput.cpp">
+      <Filter>src\Key\PlatForm\Windows</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

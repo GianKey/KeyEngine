@@ -1,4 +1,5 @@
 #pragma once
+#include "Key/Renderer/Renderer.h"
 
 namespace Key {
 
@@ -101,11 +102,16 @@ namespace Key {
 		virtual ~VertexBuffer() {}
 
 		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
 
 		virtual const BufferLayout& GetLayout() const = 0;
 		virtual void SetLayout(const BufferLayout& layout) = 0;
 		static VertexBuffer* Create(float* vertices, uint32_t size);
+		//3D
+		virtual unsigned int GetSize() const = 0;
+		virtual RendererID GetRendererID() const = 0;
+		virtual void SetData(void* buffer, unsigned int size, unsigned int offset = 0) = 0;
+		static VertexBuffer* Create(unsigned int size = 0);
+		//3D---end
 	};
 
 	class IndexBuffer
@@ -114,11 +120,17 @@ namespace Key {
 		virtual ~IndexBuffer() {}
 
 		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
 
 		virtual uint32_t GetCount() const = 0;
 
 		static IndexBuffer* Create(uint32_t* indices, uint32_t size);
+
+		//3D
+		virtual void SetData(void* buffer, unsigned int size, unsigned int offset = 0) = 0;
+		virtual unsigned int GetSize() const = 0;
+		virtual RendererID GetRendererID() const = 0;
+		static IndexBuffer* Create(unsigned int size = 0);
+		//3D---end
 	};
 }
 

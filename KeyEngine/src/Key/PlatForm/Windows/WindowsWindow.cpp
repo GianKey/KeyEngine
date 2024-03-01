@@ -1,10 +1,15 @@
 #include "Kpch.h"
+#include <glad/glad.h>
 #include "WindowsWindow.h"
+
 #include "Key/Core/Application.h"
+#include "Key/Core/Events/KeyBoardEvent.h"
 #include "Key/Core/Events/KeyBoardEvent.h"
 #include "Key/Core/Events/MouseEvent.h"
 #include "Key/Core/Events/ApplicationEvent.h"
 #include "Key/PlatForm/OpenGL/OpenGLContext.h"
+
+#include <imgui.h>
 
 namespace Key {
 
@@ -38,20 +43,22 @@ namespace Key {
 
 		if (!s_GLFWInitialized)
 		{
-			
+			// TODO: glfwTerminate on system shutdown
 			int success = glfwInit();
 			KEY_CORE_ASSERT(success, "Could not intialize GLFW!");
 			glfwSetErrorCallback(GLFWErrorCallback);
 			s_GLFWInitialized = true;
-			
 		}
 
 
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-
+		glfwMakeContextCurrent(m_Window);
+		//
 		m_Context = new OpenGLContext(m_Window);
 		m_Context->Init();
-
+		//
+		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		KEY_CORE_ASSERT(status, "Failed to initialize Glad!");
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
 
@@ -144,7 +151,25 @@ namespace Key {
 				MouseMovedEvent event((float)xPos, (float)yPos);
 				data.EventCallback(event);
 			});
+
+		m_ImGuiMouseCursors[ImGuiMouseCursor_Arrow] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+		m_ImGuiMouseCursors[ImGuiMouseCursor_TextInput] = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeAll] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);   // FIXME: GLFW doesn't have this.
+		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeNS] = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
+		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeEW] = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
+		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeNESW] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);  // FIXME: GLFW doesn't have this.
+		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeNWSE] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);  // FIXME: GLFW doesn't have this.
+		m_ImGuiMouseCursors[ImGuiMouseCursor_Hand] = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
 	}
+
+	//3D
+	inline std::pair<float, float> WindowsWindow::GetWindowPos() const
+	{
+		int x, y;
+		glfwGetWindowPos(m_Window, &x, &y);
+		return { x, y };
+	}
+	//3D---end
 
 	void WindowsWindow::Shutdown()
 	{
@@ -154,7 +179,17 @@ namespace Key {
 	void WindowsWindow::OnUpdate()
 	{
 		glfwPollEvents();
-		m_Context->SwapBuffers();
+		//m_Context->SwapBuffers();
+
+		glfwSwapBuffers(m_Window);
+
+		ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
+		glfwSetCursor(m_Window, m_ImGuiMouseCursors[imgui_cursor] ? m_ImGuiMouseCursors[imgui_cursor] : m_ImGuiMouseCursors[ImGuiMouseCursor_Arrow]);
+		glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+		float time = glfwGetTime();
+		float delta = time - m_LastFrameTime;
+		m_LastFrameTime = time;
 	}
 
 	void WindowsWindow::SetVSync(bool enabled)
@@ -173,40 +208,5 @@ namespace Key {
 		return m_Data.VSync;
 	}
 
-	Input* Input::s_Instance = new WindowsInput(); //先初始化静态成员变量
-
-	bool WindowsInput::IsKeyPressedImpl(int KeyCode)
-	{
-		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
-		auto state = glfwGetKey(window, KeyCode);
-		return state == GLFW_PRESS || state == GLFW_REPEAT;
-	}
-
-	bool WindowsInput::IsMouseButtonPressedImpl(int button)
-	{
-		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
-		auto state = glfwGetKey(window, button);
-		return state == GLFW_PRESS;
-	}
-
-	std::pair<float, float> WindowsInput::GetMousePositionImpl()
-	{
-		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
-		double xpos, ypos;
-		glfwGetCursorPos(window, &xpos, &ypos);
-		return std::pair<float, float>(xpos, ypos);
-	}
-
-	float WindowsInput::GetMouseXImpl()
-	{
-		auto [x, y] = GetMousePositionImpl();
-		return x;
-		//return GetMousePositionImpl().first;
-	}
-
-	float WindowsInput::GetMouseYImpl()
-	{
-		auto [x, y] = GetMousePositionImpl();
-		return y;
-	}
+	
 }

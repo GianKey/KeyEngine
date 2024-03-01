@@ -1,9 +1,18 @@
 #include "Kpch.h"
 #include "Application.h"
-#include "Key/Core/input.h"
-#include "Key/Core/TimeStep.h"
-#include <GLFW/glfw3.h>
+
 #include "Key/Renderer/Renderer.h"
+#include "Key/Renderer/Framebuffer.h"
+
+#include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+
+#include <imgui/imgui.h>
+#include <Glad/glad.h>
+
+#include "Key/Core/input.h"
+
 namespace Key {
 
 #define BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
@@ -15,11 +24,13 @@ namespace Key {
 		s_Instance = this;
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
+		m_Window->SetVSync(false);
+
+		m_ImGuiLayer = new ImGuiLayer("ImGui");
+		PushOverlay(m_ImGuiLayer);
 
 		Renderer::Init();
-
-		m_ImGuiLayer = new ImGuiLayer();
-		PushOverlay(m_ImGuiLayer);
+		Renderer::Get().WaitAndRender();
 	}
 	Application::~Application() {
 	
@@ -27,7 +38,6 @@ namespace Key {
 
 	void Application::OnEvent(Event& e) {
 		
-
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(OnWindowResize));
@@ -41,17 +51,74 @@ namespace Key {
 	}  
 	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
-		if (e.GetWidth() == 0 || e.GetHeight() == 0)
+		int width = e.GetWidth(), height = e.GetHeight();
+		if (width == 0 || height == 0)
 		{
 			m_Minimized = true;
 			return false;
 		}
 
 		m_Minimized = false;
-		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
-
+		//Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+		//
+		KEY_RENDER_2(width, height, { glViewport(0, 0, width, height); });
+		auto& fbs = FramebufferPool::GetGlobal()->GetAll();
+		for (auto& fb : fbs)
+			fb->Resize(width, height);
 		return false;
 	}
+
+	bool Application::OnWindowClose(WindowCloseEvent& e)
+	{
+		m_Running = false;
+		return true;
+	}
+
+	void Application::RenderImGui()
+	{
+		m_ImGuiLayer->Begin();
+
+		ImGui::Begin("Renderer");
+		auto& caps = RendererAPI::GetCapabilities();
+		ImGui::Text("Vendor: %s", caps.Vendor.c_str());
+		ImGui::Text("Renderer: %s", caps.Renderer.c_str());
+		ImGui::Text("Version: %s", caps.Version.c_str());
+		ImGui::Text("Frame Time: %.2fms\n", m_TimeStep.GetMilliseconds());
+		ImGui::End();
+
+		for (Layer* layer : m_LayerStack)
+			layer->OnImGuiRender();
+
+		m_ImGuiLayer->End();
+	}
+
+
+
+	std::string Application::OpenFile(const std::string& filter) const
+	{
+		OPENFILENAMEA ofn;       // common dialog box structure
+		CHAR szFile[260] = { 0 };       // if using TCHAR macros
+
+		// Initialize OPENFILENAME
+		ZeroMemory(&ofn, sizeof(OPENFILENAME));
+		ofn.lStructSize = sizeof(OPENFILENAME);
+		ofn.hwndOwner = glfwGetWin32Window((GLFWwindow*)m_Window->GetNativeWindow());
+		ofn.lpstrFile = szFile;
+		ofn.nMaxFile = sizeof(szFile);
+		ofn.lpstrFilter = "All\0*.*\0";
+		ofn.nFilterIndex = 1;
+		ofn.lpstrFileTitle = NULL;
+		ofn.nMaxFileTitle = 0;
+		ofn.lpstrInitialDir = NULL;
+		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+		if (GetOpenFileNameA(&ofn) == TRUE)
+		{
+			return ofn.lpstrFile;
+		}
+		return std::string();
+	}
+
 
 	void Application::PushLayer(Layer* layer)
 	{
@@ -63,36 +130,47 @@ namespace Key {
 		m_LayerStack.PushOverlay(layer);
 	}
 
-	bool Application::OnWindowClose(WindowCloseEvent& e)
+	float Application::GetTime() const
 	{
-		m_Running = false;
-		return true;
+		return (float)glfwGetTime();
 	}
-
 
 	void Application::Run() {
 		/*Key::WindowResizeEvent e(1200, 720);
 		KEY_TRACE(e);*/
-
+		OnInit();
 		while (m_Running)
 		{
-			float time = (float)glfwGetTime(); //Platform GetTime()
-			TimeStep timeStep(time - m_LastFrameTime);
-			m_LastFrameTime = time;
 
 
 			if (!m_Minimized)
 			{
 				for (Layer* layer : m_LayerStack)
-					layer->OnUpdate(timeStep);
-				m_ImGuiLayer->Begin();
+					layer->OnUpdate(m_TimeStep);
+
+				// Render ImGui on render thread
+				/*m_ImGuiLayer->Begin();
 				for (Layer* layer : m_LayerStack)
-					layer->OnImGuiRender();
-				m_ImGuiLayer->End();
+					layer->OnImGuiRender();*/
+				/*m_ImGuiLayer->End();*/
+				///End imgui
+
+					// Render ImGui on render thread
+				Application* app = this;
+				KEY_RENDER_1(app, { app->RenderImGui(); });
+
+				//更新渲染指令地址
+				Renderer::Get().WaitAndRender();
 			}
 
 			m_Window->OnUpdate();
+
+			float time = GetTime(); //Platform GetTime()
+			m_TimeStep = time - m_LastFrameTime;
+			m_LastFrameTime = time;
+
 		}
+		OnShutdown();
 	}
 
 

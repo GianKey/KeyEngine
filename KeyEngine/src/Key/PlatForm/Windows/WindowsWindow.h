@@ -24,6 +24,10 @@ namespace Key {
 		bool IsVSync() const override;
 
 		inline virtual void* GetNativeWindow() const { return m_Window; }
+
+		//3D
+		virtual std::pair<float, float> GetWindowPos() const override;
+		//3D---end
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
@@ -41,14 +45,11 @@ namespace Key {
 
 		WindowData m_Data;
 		GraphicsContext* m_Context;
+
+		//3D
+		GLFWcursor* m_ImGuiMouseCursors[9] = { 0 };
+		float m_LastFrameTime = 0.0f;
+		//3D---end
 	};
-	class WindowsInput : public Input
-	{
-	protected:
-		virtual bool IsKeyPressedImpl(int KeyCode) override;
-		virtual bool IsMouseButtonPressedImpl(int button) override;
-		virtual std::pair<float, float> GetMousePositionImpl() override;
-		virtual float GetMouseXImpl() override;
-		virtual float GetMouseYImpl() override;
-	};
+
 }

@@ -6,18 +6,30 @@
 #include <glad/glad.h>
 
 namespace Key {
+
+	std::vector<Ref<Shader>> Shader::s_AllShaders;
+
 	Ref<Shader>  Shader::Create(const std::string& filepath)
 	{
-		switch (Renderer::GetAPI())
+		Ref<Shader> result = nullptr;
+		switch (RendererAPI::Current())
 		{
-		case RendererAPI::RendererAPIType::None:    KEY_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::RendererAPIType::OpenGL:  return CreateRef<OpenGLShader>(filepath);
+			case RendererAPIType::None:    KEY_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+			case RendererAPIType::OpenGL:  result = CreateRef<OpenGLShader>(filepath);
 		}
 
 		KEY_CORE_ASSERT(false, "Unknown RendererAPI!");
-		return nullptr;
+		s_AllShaders.push_back(result);
+		return result;
 	}
 
+	ShaderLibrary::ShaderLibrary()
+	{
+	}
+
+	ShaderLibrary::~ShaderLibrary()
+	{
+	}
 
 	void ShaderLibrary::Add(const std::string& name, const Ref<Shader>& shader)
 	{
@@ -30,18 +42,21 @@ namespace Key {
 		auto& name = shader->GetName();
 		Add(name, shader);
 	}
-	Ref<Shader> ShaderLibrary::Load(const std::string& filepath)
+
+	void ShaderLibrary::Load(const std::string& path)
 	{
-		auto shader = Shader::Create(filepath);
-		Add(shader);
-		return shader;
+		auto shader = Ref<Shader>(Shader::Create(path));
+		auto& name = shader->GetName();
+		KEY_CORE_ASSERT(m_Shaders.find(name) == m_Shaders.end());
+		m_Shaders[name] = shader;
 	}
-	Ref<Shader> ShaderLibrary::Load(const std::string& name, const std::string& filepath)
+
+	void ShaderLibrary::Load(const std::string& name, const std::string& path)
 	{
-		auto shader = Shader::Create(filepath);
-		Add(name, shader);
-		return shader;
+		KEY_CORE_ASSERT(m_Shaders.find(name) == m_Shaders.end());
+		m_Shaders[name] = Ref<Shader>(Shader::Create(path));
 	}
+
 	Ref<Shader> ShaderLibrary::Get(const std::string& name)
 	{
 		KEY_CORE_ASSERT(Exists(name), "Shader not found!");

@@ -8,8 +8,8 @@ namespace Key {
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::RendererAPIType::None:    KEY_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::RendererAPIType::OpenGL:  return new OpenGLVertexBuffer(vertices, size);
+		case RendererAPIType::None:    KEY_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RendererAPIType::OpenGL:  return new OpenGLVertexBuffer(size);
 		}
 
 		KEY_CORE_ASSERT(false, "Unknown RendererAPI!");
@@ -20,11 +20,34 @@ namespace Key {
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::RendererAPIType::None:    KEY_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPI::RendererAPIType::OpenGL:  return new OpenGLIndexBuffer(indices, size);
+		case RendererAPIType::None:    KEY_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RendererAPIType::OpenGL:  return new OpenGLIndexBuffer(size);
 		}
 
 		KEY_CORE_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
+
+	//3D
+	VertexBuffer* VertexBuffer::Create(unsigned int size)
+	{
+		switch (RendererAPI::Current())
+		{
+		case RendererAPIType::None:    return nullptr;
+		case RendererAPIType::OpenGL:  return new OpenGLVertexBuffer(size);
+		}
+		return nullptr;
+
+	}
+
+	IndexBuffer* IndexBuffer::Create(unsigned int size)
+	{
+		switch (RendererAPI::Current())
+		{
+		case RendererAPIType::None:    return nullptr;
+		case RendererAPIType::OpenGL:  return new OpenGLIndexBuffer(size);
+		}
+		return nullptr;
+	}
+	//3D---end
 }

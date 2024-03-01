@@ -13,7 +13,8 @@ namespace Key {
 	{
 	public:
 		ImGuiLayer();
-		~ImGuiLayer() = default;
+		ImGuiLayer(const std::string& name);
+		virtual ~ImGuiLayer();
 
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
