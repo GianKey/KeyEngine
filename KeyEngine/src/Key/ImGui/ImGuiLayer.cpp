@@ -15,8 +15,18 @@
 namespace Key {
 
 	ImGuiLayer::ImGuiLayer()
-		: Layer("ImGuiLayer")
 	{
+
+	}
+
+	ImGuiLayer::ImGuiLayer(const std::string& name)
+	{
+
+	}
+
+	ImGuiLayer::~ImGuiLayer()
+	{
+
 	}
 
 	void ImGuiLayer::OnAttach()
@@ -31,6 +41,9 @@ namespace Key {
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
 		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoTaskBarIcons;
 		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoMerge;
+
+		ImFont* pFont = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\segoeui.ttf", 18.0f);
+		io.FontDefault = io.Fonts->Fonts.back();
 
 		// Setup Dear ImGui style
 		ImGui::StyleColorsDark();
@@ -49,7 +62,7 @@ namespace Key {
 
 		// Setup Platform/Renderer backends
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
-		ImGui_ImplOpenGL3_Init("#version 400");
+		ImGui_ImplOpenGL3_Init("#version 430");
 
 	}
 
@@ -63,7 +76,7 @@ namespace Key {
 	void ImGuiLayer::OnImGuiRender()
 	{
 		static bool show = true;
-		ImGui::ShowDemoWindow(&show);
+		//ImGui::ShowDemoWindow(&show);
 	}
 
 	void ImGuiLayer::Begin()

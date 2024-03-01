@@ -12,8 +12,8 @@ namespace Key {
 		uint32_t Height;
 
 		WindowProps(const std::string& title = "Key Engine",
-			uint32_t width = 1600,
-			uint32_t height = 900)
+			uint32_t width = 1280,
+			uint32_t height = 720)
 			: Title(title), Width(width), Height(height)
 		{
 		}
@@ -31,6 +31,9 @@ namespace Key {
 
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
+		//3D
+		virtual std::pair<float, float> GetWindowPos() const = 0;
+		//
 
 		// Window attributes
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
