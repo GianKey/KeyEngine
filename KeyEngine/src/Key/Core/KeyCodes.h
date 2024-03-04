@@ -129,4 +129,4 @@
 #define KEY_KEY_RIGHT_SUPER        347
 #define KEY_KEY_MENU               348
 		
-#define KEY_KEY_LAST               HZ_KEY_MENU
+#define KEY_KEY_LAST               KEY_KEY_MENU

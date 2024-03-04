@@ -4,7 +4,6 @@
 
 #include "Key/Core/Application.h"
 #include "Key/Core/Events/KeyBoardEvent.h"
-#include "Key/Core/Events/KeyBoardEvent.h"
 #include "Key/Core/Events/MouseEvent.h"
 #include "Key/Core/Events/ApplicationEvent.h"
 #include "Key/PlatForm/OpenGL/OpenGLContext.h"
@@ -111,7 +110,7 @@ namespace Key {
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-				KeyTypedEvent event(keycode);
+				KeyTypedEvent event((int)keycode);
 				data.EventCallback(event);
 			});
 

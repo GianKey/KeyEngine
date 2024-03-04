@@ -12,15 +12,15 @@ namespace Key {
 
 	bool WindowsInput::IsKeyPressedImpl(int KeyCode)
 	{
-		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
-		auto state = glfwGetKey(window, KeyCode);
+		auto& window = static_cast<WindowsWindow&>(Application::Get().GetWindow());
+		auto state = glfwGetKey(static_cast<GLFWwindow*>(window.GetNativeWindow()), KeyCode);
 		return state == GLFW_PRESS || state == GLFW_REPEAT;
 	}
 
 	bool WindowsInput::IsMouseButtonPressedImpl(int button)
 	{
-		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
-		auto state = glfwGetKey(window, button);
+		auto& window = static_cast<WindowsWindow&>(Application::Get().GetWindow());
+		auto state = glfwGetMouseButton(static_cast<GLFWwindow*>(window.GetNativeWindow()), button);
 		return state == GLFW_PRESS;
 	}
 
