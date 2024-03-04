@@ -8,6 +8,9 @@ workspace "KeyEngine"
 		"Release",
 		"Dist"
 	}
+
+	startproject "Keya"
+
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 -- Include directories relative to root folder
@@ -99,7 +102,7 @@ project "KeyEngine"
 		runtime "Release"
 		optimize "on"
 
-project "Sandbox"
+	project "Sandbox"
 	location "Sandbox"
 	kind "ConsoleApp"
 	language "C++"
@@ -153,3 +156,59 @@ project "Sandbox"
 		runtime "Release"
 		optimize "on"
 
+
+		project "Keya"
+		location "Keya"
+		kind "ConsoleApp"
+		language "C++"
+		cppdialect "C++17"
+		staticruntime "on"
+	
+		targetdir("bin/" ..outputdir.. "/%{prj.name}")
+		objdir("bin-int/" ..outputdir.. "/%{prj.name}")
+	
+		files
+		{
+			"%{prj.name}/src/**.h",
+			"%{prj.name}/src/**.cpp",
+		}
+	
+		includedirs
+		{
+			"KeyEngine/vendor/spdlog/include",
+			"KeyEngine/src/",
+			"KeyEngine/vendor",
+			"%{IncludeDir.glm}"
+		}
+	
+		links
+		{
+			"KeyEngine",
+			"KeyEngine/vendor/assimp/win64/assimp-vc143-mtd.lib"
+		}
+	
+		filter "system:windows"
+			systemversion "latest"
+	
+			defines
+			{
+				"KEY_PLATFORM_WINDOWS"
+			}
+	
+	
+		filter "configurations:Debug"
+			defines "KE_DEBUG"
+			runtime "Debug"
+			symbols "on"
+	
+		filter "configurations:Release"
+			defines "KE_RELEASE"
+			runtime "Release"
+			optimize "on"
+	
+		filter "configurations:Dist"
+			defines "KE_DIST"
+			runtime "Release"
+			optimize "on"
+	
+	

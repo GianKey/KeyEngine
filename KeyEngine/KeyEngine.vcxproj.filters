@@ -129,6 +129,9 @@
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLVertexArray.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Windows\WindowsInput.h">
+      <Filter>src\Key\PlatForm\Windows</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\PlatForm\Windows\WindowsWindow.h">
       <Filter>src\Key\PlatForm\Windows</Filter>
     </ClInclude>
@@ -1428,9 +1431,6 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\PlatForm\Windows\WindowsInput.h">
-      <Filter>src\Key\PlatForm\Windows</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Key\Core\Application.cpp">
@@ -1481,6 +1481,9 @@
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLVertexArray.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Windows\WindowsInput.cpp">
+      <Filter>src\Key\PlatForm\Windows</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\PlatForm\Windows\WindowsWindow.cpp">
       <Filter>src\Key\PlatForm\Windows</Filter>
     </ClCompile>
@@ -1525,9 +1528,6 @@
     </ClCompile>
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Key\PlatForm\Windows\WindowsInput.cpp">
-      <Filter>src\Key\PlatForm\Windows</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
