@@ -11,10 +11,14 @@
 #include "Key/ImGui/ImGuiLayer.h"
 
 namespace Key {
+	struct ApplicationProps {
+		std::string Name;
+		uint32_t WindowWidth, WindowHeight;
+	};
 	class KEY_API Application
 	{
 	public:
-		Application();
+		Application(const ApplicationProps& props = { "KeyEngine", 1280, 720 });
 		virtual ~Application();
 
 		void Run();

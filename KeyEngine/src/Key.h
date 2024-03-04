@@ -35,7 +35,3 @@
 #include "Key/Renderer/OrthographicCamera.h"
 
 //-----------------------------------------
-
-// --- Entry Point -----------------
-#include "Key/EntryPoint.h"
-// --- Entry Point -----------------
