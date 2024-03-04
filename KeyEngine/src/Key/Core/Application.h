@@ -32,8 +32,8 @@ namespace Key {
 		void PushOverlay(Layer* layer);
 	
 
-		Window& GetWindow() { return *m_Window; }
-		static Application& Get() { return *s_Instance; }
+		inline Window& GetWindow() { return *m_Window; }
+		static inline Application& Get() { return *s_Instance; }
 
 		float GetTime() const; // TODO: This should be in "Platform"
 	private:
