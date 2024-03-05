@@ -1,34 +1,17 @@
 #pragma once
 #include <memory>
-
+#include "Assert.h"
 namespace Key {
 	void InitializeCore();
 	void ShutdownCore();
 }
 
-#ifdef KEY_PLATFORM_WINDOWS
-#if KEY_DYNAIMC_LINK
-	#ifdef KEY_BUILD_DLL
-		#define KEY_API __declspec(dllexport)
-	#else
-		#define KEY_API __declspec(dllimport)
-	#endif KEY_BUILD_DLL
-#else
-	#define KEY_API
-#endif 
-#else
+#ifndef KEY_PLATFORM_WINDOWS
 	#error KeyEngine only supprt Windows!
 #endif // KEY_PALTFORM_WINDOWS
 
 
-#ifdef KEY_ENABLE_ASSERTS
-	#define KEY_ASSERT(x, ...) {if(!x) {KEY_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak();}}
-	#define KEY_CORE_ASSERT(x, ...) {if(!x) {KEY_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak();}}
-#else
-	#define KEY_ASSERT(x, ...)
-	#define KEY_CORE_ASSERT(x, ...)
-#endif
-
+#define KEY_EXPAND_VARGS(x) x
 
 #define BIT(x) (1 << x)
 

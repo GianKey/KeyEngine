@@ -6,7 +6,7 @@
 
 namespace Key {
 
-	class KEY_API LayerStack
+	class  LayerStack
 	{
 	public:
 		LayerStack() ;

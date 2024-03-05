@@ -20,7 +20,7 @@ namespace Key {
 	};
 
 	// Interface representing a desktop system based Window
-	class KEY_API Window
+	class  Window
 	{
 	public:
 		using EventCallbackFn = std::function<void(Event&)>;

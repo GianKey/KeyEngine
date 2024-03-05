@@ -3,7 +3,7 @@
 #include "Kpch.h"
 
 namespace Key {
-	class KEY_API Input
+	class  Input
 	{
 	public:
 		inline static bool IsKeyPressed(int Keycode) { return s_Instance->IsKeyPressedImpl(Keycode); }
