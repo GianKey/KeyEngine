@@ -62,10 +62,13 @@ namespace Key {
 		m_Minimized = false;
 		//Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 		//
-		KEY_RENDER_2(width, height, { glViewport(0, 0, width, height); });
+		Renderer::Submit([=]() { glViewport(0, 0, width, height); });
 		auto& fbs = FramebufferPool::GetGlobal()->GetAll();
 		for (auto& fb : fbs)
-			fb->Resize(width, height);
+		{
+			if (auto fbp = fb.lock())
+				fbp->Resize(width, height);
+		}
 		return false;
 	}
 
@@ -158,7 +161,7 @@ namespace Key {
 
 					// Render ImGui on render thread
 				Application* app = this;
-				KEY_RENDER_1(app, { app->RenderImGui(); });
+				Renderer::Submit([app]() { app->RenderImGui(); });
 
 				//更新渲染指令地址
 				Renderer::Get().WaitAndRender();

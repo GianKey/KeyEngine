@@ -1,36 +1,34 @@
 #pragma once
+
 #include "Key/Renderer/Shader.h"
 #include <glad/glad.h>
 
 #include "OpenGLShaderUniform.h"
 
 namespace Key {
+
 	class OpenGLShader : public Shader
 	{
 	public:
 		OpenGLShader() = default;
 		OpenGLShader(const std::string& filepath);
-		virtual ~OpenGLShader();
-		//3D
 		static Ref<OpenGLShader> CreateFromString(const std::string& source);
+
 		virtual void Reload() override;
 		virtual void AddShaderReloadedCallback(const ShaderReloadedCallback& callback) override;
-		//3D--end
 
-		//3D
+		virtual void Bind() override;
+
 		virtual void UploadUniformBuffer(const UniformBufferBase& uniformBuffer) override;
+
 		virtual void SetVSMaterialUniformBuffer(Buffer buffer) override;
 		virtual void SetPSMaterialUniformBuffer(Buffer buffer) override;
 
 		virtual void SetFloat(const std::string& name, float value) override;
 		virtual void SetMat4(const std::string& name, const glm::mat4& value) override;
-		virtual void SetMat4FromRenderThread(const std::string& name, const glm::mat4& value) override;
-		//3D--end
+		virtual void SetMat4FromRenderThread(const std::string& name, const glm::mat4& value, bool bind = true) override;
 
-		virtual void Bind()  override;
-		virtual void UnBind() override;
 		virtual const std::string& GetName() const override { return m_Name; }
-
 	private:
 		void Load(const std::string& source);
 
@@ -79,8 +77,7 @@ namespace Key {
 		inline const ShaderUniformBufferList& GetPSRendererUniforms() const override { return m_PSRendererUniformBuffers; }
 		inline const ShaderUniformBufferDeclaration& GetVSMaterialUniformBuffer() const override { return *m_VSMaterialUniformBuffer; }
 		inline const ShaderUniformBufferDeclaration& GetPSMaterialUniformBuffer() const override { return *m_PSMaterialUniformBuffer; }
-		inline const ShaderResourceList& GetResources() const override { return m_Resources; }	
-
+		inline const ShaderResourceList& GetResources() const override { return m_Resources; }
 	private:
 		RendererID m_RendererID = 0;
 		bool m_Loaded = false;
@@ -96,6 +93,7 @@ namespace Key {
 		Scope<OpenGLShaderUniformBufferDeclaration> m_PSMaterialUniformBuffer;
 		ShaderResourceList m_Resources;
 		ShaderStructList m_Structs;
+
 	};
 
 }

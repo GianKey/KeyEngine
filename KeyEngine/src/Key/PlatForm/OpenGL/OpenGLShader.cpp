@@ -5,19 +5,21 @@
 #include <sstream>
 #include <limits>
 
-#include <glad/glad.h>
-#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include "Key/Renderer/Renderer.h"
+
 namespace Key {
 
-	#define UNIFORM_LOGGING 0
-	#if UNIFORM_LOGGING
-	#define KEY_LOG_UNIFORM(...) KEY_CORE_WARN(__VA_ARGS__)
-	#else
-	#define KEY_LOG_UNIFORM
-	#endif
+#define UNIFORM_LOGGING 0
+#if UNIFORM_LOGGING
+#define KEY_LOG_UNIFORM(...) KEY_CORE_WARN(__VA_ARGS__)
+#else
+#define KEY_LOG_UNIFORM
+#endif
 
-	OpenGLShader::OpenGLShader(const std::string& filepath) : m_AssetPath(filepath)
+	OpenGLShader::OpenGLShader(const std::string& filepath)
+		: m_AssetPath(filepath)
 	{
 		size_t found = filepath.find_last_of("/\\");
 		m_Name = found != std::string::npos ? filepath.substr(found + 1) : filepath;
@@ -40,32 +42,28 @@ namespace Key {
 		Load(source);
 	}
 
-	void OpenGLShader::Load(const std::string & source)
+	void OpenGLShader::Load(const std::string& source)
 	{
 		m_ShaderSource = PreProcess(source);
 		Parse();
 
-		KEY_RENDER_S({
-			if (self->m_RendererID)
-				glDeleteShader(self->m_RendererID);
-
-			self->CompileAndUploadShader();
-			self->ResolveUniforms();
-			self->ValidateUniforms();
-
-			if (self->m_Loaded)
+		Renderer::Submit([this]()
 			{
-				for (auto& callback : self->m_ShaderReloadedCallbacks)
-					callback();
-			}
+				if (m_RendererID)
+					glDeleteShader(m_RendererID);
 
-			self->m_Loaded = true;
+				CompileAndUploadShader();
+				ResolveUniforms();
+				ValidateUniforms();
+
+				if (m_Loaded)
+				{
+					for (auto& callback : m_ShaderReloadedCallbacks)
+						callback();
+				}
+
+				m_Loaded = true;
 			});
-	}
-
-	OpenGLShader::~OpenGLShader()
-	{
-		glDeleteProgram(m_RendererID);
 	}
 
 	void OpenGLShader::AddShaderReloadedCallback(const ShaderReloadedCallback& callback)
@@ -75,15 +73,15 @@ namespace Key {
 
 	void OpenGLShader::Bind()
 	{
-		KEY_RENDER_S({
-		glUseProgram(self->m_RendererID);
+		Renderer::Submit([this]() {
+			glUseProgram(m_RendererID);
 			});
 	}
 
 	std::string OpenGLShader::ReadShaderFromFile(const std::string& filepath) const
 	{
 		std::string result;
-		std::ifstream in(filepath, std::ios::in, std::ios::binary);
+		std::ifstream in(filepath, std::ios::in | std::ios::binary);
 		if (in)
 		{
 			in.seekg(0, std::ios::end);
@@ -94,7 +92,7 @@ namespace Key {
 		}
 		else
 		{
-			KEY_CORE_ERROR("Could not open file '{0}'", filepath);
+			KEY_CORE_WARN("Could not read shader file {0}", filepath);
 		}
 
 		return result;
@@ -102,22 +100,22 @@ namespace Key {
 
 	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
 	{
-		std::unordered_map<GLenum, std::string> shaderSources; //分别保存两个shader并记录，用哈希表方便我们使用的时候找到
+		std::unordered_map<GLenum, std::string> shaderSources;
 
-		const char* typeToken = "#type";  //先找到字符串 type 以此来确定是何种 shader
+		const char* typeToken = "#type";
 		size_t typeTokenLength = strlen(typeToken);
-		size_t pos = source.find(typeToken, 0);  //从起始位置找 type
-		while (pos != std::string::npos)  //如果找到了，进入循环，没找到直接返回
+		size_t pos = source.find(typeToken, 0);
+		while (pos != std::string::npos)
 		{
-			size_t eol = source.find_first_of("\r\n", pos); //从 type 之后找当前行剩下的字符串（vertex/fragment）
+			size_t eol = source.find_first_of("\r\n", pos);
 			KEY_CORE_ASSERT(eol != std::string::npos, "Syntax error");
 			size_t begin = pos + typeTokenLength + 1;
 			std::string type = source.substr(begin, eol - begin);
-			KEY_CORE_ASSERT(Utils::ShaderTypeFromString(type), "Invalid shader type specified");
+			KEY_CORE_ASSERT(type == "vertex" || type == "fragment" || type == "pixel", "Invalid shader type specified");
 
-			size_t nextLinePos = source.find_first_not_of("\r\n", eol); //确定类型之后，起始位置变为下一行的开始位置
-			pos = source.find(typeToken, nextLinePos); //然后找下一个 type token
-			shaderSources[ShaderTypeFromString(type)] = source.substr(nextLinePos, pos - (nextLinePos == std::string::npos ? source.size() - 1 : nextLinePos));//存储在哈希表中
+			size_t nextLinePos = source.find_first_not_of("\r\n", eol);
+			pos = source.find(typeToken, nextLinePos);
+			shaderSources[ShaderTypeFromString(type)] = source.substr(nextLinePos, pos - (nextLinePos == std::string::npos ? source.size() - 1 : nextLinePos));
 		}
 
 		return shaderSources;
@@ -525,15 +523,9 @@ namespace Key {
 		if (type == "fragment" || type == "pixel")
 			return GL_FRAGMENT_SHADER;
 
-		KEY_CORE_ASSERT(false, "Unknown shader type!");
 		return GL_NONE;
 	}
 
-	void OpenGLShader::UnBind()
-	{
-		glUseProgram(0);
-	}
-	//3D
 	void OpenGLShader::CompileAndUploadShader()
 	{
 		std::vector<GLuint> shaderRendererIDs;
@@ -605,17 +597,17 @@ namespace Key {
 
 	void OpenGLShader::SetVSMaterialUniformBuffer(Buffer buffer)
 	{
-		KEY_RENDER_S1(buffer, {
-			glUseProgram(self->m_RendererID);
-			self->ResolveAndSetUniforms(self->m_VSMaterialUniformBuffer, buffer);
+		Renderer::Submit([this, buffer]() {
+			glUseProgram(m_RendererID);
+			ResolveAndSetUniforms(m_VSMaterialUniformBuffer, buffer);
 			});
 	}
 
 	void OpenGLShader::SetPSMaterialUniformBuffer(Buffer buffer)
 	{
-		KEY_RENDER_S1(buffer, {
-			glUseProgram(self->m_RendererID);
-			self->ResolveAndSetUniforms(self->m_PSMaterialUniformBuffer, buffer);
+		Renderer::Submit([this, buffer]() {
+			glUseProgram(m_RendererID);
+			ResolveAndSetUniforms(m_PSMaterialUniformBuffer, buffer);
 			});
 	}
 
@@ -748,32 +740,32 @@ namespace Key {
 			{
 				const std::string& name = decl.Name;
 				float value = *(float*)(uniformBuffer.GetBuffer() + decl.Offset);
-				KEY_RENDER_S2(name, value, {
-					self->UploadUniformFloat(name, value);
+				Renderer::Submit([=]() {
+					UploadUniformFloat(name, value);
 					});
 			}
 			case UniformType::Float3:
 			{
 				const std::string& name = decl.Name;
 				glm::vec3& values = *(glm::vec3*)(uniformBuffer.GetBuffer() + decl.Offset);
-				KEY_RENDER_S2(name, values, {
-					self->UploadUniformFloat3(name, values);
+				Renderer::Submit([=]() {
+					UploadUniformFloat3(name, values);
 					});
 			}
 			case UniformType::Float4:
 			{
 				const std::string& name = decl.Name;
 				glm::vec4& values = *(glm::vec4*)(uniformBuffer.GetBuffer() + decl.Offset);
-				KEY_RENDER_S2(name, values, {
-					self->UploadUniformFloat4(name, values);
+				Renderer::Submit([=]() {
+					UploadUniformFloat4(name, values);
 					});
 			}
 			case UniformType::Matrix4x4:
 			{
 				const std::string& name = decl.Name;
 				glm::mat4& values = *(glm::mat4*)(uniformBuffer.GetBuffer() + decl.Offset);
-				KEY_RENDER_S2(name, values, {
-					self->UploadUniformMat4(name, values);
+				Renderer::Submit([=]() {
+					UploadUniformMat4(name, values);
 					});
 			}
 			}
@@ -782,21 +774,30 @@ namespace Key {
 
 	void OpenGLShader::SetFloat(const std::string& name, float value)
 	{
-		KEY_RENDER_S2(name, value, {
-			self->UploadUniformFloat(name, value);
+		Renderer::Submit([=]() {
+			UploadUniformFloat(name, value);
 			});
 	}
 
 	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
 	{
-		KEY_RENDER_S2(name, value, {
-			self->UploadUniformMat4(name, value);
+		Renderer::Submit([=]() {
+			UploadUniformMat4(name, value);
 			});
 	}
 
-	void OpenGLShader::SetMat4FromRenderThread(const std::string& name, const glm::mat4& value)
+	void OpenGLShader::SetMat4FromRenderThread(const std::string& name, const glm::mat4& value, bool bind)
 	{
-		UploadUniformMat4(name, value);
+		if (bind)
+		{
+			UploadUniformMat4(name, value);
+		}
+		else
+		{
+			int location = glGetUniformLocation(m_RendererID, name.c_str());
+			if (location != -1)
+				UploadUniformMat4(location, value);
+		}
 	}
 
 	void OpenGLShader::UploadUniformInt(uint32_t location, int32_t value)
@@ -908,8 +909,4 @@ namespace Key {
 			KEY_LOG_UNIFORM("Uniform '{0}' not found!", name);
 	}
 
-
 }
-
-
-
