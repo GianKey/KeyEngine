@@ -60,6 +60,9 @@
     <ClInclude Include="src\Key\Core\Application.h">
       <Filter>src\Key\Core</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Core\Assert.h">
+      <Filter>src\Key\Core</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\Core\Base.h">
       <Filter>src\Key\Core</Filter>
     </ClInclude>
@@ -1431,6 +1434,9 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\ImGui\ImGuizmo.h">
+      <Filter>src\Key\ImGui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Key\Core\Application.cpp">
@@ -1528,6 +1534,9 @@
     </ClCompile>
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\ImGui\ImGuizmo.cpp">
+      <Filter>src\Key\ImGui</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
