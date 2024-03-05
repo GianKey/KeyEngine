@@ -19,5 +19,5 @@ public:
 
 Key::Application* Key::CreateApplication()
 {
-    return new KeyaApplication({ "Keynut", 1600, 900 });
+    return new KeyaApplication({ "Keya", 1600, 900 });
 }
