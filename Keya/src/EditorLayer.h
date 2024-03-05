@@ -90,8 +90,7 @@ namespace Key {
 
 		std::unique_ptr<Framebuffer> m_Framebuffer, m_FinalPresentBuffer;
 
-		Ref<VertexBuffer> m_VertexBuffer;
-		Ref<IndexBuffer> m_IndexBuffer;
+		Ref<VertexArray> m_FullscreenQuadVertexArray;
 		Ref<TextureCube> m_EnvironmentCubeMap, m_EnvironmentIrradiance;
 
 		Camera m_Camera;

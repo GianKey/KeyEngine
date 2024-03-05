@@ -26,46 +26,66 @@ namespace Key {
 
 	OpenGLVertexArray::OpenGLVertexArray()
 	{
-		glGenVertexArrays(1, &m_RendererID);
+		KEY_RENDER_S({
+			glCreateVertexArrays(1, &self->m_RendererID);
+			});
 	}
 	OpenGLVertexArray::~OpenGLVertexArray()
 	{
-		glDeleteVertexArrays(1, &m_RendererID);
+		KEY_RENDER_S({
+			glDeleteVertexArrays(1, &self->m_RendererID);
+			});
 	}
 	void OpenGLVertexArray::Bind() const
 	{
-		glBindVertexArray(m_RendererID);
+		KEY_RENDER_S({
+			glBindVertexArray(self->m_RendererID);
+			});
 	}
 	void OpenGLVertexArray::Unbind() const
 	{
-		glBindVertexArray(0);
+		KEY_RENDER_S({
+			glBindVertexArray(0);
+			});
 	}
 	void OpenGLVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
 	{
-		glBindVertexArray(m_RendererID);
-		vertexBuffer->Bind();
-
 		KEY_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "Vertex Buffer has no layout!");
 
-		uint32_t index = 0;
-		const auto& layout = vertexBuffer->GetLayout();
-		for (const auto& element : layout)
-		{
-			glEnableVertexAttribArray(index);
-			glVertexAttribPointer(index,
-				element.GetComponentCount(),
-				ShaderDataTypeToOpenGLBaseType(element.Type),
-				element.Normalized ? GL_TRUE : GL_FALSE,
-				layout.GetStride(),
-				(const void*)element.Offset);
-			index++;
-		}
+		Bind();
+		vertexBuffer->Bind();
 
+		KEY_RENDER_S1(vertexBuffer, {
+					const auto& layout = vertexBuffer->GetLayout();
+			for (const auto& element : layout)
+			{
+				auto glBaseType = ShaderDataTypeToOpenGLBaseType(element.Type);
+				glEnableVertexAttribArray(self->m_VertexBufferIndex);
+				if (glBaseType == GL_INT)
+				{
+					glVertexAttribIPointer(self->m_VertexBufferIndex,
+						element.GetComponentCount(),
+						glBaseType,
+						layout.GetStride(),
+						(const void*)(intptr_t)element.Offset);
+				}
+				else
+				{
+					glVertexAttribPointer(self->m_VertexBufferIndex,
+						element.GetComponentCount(),
+						glBaseType,
+						element.Normalized ? GL_TRUE : GL_FALSE,
+						layout.GetStride(),
+						(const void*)(intptr_t)element.Offset);
+				}
+				self->m_VertexBufferIndex++;
+			}
+		});
 		m_VertexBuffers.push_back(vertexBuffer);
 	}
 	void OpenGLVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
 	{
-		glBindVertexArray(m_RendererID);
+		Bind();
 		indexBuffer->Bind();
 
 		m_IndexBuffer = indexBuffer;

@@ -5,6 +5,7 @@
 
 #include "Key/Core/TimeStep.h"
 
+#include "Key/Renderer/VertexArray.h"
 #include "Key/Renderer/Buffer.h"
 #include "Key/Renderer/Shader.h"
 #include "Key/Renderer/Material.h"
@@ -147,8 +148,7 @@ namespace Key {
 		uint32_t m_BoneCount = 0;
 		std::vector<BoneInfo> m_BoneInfo;
 
-		std::unique_ptr<VertexBuffer> m_VertexBuffer;
-		std::unique_ptr<IndexBuffer> m_IndexBuffer;
+		Ref<VertexArray> m_VertexArray;
 
 		std::vector<Vertex> m_StaticVertices;
 		std::vector<AnimatedVertex> m_AnimatedVertices;

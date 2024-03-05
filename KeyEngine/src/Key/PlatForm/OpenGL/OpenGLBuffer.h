@@ -1,4 +1,5 @@
 #pragma once
+#include "Key/Core/Buffer.h"
 #include "Key/Renderer/Buffer.h"
 
 namespace Key {
@@ -8,7 +9,8 @@ namespace Key {
 	class OpenGLVertexBuffer : public VertexBuffer
 	{
 	public:
-		OpenGLVertexBuffer(unsigned int size);
+		OpenGLVertexBuffer(void* data, uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
+		OpenGLVertexBuffer(uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Dynamic);
 		virtual ~OpenGLVertexBuffer();
 
 		virtual void Bind() const override;
@@ -18,14 +20,17 @@ namespace Key {
 		virtual void SetLayout(const BufferLayout& layout) override { m_Layout = layout; }
 
 		//3D
-		virtual void SetData(void* buffer, unsigned int size, unsigned int offset = 0);
-		virtual unsigned int GetSize() const { return m_Size; }
+		virtual void SetData(void* data, uint32_t size, uint32_t offset = 0);
+		virtual uint32_t GetSize() const { return m_Size; }
 		virtual RendererID GetRendererID() const { return m_RendererID; }
 		//3D---end
 	private:
-		uint32_t m_RendererID;
+		RendererID m_RendererID = 0;
+		uint32_t m_Size;
+		VertexBufferUsage m_Usage;
 		BufferLayout m_Layout;
-		unsigned int m_Size;
+
+		Buffer m_LocalData;
 	};
 
 
@@ -36,7 +41,7 @@ namespace Key {
 	{
 	public:
 		//3D
-		OpenGLIndexBuffer(unsigned int size);
+		OpenGLIndexBuffer(void* data, uint32_t size);
 		//3D---end
 		virtual ~OpenGLIndexBuffer();
 
@@ -46,12 +51,14 @@ namespace Key {
 		virtual uint32_t GetCount() const { return m_Size / sizeof(uint32_t); }
 
 		//3d
-		virtual unsigned int GetSize() const { return m_Size; }
+		virtual uint32_t GetSize() const { return m_Size; }
 		virtual RendererID GetRendererID() const { return m_RendererID; }
-		virtual void SetData(void* buffer, unsigned int size, unsigned int offset = 0);
+		virtual void SetData(void* data, uint32_t size, uint32_t offset = 0);
 	private:
-		uint32_t m_RendererID;
-		unsigned int m_Size;
+		RendererID m_RendererID = 0;
+		uint32_t m_Size;
+
+		Buffer m_LocalData;
 	};
 }
 

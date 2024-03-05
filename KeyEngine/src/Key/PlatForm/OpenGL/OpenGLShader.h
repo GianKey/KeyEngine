@@ -8,10 +8,11 @@ namespace Key {
 	class OpenGLShader : public Shader
 	{
 	public:
-		//OpenGLShader(const std::string& VertexSrc, const std::string& FragmentSrc);
+		OpenGLShader() = default;
 		OpenGLShader(const std::string& filepath);
 		virtual ~OpenGLShader();
 		//3D
+		static Ref<OpenGLShader> CreateFromString(const std::string& source);
 		virtual void Reload() override;
 		virtual void AddShaderReloadedCallback(const ShaderReloadedCallback& callback) override;
 		//3D--end
@@ -31,6 +32,8 @@ namespace Key {
 		virtual const std::string& GetName() const override { return m_Name; }
 
 	private:
+		void Load(const std::string& source);
+
 		std::string ReadShaderFromFile(const std::string& filepath) const;
 		std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
 		void Parse();
