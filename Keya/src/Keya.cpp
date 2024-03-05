@@ -3,10 +3,10 @@
 
 #include "EditorLayer.h"
 
-class KeynutApplication : public Key::Application
+class KeyaApplication : public Key::Application
 {
 public:
-    KeynutApplication(const Key::ApplicationProps& props)
+    KeyaApplication(const Key::ApplicationProps& props)
         : Application(props)
     {
     }
@@ -19,5 +19,5 @@ public:
 
 Key::Application* Key::CreateApplication()
 {
-    return new KeynutApplication({ "Keynut", 1600, 900 });
+    return new KeyaApplication({ "Keynut", 1600, 900 });
 }

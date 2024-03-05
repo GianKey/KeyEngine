@@ -145,6 +145,7 @@
   <ItemGroup>
     <ClInclude Include="src\Key.h" />
     <ClInclude Include="src\Key\Core\Application.h" />
+    <ClInclude Include="src\Key\Core\Assert.h" />
     <ClInclude Include="src\Key\Core\Base.h" />
     <ClInclude Include="src\Key\Core\Buffer.h" />
     <ClInclude Include="src\Key\Core\Events\ApplicationEvent.h" />
@@ -161,6 +162,7 @@
     <ClInclude Include="src\Key\Core\input.h" />
     <ClInclude Include="src\Key\EntryPoint.h" />
     <ClInclude Include="src\Key\ImGui\ImGuiLayer.h" />
+    <ClInclude Include="src\Key\ImGui\ImGuizmo.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLBuffer.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLContext.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLFramebuffer.h" />
@@ -612,6 +614,7 @@
     <ClCompile Include="src\Key\Core\Window.cpp" />
     <ClCompile Include="src\Key\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="src\Key\ImGui\ImGuiLayer.cpp" />
+    <ClCompile Include="src\Key\ImGui\ImGuizmo.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLBuffer.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLContext.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLFrameBbuffer.cpp" />

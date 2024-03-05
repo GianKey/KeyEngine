@@ -5,7 +5,7 @@
 #include "spdlog/fmt/ostr.h"
 
 namespace Key {
-	class KEY_API Log  
+	class Log  
 	{
 	public:
 		static void Init();
