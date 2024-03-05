@@ -5,10 +5,11 @@
 
 namespace Key {
 
-	VertexArray* VertexArray::Create() {
-		switch (Renderer::GetAPI()) {
-		case RendererAPIType::None:		KEY_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPIType::OpenGL:	return new OpenGLVertexArray();
+	Ref<VertexArray> VertexArray::Create() {
+		switch (RendererAPI::Current())
+		{
+			case RendererAPIType::None:    KEY_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+			case RendererAPIType::OpenGL:  return std::make_shared<OpenGLVertexArray>();
 		}
 
 		KEY_CORE_ASSERT(false, "Unknown RendererAPI!");

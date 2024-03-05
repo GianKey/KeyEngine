@@ -63,7 +63,6 @@ namespace Key {
 	};
 
 
-
 	class BufferLayout
 	{
 	public:
@@ -78,6 +77,8 @@ namespace Key {
 		inline uint32_t GetStride() const { return m_Stride; }
 		inline const std::vector<BufferElement>& GetElements() const { return m_Elements; }
 
+		std::vector<BufferElement>::iterator begin() { return m_Elements.begin(); }
+		std::vector<BufferElement>::iterator end() { return m_Elements.end(); }
 		std::vector<BufferElement>::const_iterator begin() const { return m_Elements.begin(); }
 		std::vector<BufferElement>::const_iterator end() const { return m_Elements.end(); }
 	private:
@@ -96,6 +97,15 @@ namespace Key {
 		std::vector<BufferElement> m_Elements;  //	存放每一个顶点属性对应一个 Element
 		uint32_t m_Stride = 0;									//步长，代表一个顶点的所有数据的长度
 	};
+
+
+
+	enum class VertexBufferUsage
+	{
+		None = 0, Static = 1, Dynamic = 2
+	};
+
+
 	class VertexBuffer
 	{
 	public:
@@ -109,8 +119,9 @@ namespace Key {
 		//3D
 		virtual unsigned int GetSize() const = 0;
 		virtual RendererID GetRendererID() const = 0;
-		virtual void SetData(void* buffer, unsigned int size, unsigned int offset = 0) = 0;
-		static VertexBuffer* Create(unsigned int size = 0);
+		virtual void SetData(void* buffer, uint32_t size, uint32_t offset = 0) = 0;
+		static Ref<VertexBuffer> Create(void* data, uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
+		static Ref<VertexBuffer> Create(uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Dynamic);
 		//3D---end
 	};
 
@@ -123,13 +134,12 @@ namespace Key {
 
 		virtual uint32_t GetCount() const = 0;
 
-		static IndexBuffer* Create(uint32_t* indices, uint32_t size);
 
 		//3D
-		virtual void SetData(void* buffer, unsigned int size, unsigned int offset = 0) = 0;
+		virtual void SetData(void* buffer, uint32_t size, uint32_t offset = 0) = 0;
 		virtual unsigned int GetSize() const = 0;
 		virtual RendererID GetRendererID() const = 0;
-		static IndexBuffer* Create(unsigned int size = 0);
+		static Ref<IndexBuffer> Create(void* data, uint32_t size = 0);
 		//3D---end
 	};
 }
