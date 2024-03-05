@@ -15,7 +15,7 @@ namespace Key {
 		std::string Name;
 		uint32_t WindowWidth, WindowHeight;
 	};
-	class KEY_API Application
+	class  Application
 	{
 	public:
 		Application(const ApplicationProps& props = { "KeyEngine", 1280, 720 });

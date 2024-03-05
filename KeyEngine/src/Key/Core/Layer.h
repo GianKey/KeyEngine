@@ -5,7 +5,7 @@
 #include "Key/Core/TimeStep.h"
 namespace Key {
 
-	class KEY_API Layer
+	class Layer
 	{
 	public:
 		Layer(const std::string& name = "Layer");
