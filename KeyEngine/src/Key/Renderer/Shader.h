@@ -2,13 +2,15 @@
 
 #include "Key/Core/Base.h"
 #include "Key/Core/Buffer.h"
-		  
-#include "Key/Renderer/Renderer.h"
+
+#include "Key/Renderer/RendererAPI.h"
 #include "Key/Renderer/ShaderUniform.h"
 
 #include <string>
 #include <glm/glm.hpp>
-namespace Key {
+
+namespace Key
+{
 	struct ShaderUniform
 	{
 
@@ -102,33 +104,29 @@ namespace Key {
 
 	};
 
-
 	class Shader
 	{
 	public:
-		//3D
 		using ShaderReloadedCallback = std::function<void()>;
-		//3D---end
-		virtual ~Shader() = default;
 
-		virtual void Bind()  = 0;				
-		virtual void UnBind() = 0;
-
-		virtual const std::string& GetName() const = 0;
-
-		//static Shader* Create(const std::string& vertexSrc, const std::string& fragmentSrc);
-		// Represents a complete shader program stored in a single file.
-		// Note: currently for simplicity this is simply a string filepath, however
-		//       in the future this will be an asset object + metadata
-		static Ref<Shader>  Create(const std::string& filepath);
-		static Ref<Shader> CreateFromString(const std::string& source);
-		
 		virtual void Reload() = 0;
+
+		virtual void Bind() = 0;
 		virtual void UploadUniformBuffer(const UniformBufferBase& uniformBuffer) = 0;
+
 		// Temporary while we don't have materials
 		virtual void SetFloat(const std::string& name, float value) = 0;
 		virtual void SetMat4(const std::string& name, const glm::mat4& value) = 0;
-		virtual void SetMat4FromRenderThread(const std::string& name, const glm::mat4& value) = 0;
+		virtual void SetMat4FromRenderThread(const std::string& name, const glm::mat4& value, bool bind = true) = 0;
+
+		virtual const std::string& GetName() const = 0;
+
+		// Represents a complete shader program stored in a single file.
+		// Note: currently for simplicity this is simply a string filepath, however
+		//       in the future this will be an asset object + metadata
+		static Ref<Shader> Create(const std::string& filepath);
+		static Ref<Shader> CreateFromString(const std::string& source);
+
 		virtual void SetVSMaterialUniformBuffer(Buffer buffer) = 0;
 		virtual void SetPSMaterialUniformBuffer(Buffer buffer) = 0;
 
@@ -144,23 +142,21 @@ namespace Key {
 		// Temporary, before we have an asset manager
 		static std::vector<Ref<Shader>> s_AllShaders;
 	};
+
+	// This should be eventually handled by the Asset Manager
 	class ShaderLibrary
 	{
 	public:
 		ShaderLibrary();
 		~ShaderLibrary();
-		void Add(const std::string& name, const Ref<Shader>& shader);
+
 		void Add(const Ref<Shader>& shader);
-		//3D
 		void Load(const std::string& path);
 		void Load(const std::string& name, const std::string& path);
-		//3D---end
 
-		Ref<Shader> Get(const std::string& name);
-
-		bool Exists(const std::string& name) const;
+		Ref<Shader>& Get(const std::string& name);
 	private:
 		std::unordered_map<std::string, Ref<Shader>> m_Shaders;
 	};
-}
 
+}

@@ -111,6 +111,9 @@
     <ClInclude Include="src\Key\ImGui\ImGuiLayer.h">
       <Filter>src\Key\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\ImGui\ImGuizmo.h">
+      <Filter>src\Key\ImGui</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLBuffer.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
@@ -118,6 +121,9 @@
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLFramebuffer.h">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLRenderPass.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLShader.h">
@@ -163,6 +169,9 @@
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\RenderCommandQueue.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Renderer\RenderPass.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\Renderer.h">
@@ -1434,9 +1443,6 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\ImGui\ImGuizmo.h">
-      <Filter>src\Key\ImGui</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Key\Core\Application.cpp">
@@ -1463,6 +1469,9 @@
     <ClCompile Include="src\Key\ImGui\ImGuiLayer.cpp">
       <Filter>src\Key\ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="src\Key\ImGui\ImGuizmo.cpp">
+      <Filter>src\Key\ImGui</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLBuffer.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
@@ -1470,6 +1479,9 @@
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLFrameBbuffer.cpp">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLRenderPass.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLRendererAPI.cpp">
@@ -1517,6 +1529,9 @@
     <ClCompile Include="src\Key\Renderer\RenderCommandQueue.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\Key\Renderer\RenderPass.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\Renderer\Renderer.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
@@ -1534,9 +1549,6 @@
     </ClCompile>
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Key\ImGui\ImGuizmo.cpp">
-      <Filter>src\Key\ImGui</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

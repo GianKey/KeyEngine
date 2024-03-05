@@ -23,6 +23,7 @@
 //--------Renderer API----------
 
 #include "Key/Renderer/Renderer.h"
+#include "Key/Renderer/RenderPass.h"
 #include "Key/Renderer/Framebuffer.h"
 #include "Key/Renderer/Buffer.h"
 #include "Key/Renderer/Shader.h"

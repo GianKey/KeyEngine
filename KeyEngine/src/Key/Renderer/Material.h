@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Key/Core/Base.h"
 
 #include "Key/Renderer/Shader.h"
@@ -7,6 +8,7 @@
 #include <unordered_set>
 
 namespace Key {
+
 	class Material
 	{
 		friend class MaterialInstance;
@@ -20,7 +22,7 @@ namespace Key {
 		void Set(const std::string& name, const T& value)
 		{
 			auto decl = FindUniformDeclaration(name);
-		
+			// KEY_CORE_ASSERT(decl, "Could not find uniform with name '{0}'", name);
 			KEY_CORE_ASSERT(decl, "Could not find uniform with name 'x'");
 			auto& buffer = GetUniformBufferTarget(decl);
 			buffer.Write((byte*)&value, decl->GetSize(), decl->GetOffset());
@@ -68,7 +70,6 @@ namespace Key {
 		int32_t m_RenderFlags = 0;
 	};
 
-
 	class MaterialInstance
 	{
 		friend class Material;
@@ -82,7 +83,7 @@ namespace Key {
 			auto decl = m_Material->FindUniformDeclaration(name);
 			if (!decl)
 				return;
-
+			// KEY_CORE_ASSERT(decl, "Could not find uniform with name '{0}'", name);
 			KEY_CORE_ASSERT(decl, "Could not find uniform with name 'x'");
 			auto& buffer = GetUniformBufferTarget(decl);
 			buffer.Write((byte*)&value, decl->GetSize(), decl->GetOffset());
@@ -129,4 +130,3 @@ namespace Key {
 	};
 
 }
-
