@@ -23,6 +23,7 @@
 //--------Renderer API----------
 
 #include "Key/Renderer/Renderer.h"
+#include "Key/Renderer/SceneRenderer.h"
 #include "Key/Renderer/RenderPass.h"
 #include "Key/Renderer/Framebuffer.h"
 #include "Key/Renderer/Buffer.h"
@@ -36,3 +37,7 @@
 #include "Key/Renderer/OrthographicCamera.h"
 
 //-----------------------------------------
+
+// Scenes
+#include "Key/Scene/Entity.h"
+#include "Key/Scene/Scene.h"

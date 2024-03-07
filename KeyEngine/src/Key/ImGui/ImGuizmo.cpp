@@ -34,6 +34,8 @@
 #include "imgui_internal.h"
 #include "ImGuizmo.h"
 
+#include "Key/Core/Input.h"
+#include "Key/Core/KeyCodes.h"
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
@@ -1444,6 +1446,10 @@ namespace ImGuizmo
 
    static bool CanActivate()
    {
+       // Check for modifiers
+       if (Key::Input::IsKeyPressed(KEY_KEY_LEFT_ALT) || Key::Input::IsKeyPressed(KEY_KEY_LEFT_SHIFT) || Key::Input::IsKeyPressed(KEY_KEY_LEFT_CONTROL))
+           return false;
+
       if (ImGui::IsMouseClicked(0) && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive())
       {
          return true;
