@@ -1551,4 +1551,9 @@
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+    <None Include="KeyEngineClassDiagram1.cd" />
+    <None Include="RenderClassDiagram1.cd" />
+  </ItemGroup>
 </Project>

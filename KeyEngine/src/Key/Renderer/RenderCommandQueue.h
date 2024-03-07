@@ -6,7 +6,7 @@ namespace Key {
 	class RenderCommandQueue
 	{
 	public:
-		//指向无返回值、参数为 void* 的函数的指针类型
+		//Pointer type to a function with no return value and parameter void *
 		typedef void(*RenderCommandFn) (void*);
 
 		RenderCommandQueue();
