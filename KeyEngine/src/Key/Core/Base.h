@@ -39,5 +39,5 @@ namespace Key {
 	{
 		return std::make_shared<T>(std::forward<Args>(args)...);
 	}
-	using byte = unsigned char;
+	using byte = uint8_t;
 }

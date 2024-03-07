@@ -1,5 +1,5 @@
 #include "Kpch.h"
-#include "WindowsInput.h"
+#include "Key/Core/Input.h"
 
 #include "WindowsWindow.h"
 
@@ -8,40 +8,38 @@
 #include <GLFW/glfw3.h>
 
 namespace Key {
-	Input* Input::s_Instance = new WindowsInput(); //先初始化静态成员变量
 
-	bool WindowsInput::IsKeyPressedImpl(int KeyCode)
+	bool Input::IsKeyPressed(int keycode)
 	{
 		auto& window = static_cast<WindowsWindow&>(Application::Get().GetWindow());
-		auto state = glfwGetKey(static_cast<GLFWwindow*>(window.GetNativeWindow()), KeyCode);
+		auto state = glfwGetKey(static_cast<GLFWwindow*>(window.GetNativeWindow()), keycode);
 		return state == GLFW_PRESS || state == GLFW_REPEAT;
 	}
 
-	bool WindowsInput::IsMouseButtonPressedImpl(int button)
+	bool Input::IsMouseButtonPressed(int button)
 	{
 		auto& window = static_cast<WindowsWindow&>(Application::Get().GetWindow());
 		auto state = glfwGetMouseButton(static_cast<GLFWwindow*>(window.GetNativeWindow()), button);
 		return state == GLFW_PRESS;
 	}
 
-	std::pair<float, float> WindowsInput::GetMousePositionImpl()
+	float Input::GetMouseX()
 	{
-		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		auto& window = static_cast<WindowsWindow&>(Application::Get().GetWindow());
+
 		double xpos, ypos;
-		glfwGetCursorPos(window, &xpos, &ypos);
-		return std::pair<float, float>(xpos, ypos);
+		glfwGetCursorPos(static_cast<GLFWwindow*>(window.GetNativeWindow()), &xpos, &ypos);
+
+		return (float)xpos;
 	}
 
-	float WindowsInput::GetMouseXImpl()
+	float Input::GetMouseY()
 	{
-		auto [x, y] = GetMousePositionImpl();
-		return x;
-		//return GetMousePositionImpl().first;
-	}
+		auto& window = static_cast<WindowsWindow&>(Application::Get().GetWindow());
 
-	float WindowsInput::GetMouseYImpl()
-	{
-		auto [x, y] = GetMousePositionImpl();
-		return y;
+		double xpos, ypos;
+		glfwGetCursorPos(static_cast<GLFWwindow*>(window.GetNativeWindow()), &xpos, &ypos);
+
+		return (float)ypos;
 	}
 }

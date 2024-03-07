@@ -156,10 +156,12 @@
     <ClInclude Include="src\Key\Core\Layer.h" />
     <ClInclude Include="src\Key\Core\LayerStack.h" />
     <ClInclude Include="src\Key\Core\Log.h" />
+    <ClInclude Include="src\Key\Core\Math\Mat4.h" />
     <ClInclude Include="src\Key\Core\MouseButtonCodes.h" />
     <ClInclude Include="src\Key\Core\TimeStep.h" />
     <ClInclude Include="src\Key\Core\Window.h" />
     <ClInclude Include="src\Key\Core\input.h" />
+    <ClInclude Include="src\Key\Editor\SceneHierarchyPanel.h" />
     <ClInclude Include="src\Key\EntryPoint.h" />
     <ClInclude Include="src\Key\ImGui\ImGuiLayer.h" />
     <ClInclude Include="src\Key\ImGui\ImGuizmo.h" />
@@ -185,10 +187,13 @@
     <ClInclude Include="src\Key\Renderer\RenderPass.h" />
     <ClInclude Include="src\Key\Renderer\Renderer.h" />
     <ClInclude Include="src\Key\Renderer\RendererAPI.h" />
+    <ClInclude Include="src\Key\Renderer\SceneRenderer.h" />
     <ClInclude Include="src\Key\Renderer\Shader.h" />
     <ClInclude Include="src\Key\Renderer\ShaderUniform.h" />
     <ClInclude Include="src\Key\Renderer\Texture.h" />
     <ClInclude Include="src\Key\Renderer\VertexArray.h" />
+    <ClInclude Include="src\Key\Scene\Entity.h" />
+    <ClInclude Include="src\Key\Scene\Scene.h" />
     <ClInclude Include="src\Kpch.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\_features.hpp" />
@@ -613,7 +618,9 @@
     <ClCompile Include="src\Key\Core\Layer.cpp" />
     <ClCompile Include="src\Key\Core\LayerStack.cpp" />
     <ClCompile Include="src\Key\Core\Log.cpp" />
+    <ClCompile Include="src\Key\Core\Math\Mat4.cpp" />
     <ClCompile Include="src\Key\Core\Window.cpp" />
+    <ClCompile Include="src\Key\Editor\SceneHierarchyPanel.cpp" />
     <ClCompile Include="src\Key\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="src\Key\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="src\Key\ImGui\ImGuizmo.cpp" />
@@ -638,9 +645,12 @@
     <ClCompile Include="src\Key\Renderer\RenderCommandQueue.cpp" />
     <ClCompile Include="src\Key\Renderer\RenderPass.cpp" />
     <ClCompile Include="src\Key\Renderer\Renderer.cpp" />
+    <ClCompile Include="src\Key\Renderer\SceneRenderer.cpp" />
     <ClCompile Include="src\Key\Renderer\Shader.cpp" />
     <ClCompile Include="src\Key\Renderer\Texture.cpp" />
     <ClCompile Include="src\Key\Renderer\VertexArray.cpp" />
+    <ClCompile Include="src\Key\Scene\Entity.cpp" />
+    <ClCompile Include="src\Key\Scene\Scene.cpp" />
     <ClCompile Include="src\Kpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

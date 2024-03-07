@@ -45,7 +45,7 @@ namespace Key {
 		PushOverlay(m_ImGuiLayer);
 
 		Renderer::Init();
-		Renderer::Get().WaitAndRender();
+		Renderer::WaitAndRender();
 	}
 	Application::~Application() {
 	
@@ -209,7 +209,7 @@ namespace Key {
 				Renderer::Submit([app]() { app->RenderImGui(); });
 
 				//Update render command address
-				Renderer::Get().WaitAndRender();
+				Renderer::WaitAndRender();
 			}
 
 			m_Window->OnUpdate();

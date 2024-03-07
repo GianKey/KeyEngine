@@ -52,6 +52,15 @@
     <Filter Include="vendor\stb_image">
       <UniqueIdentifier>{0DA0BA59-F998-D9AB-22CB-BE300E23B9B7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Key\Core\Math">
+      <UniqueIdentifier>{d112b2e1-5362-4555-be4e-c28f63e4e07d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Key\Editor">
+      <UniqueIdentifier>{8dec465e-f525-42bf-b3d4-c488da2f1d80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Key\Scene">
+      <UniqueIdentifier>{aa09715b-1739-4054-8f10-4deac1fce145}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Key.h">
@@ -1443,6 +1452,21 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Core\Math\Mat4.h">
+      <Filter>src\Key\Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Editor\SceneHierarchyPanel.h">
+      <Filter>src\Key\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Scene\Entity.h">
+      <Filter>src\Key\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Scene\Scene.h">
+      <Filter>src\Key\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Renderer\SceneRenderer.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Key\Core\Application.cpp">
@@ -1549,6 +1573,21 @@
     </ClCompile>
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Core\Math\Mat4.cpp">
+      <Filter>src\Key\Core\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Editor\SceneHierarchyPanel.cpp">
+      <Filter>src\Key\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Scene\Entity.cpp">
+      <Filter>src\Key\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Scene\Scene.cpp">
+      <Filter>src\Key\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Renderer\SceneRenderer.cpp">
+      <Filter>src\Key\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
