@@ -15,6 +15,12 @@ namespace Key {
 
 #define BIT(x) (1 << x)
 
+/**
+ * 使用 std::bind 来创建一个成员函数的绑定.
+ * @param &x 函数地址
+ * @param this 指向当前实例
+ * @param std::placeholders::_1 一个占位符，表示在调用绑定的函数时，传递第一个参数
+ */
 #define KEY_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
 
 namespace Key {

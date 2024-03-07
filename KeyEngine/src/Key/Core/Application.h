@@ -11,10 +11,22 @@
 #include "Key/ImGui/ImGuiLayer.h"
 
 namespace Key {
+	
+	/**
+	 * @struct ApplicationProps
+	 * @brief 应用程序的基本信息
+	 * 用于创建初始化应用
+	 */
 	struct ApplicationProps {
 		std::string Name;
 		uint32_t WindowWidth, WindowHeight;
 	};
+
+	/**
+	 * @brief 应用类
+	 * 
+	 * 前端使用引擎源码执行功能的类
+	 */
 	class  Application
 	{
 	public:
