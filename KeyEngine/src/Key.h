@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "Key/Core/Application.h"
 #include "Key/Core/Log.h"
+#include "Key/Core/Input.h"
 #include "Key/Core/TimeStep.h"
 
 #include "Key/Core/Events/Event.h"

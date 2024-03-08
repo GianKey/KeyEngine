@@ -46,6 +46,8 @@ namespace Key {
 
 				glBindTexture(GL_TEXTURE_2D, 0);
 			});
+
+		m_ImageData.Allocate(width * height * Texture::GetBPP(m_Format));
 	}
 
 	OpenGLTexture2D::OpenGLTexture2D(const std::string& path, bool srgb)
