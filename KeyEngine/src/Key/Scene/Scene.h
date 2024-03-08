@@ -13,6 +13,15 @@ namespace Key {
 		static Environment Load(const std::string& filepath);
 	};
 
+	struct Light
+	{
+		glm::vec3 Direction;
+		glm::vec3 Radiance;
+
+		float Multiplier = 1.0f;
+	};
+
+
 	class Scene
 	{
 	public:
@@ -30,6 +39,8 @@ namespace Key {
 		void SetEnvironment(const Environment& environment);
 		void SetSkybox(const Ref<TextureCube>& skybox);
 
+		Light& GetLight() { return m_Light; }
+
 		float& GetSkyboxLod() { return m_SkyboxLod; }
 
 		void AddEntity(Entity* entity);
@@ -38,6 +49,9 @@ namespace Key {
 		std::string m_DebugName;
 		std::vector<Entity*> m_Entities;
 		Camera m_Camera;
+
+		Light m_Light;
+		float m_LightMultiplier = 0.3f;
 
 		Environment m_Environment;
 		Ref<TextureCube> m_SkyboxTexture;

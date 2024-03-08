@@ -13,6 +13,12 @@
     <Filter Include="src\Key\Core\Events">
       <UniqueIdentifier>{C1381CF3-2D9A-F900-B607-40B3226830C0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Key\Core\Math">
+      <UniqueIdentifier>{7616725F-E22C-70F5-2BA4-FB1697F9407D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Key\Editor">
+      <UniqueIdentifier>{9B713506-873F-290C-70D3-99325C400571}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Key\ImGui">
       <UniqueIdentifier>{EF30945D-5BF1-0F94-242C-591190AB5470}</UniqueIdentifier>
     </Filter>
@@ -27,6 +33,9 @@
     </Filter>
     <Filter Include="src\Key\Renderer">
       <UniqueIdentifier>{4B252DC0-371E-4C12-6050-31974CA82B1E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Key\Scene">
+      <UniqueIdentifier>{E228445E-4EE9-BF94-1724-091283A30471}</UniqueIdentifier>
     </Filter>
     <Filter Include="vendor">
       <UniqueIdentifier>{B3738122-9F15-ACF8-88D0-BF4C74113349}</UniqueIdentifier>
@@ -51,15 +60,6 @@
     </Filter>
     <Filter Include="vendor\stb_image">
       <UniqueIdentifier>{0DA0BA59-F998-D9AB-22CB-BE300E23B9B7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\Key\Core\Math">
-      <UniqueIdentifier>{d112b2e1-5362-4555-be4e-c28f63e4e07d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\Key\Editor">
-      <UniqueIdentifier>{8dec465e-f525-42bf-b3d4-c488da2f1d80}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\Key\Scene">
-      <UniqueIdentifier>{aa09715b-1739-4054-8f10-4deac1fce145}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -102,6 +102,15 @@
     <ClInclude Include="src\Key\Core\Log.h">
       <Filter>src\Key\Core</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Core\Math\AABB.h">
+      <Filter>src\Key\Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Core\Math\Mat4.h">
+      <Filter>src\Key\Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Core\Math\Ray.h">
+      <Filter>src\Key\Core\Math</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\Core\MouseButtonCodes.h">
       <Filter>src\Key\Core</Filter>
     </ClInclude>
@@ -113,6 +122,9 @@
     </ClInclude>
     <ClInclude Include="src\Key\Core\input.h">
       <Filter>src\Key\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Editor\SceneHierarchyPanel.h">
+      <Filter>src\Key\Editor</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\EntryPoint.h">
       <Filter>src\Key</Filter>
@@ -146,9 +158,6 @@
     </ClInclude>
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLVertexArray.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\PlatForm\Windows\WindowsInput.h">
-      <Filter>src\Key\PlatForm\Windows</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\PlatForm\Windows\WindowsWindow.h">
       <Filter>src\Key\PlatForm\Windows</Filter>
@@ -186,7 +195,13 @@
     <ClInclude Include="src\Key\Renderer\Renderer.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Renderer\Renderer2D.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\Renderer\RendererAPI.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Renderer\SceneRenderer.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\Shader.h">
@@ -200,6 +215,12 @@
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\VertexArray.h">
       <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Scene\Entity.h">
+      <Filter>src\Key\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Scene\Scene.h">
+      <Filter>src\Key\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Kpch.h">
       <Filter>src</Filter>
@@ -1452,24 +1473,6 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\Core\Math\Mat4.h">
-      <Filter>src\Key\Core\Math</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\Editor\SceneHierarchyPanel.h">
-      <Filter>src\Key\Editor</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\Scene\Entity.h">
-      <Filter>src\Key\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\Scene\Scene.h">
-      <Filter>src\Key\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\Renderer\SceneRenderer.h">
-      <Filter>src\Key\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\Renderer\Renderer2D.h">
-      <Filter>src\Key\Renderer</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Key\Core\Application.cpp">
@@ -1487,8 +1490,14 @@
     <ClCompile Include="src\Key\Core\Log.cpp">
       <Filter>src\Key\Core</Filter>
     </ClCompile>
+    <ClCompile Include="src\Key\Core\Math\Mat4.cpp">
+      <Filter>src\Key\Core\Math</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\Core\Window.cpp">
       <Filter>src\Key\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Editor\SceneHierarchyPanel.cpp">
+      <Filter>src\Key\Editor</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\ImGui\ImGuiBuild.cpp">
       <Filter>src\Key\ImGui</Filter>
@@ -1562,6 +1571,12 @@
     <ClCompile Include="src\Key\Renderer\Renderer.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\Key\Renderer\Renderer2D.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Renderer\SceneRenderer.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\Renderer\Shader.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
@@ -1571,34 +1586,17 @@
     <ClCompile Include="src\Key\Renderer\VertexArray.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="src\Kpch.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="vendor\stb_image\stb_image.cpp">
-      <Filter>vendor\stb_image</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Key\Core\Math\Mat4.cpp">
-      <Filter>src\Key\Core\Math</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Key\Editor\SceneHierarchyPanel.cpp">
-      <Filter>src\Key\Editor</Filter>
-    </ClCompile>
     <ClCompile Include="src\Key\Scene\Entity.cpp">
       <Filter>src\Key\Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Scene\Scene.cpp">
       <Filter>src\Key\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="src\Key\Renderer\SceneRenderer.cpp">
-      <Filter>src\Key\Renderer</Filter>
+    <ClCompile Include="src\Kpch.cpp">
+      <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Key\Renderer\Renderer2D.cpp">
-      <Filter>src\Key\Renderer</Filter>
+    <ClCompile Include="vendor\stb_image\stb_image.cpp">
+      <Filter>vendor\stb_image</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ClassDiagram.cd" />
-    <None Include="KeyEngineClassDiagram1.cd" />
-    <None Include="RenderClassDiagram1.cd" />
   </ItemGroup>
 </Project>
