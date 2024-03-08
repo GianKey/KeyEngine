@@ -56,7 +56,6 @@ namespace Key {
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		KEY_CORE_ASSERT(status, "Failed to initialize Glad!");
 		glfwSetWindowUserPointer(m_Window, &m_Data);
-		SetVSync(true);
 
 		// Set GLFW callbacks
 		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
@@ -156,6 +155,15 @@ namespace Key {
 		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeNESW] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);  // FIXME: GLFW doesn't have this.
 		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeNWSE] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);  // FIXME: GLFW doesn't have this.
 		m_ImGuiMouseCursors[ImGuiMouseCursor_Hand] = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+	
+
+		// Update window size to actual size
+		{
+			int width, height;
+			glfwGetWindowSize(m_Window, &width, &height);
+			m_Data.Width = width;
+			m_Data.Height = height;
+		}
 	}
 
 	//3D

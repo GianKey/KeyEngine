@@ -26,6 +26,7 @@ namespace Key {
 		inline virtual void* GetNativeWindow() const { return m_Window; }
 
 		//3D
+		virtual std::pair<uint32_t, uint32_t> GetSize() const override { return { m_Data.Width, m_Data.Height }; }
 		virtual std::pair<float, float> GetWindowPos() const override;
 		//3D---end
 	private:
@@ -37,7 +38,7 @@ namespace Key {
 		struct WindowData
 		{
 			std::string Title;
-			unsigned int Width, Height;
+			uint32_t Width, Height;
 			bool VSync;
 
 			EventCallbackFn EventCallback;

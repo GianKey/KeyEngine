@@ -20,6 +20,9 @@
 
 #include "Key/Core/KeyCodes.h"  
 #include "Key/Core/MouseButtonCodes.h"
+#include "Key/Core/Math/AABB.h"
+#include "Key/Core/Math/Ray.h"
+
 #include "imgui/imgui.h"
 //--------Renderer API----------
 

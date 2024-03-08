@@ -31,6 +31,7 @@ namespace Key {
 
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
+		virtual std::pair<uint32_t, uint32_t> GetSize() const = 0;
 		//3D
 		virtual std::pair<float, float> GetWindowPos() const = 0;
 		//
