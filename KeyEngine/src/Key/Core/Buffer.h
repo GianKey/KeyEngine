@@ -47,7 +47,7 @@ namespace Key {
 				memset(Data, 0, Size);
 		}
 
-		void Write(byte* data, uint32_t size, uint32_t offset = 0)
+		void Write(void* data, uint32_t size, uint32_t offset = 0)
 		{
 			KEY_CORE_ASSERT(offset + size <= Size, "Buffer overflow!");
 			memcpy(Data + offset, data, size);
