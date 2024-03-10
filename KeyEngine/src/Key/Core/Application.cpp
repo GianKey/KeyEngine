@@ -52,13 +52,16 @@ namespace Key {
 	}
 
 	/**
+	 * @callgraph
 	 * .@brief 负责事件的分发
 	 * 
-	 *	负责处理事件的分发和传递给对应的处理函数，以及将各个事件作为参数传递给图层进行处理。
+	 *	@details  负责处理事件的分发和传递给对应的处理函数，以及将各个事件作为参数传递给图层进行处理。
 	 * 
 	 * \param e
 	 * @ref Event.h
 	 * @ref ApplicationEvent.h
+	 * 
+	 * 
 	 */
 	void Application::OnEvent(Event& e) {
 		
