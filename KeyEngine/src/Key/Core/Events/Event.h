@@ -87,11 +87,14 @@ namespace Key {
         {
         }
 
-        /**
+        /**\
+         * @callgraph  
          * @brief 事件分发.
          * 
-         * 若Dispath函数调用指定模板类型与本分发器创建时设定的event类型相同，则将分发器的m_event作为参数交给参数func函数执行
+         *  @details 若Dispath函数调用指定模板类型与本分发器创建时设定的event类型相同，则将分发器的m_event作为参数交给参数func函数执行
          *  F将由编译器推导出来
+         * 
+         *
          */
         template<typename T, typename F>
         bool Dispatch(const F& func)

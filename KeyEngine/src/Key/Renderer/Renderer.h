@@ -44,6 +44,7 @@ namespace Key {
 				pFunc->~FuncT();
 			};
 			auto storageBuffer = GetRenderCommandQueue().Allocate(renderCmd, sizeof(func));
+			///将 FuncT 类型的对象构造在 storageBuffer 指向的内存位置上。
 			new (storageBuffer) FuncT(std::forward<FuncT>(func));
 		}
 
