@@ -160,6 +160,8 @@
     <ClInclude Include="src\Key\Core\Math\Mat4.h" />
     <ClInclude Include="src\Key\Core\Math\Ray.h" />
     <ClInclude Include="src\Key\Core\MouseButtonCodes.h" />
+    <ClInclude Include="src\Key\Core\Ref.h" />
+    <ClInclude Include="src\Key\Core\Timer.h" />
     <ClInclude Include="src\Key\Core\TimeStep.h" />
     <ClInclude Include="src\Key\Core\Window.h" />
     <ClInclude Include="src\Key\Core\input.h" />

@@ -41,6 +41,7 @@ namespace Key {
 	{
 	public:
 		//3D
+		OpenGLIndexBuffer(uint32_t size);
 		OpenGLIndexBuffer(void* data, uint32_t size);
 		//3D---end
 		virtual ~OpenGLIndexBuffer();
