@@ -8,6 +8,7 @@
 #include "Key/Core/Log.h"
 #include "Key/Core/Input.h"
 #include "Key/Core/TimeStep.h"
+#include "Key/Core/Timer.h"
 
 #include "Key/Core/Events/Event.h"
 #include "Key/Core/Events/ApplicationEvent.h"

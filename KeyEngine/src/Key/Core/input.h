@@ -1,12 +1,12 @@
 #pragma once
 #include "Base.h"
 #include "Kpch.h"
-
+#include "KeyCodes.h"
 namespace Key {
 	class  Input
 	{
 	public:
-		static bool IsKeyPressed(int keycode);
+		static bool IsKeyPressed(KeyCode keycode);
 
 		static bool IsMouseButtonPressed(int button);
 		static float GetMouseX();

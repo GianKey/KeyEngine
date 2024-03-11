@@ -11,12 +11,12 @@ namespace Key {
         Ref<Framebuffer> TargetFramebuffer;
     };
 
-    class RenderPass
+    class RenderPass : public RefCounted
     {
     public:
         virtual ~RenderPass() {}
 
-        virtual const RenderPassSpecification& GetSpecification() const = 0;
+        virtual RenderPassSpecification& GetSpecification() = 0;
 
         static Ref<RenderPass> Create(const RenderPassSpecification& spec);
     };
