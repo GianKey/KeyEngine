@@ -1,6 +1,10 @@
 #pragma once
+
+#include "Key/Renderer/RendererAPI.h"
 #include "Key/Renderer/Texture.h"
+
 namespace Key {
+
 	class OpenGLTexture2D : public Texture2D
 	{
 	public:

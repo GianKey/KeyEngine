@@ -5,11 +5,12 @@
 #include "Key/Renderer/Renderer.h"
 
 #include <glad/glad.h>
+#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 namespace Key {
 
-	static GLenum KeyToOpenGLTextureFormat(TextureFormat format)
+	static GLenum HazelToOpenGLTextureFormat(TextureFormat format)
 	{
 		switch (format)
 		{
@@ -41,8 +42,7 @@ namespace Key {
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
 				glTextureParameterf(instance->m_RendererID, GL_TEXTURE_MAX_ANISOTROPY, RendererAPI::GetCapabilities().MaxAnisotropy);
 
-				glTexImage2D(GL_TEXTURE_2D, 0, KeyToOpenGLTextureFormat(instance->m_Format), instance->m_Width, instance->m_Height, 0, KeyToOpenGLTextureFormat(instance->m_Format), GL_UNSIGNED_BYTE, nullptr);
-				//glGenerateMipmap(GL_TEXTURE_2D);
+				glTexImage2D(GL_TEXTURE_2D, 0, HazelToOpenGLTextureFormat(instance->m_Format), instance->m_Width, instance->m_Height, 0, HazelToOpenGLTextureFormat(instance->m_Format), GL_UNSIGNED_BYTE, nullptr);
 
 				glBindTexture(GL_TEXTURE_2D, 0);
 			});
@@ -54,8 +54,6 @@ namespace Key {
 		: m_FilePath(path)
 	{
 		int width, height, channels;
-		KEY_CORE_INFO("Loading texture {0}, srgb={1}", path, srgb);
-		m_ImageData.Data = stbi_load(path.c_str(), &width, &height, &channels, srgb ? STBI_rgb : STBI_rgb_alpha);
 		if (stbi_is_hdr(path.c_str()))
 		{
 			KEY_CORE_INFO("Loading HDR texture {0}, srgb={1}", path, srgb);
@@ -105,8 +103,8 @@ namespace Key {
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-					GLenum internalFormat = KeyToOpenGLTextureFormat(instance->m_Format);
-					GLenum format = srgb ? GL_SRGB8 : (instance->m_IsHDR ? GL_RGB : KeyToOpenGLTextureFormat(instance->m_Format)); // HDR = GL_RGB for now
+					GLenum internalFormat = HazelToOpenGLTextureFormat(instance->m_Format);
+					GLenum format = srgb ? GL_SRGB8 : (instance->m_IsHDR ? GL_RGB : HazelToOpenGLTextureFormat(instance->m_Format)); // HDR = GL_RGB for now
 					GLenum type = internalFormat == GL_RGBA16F ? GL_FLOAT : GL_UNSIGNED_BYTE;
 					glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, instance->m_Width, instance->m_Height, 0, format, type, instance->m_ImageData.Data);
 					glGenerateMipmap(GL_TEXTURE_2D);
@@ -119,8 +117,9 @@ namespace Key {
 
 	OpenGLTexture2D::~OpenGLTexture2D()
 	{
-		Renderer::Submit([this]() {
-			glDeleteTextures(1, &m_RendererID);
+		GLuint rendererID = m_RendererID;
+		Renderer::Submit([rendererID]() {
+			glDeleteTextures(1, &rendererID);
 			});
 	}
 
@@ -142,7 +141,7 @@ namespace Key {
 		m_Locked = false;
 		Ref<OpenGLTexture2D> instance = this;
 		Renderer::Submit([instance]() {
-			glTextureSubImage2D(instance->m_RendererID, 0, 0, 0, instance->m_Width, instance->m_Height, KeyToOpenGLTextureFormat(instance->m_Format), GL_UNSIGNED_BYTE, instance->m_ImageData.Data);
+			glTextureSubImage2D(instance->m_RendererID, 0, 0, 0, instance->m_Width, instance->m_Height, HazelToOpenGLTextureFormat(instance->m_Format), GL_UNSIGNED_BYTE, instance->m_ImageData.Data);
 			});
 	}
 
@@ -182,7 +181,7 @@ namespace Key {
 		Renderer::Submit([instance, levels]() mutable
 			{
 				glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &instance->m_RendererID);
-				glTextureStorage2D(instance->m_RendererID, levels, KeyToOpenGLTextureFormat(instance->m_Format), instance->m_Width, instance->m_Height);
+				glTextureStorage2D(instance->m_RendererID, levels, HazelToOpenGLTextureFormat(instance->m_Format), instance->m_Width, instance->m_Height);
 				glTextureParameteri(instance->m_RendererID, GL_TEXTURE_MIN_FILTER, levels > 1 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
 				glTextureParameteri(instance->m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -194,7 +193,7 @@ namespace Key {
 	}
 
 	// TODO: Revisit this, as currently env maps are being loaded as equirectangular 2D images
-//       so this is an old path
+	//       so this is an old path
 	OpenGLTextureCube::OpenGLTextureCube(const std::string& path)
 		: m_FilePath(path)
 	{
@@ -254,36 +253,36 @@ namespace Key {
 
 		Ref<OpenGLTextureCube> instance = this;
 		Renderer::Submit([instance, faceWidth, faceHeight, faces]() mutable
-		{
-			glGenTextures(1, &instance->m_RendererID);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, instance->m_RendererID);
+			{
+				glGenTextures(1, &instance->m_RendererID);
+				glBindTexture(GL_TEXTURE_CUBE_MAP, instance->m_RendererID);
 
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-			glTextureParameterf(instance->m_RendererID, GL_TEXTURE_MAX_ANISOTROPY, RendererAPI::GetCapabilities().MaxAnisotropy);
+				glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+				glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+				glTextureParameterf(instance->m_RendererID, GL_TEXTURE_MAX_ANISOTROPY, RendererAPI::GetCapabilities().MaxAnisotropy);
 
-			auto format = KeyToOpenGLTextureFormat(instance->m_Format);
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[2]);
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[0]);
+				auto format = HazelToOpenGLTextureFormat(instance->m_Format);
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[2]);
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[0]);
 
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[4]);
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[5]);
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[4]);
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[5]);
 
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[1]);
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[3]);
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[1]);
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, format, faceWidth, faceHeight, 0, format, GL_UNSIGNED_BYTE, faces[3]);
 
-			glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+				glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
-			glBindTexture(GL_TEXTURE_2D, 0);
+				glBindTexture(GL_TEXTURE_2D, 0);
 
-			for (size_t i = 0; i < faces.size(); i++)
-				delete[] faces[i];
+				for (size_t i = 0; i < faces.size(); i++)
+					delete[] faces[i];
 
-			stbi_image_free(instance->m_ImageData);
-		});
+				stbi_image_free(instance->m_ImageData);
+			});
 	}
 
 	OpenGLTextureCube::~OpenGLTextureCube()

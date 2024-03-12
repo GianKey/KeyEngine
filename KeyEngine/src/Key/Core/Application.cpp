@@ -3,15 +3,14 @@
 
 #include "Key/Renderer/Renderer.h"
 #include "Key/Renderer/Framebuffer.h"
-
 #include <GLFW/glfw3.h>
+
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
+#include <Windows.h>
 
+#include "Key/Script/ScriptEngine.h"
 #include <imgui/imgui.h>
-#include <Glad/glad.h>
-
-#include "Key/Core/input.h"
 
 namespace Key {
 	/**
@@ -43,6 +42,8 @@ namespace Key {
 
 		m_ImGuiLayer = new ImGuiLayer("ImGui");
 		PushOverlay(m_ImGuiLayer);
+
+		ScriptEngine::Init("assets/scripts/ExampleApp.dll");
 
 		Renderer::Init();
 		Renderer::WaitAndRender();
@@ -100,10 +101,7 @@ namespace Key {
 		Renderer::Submit([=]() { glViewport(0, 0, width, height); });
 		auto& fbs = FramebufferPool::GetGlobal()->GetAll();
 		for (auto& fb : fbs)
-		{
-			if (auto fbp = fb.lock())
-				fbp->Resize(width, height);
-		}
+			fb->Resize(width, height);
 		return false;
 	}
 

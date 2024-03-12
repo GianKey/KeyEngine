@@ -1,17 +1,16 @@
 #include "Kpch.h"
 
 #include "Key/Core/Application.h"
-
-// TEMPORARY
 #include <GLFW/glfw3.h>
-#include <glad/glad.h>
 
 #include "ImGuiLayer.h"
 #include "ImGuizmo.h"
-
 #include <imgui.h>
+
+#define IMGUI_IMPL_API
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
+#include "Key/Renderer/Renderer.h"
 
 namespace Key {
 
