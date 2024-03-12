@@ -38,6 +38,8 @@ namespace Key {
 		Component_RegisterType(ScriptComponent);
 		Component_RegisterType(CameraComponent);
 		Component_RegisterType(SpriteRendererComponent);
+		Component_RegisterType(RigidBody2DComponent);
+		Component_RegisterType(BoxCollider2DComponent);
 	}
 
 	void ScriptEngineRegistry::RegisterAll()
@@ -50,9 +52,14 @@ namespace Key {
 		mono_add_internal_call("Key.Entity::SetTransform_Native", Key::Script::Key_Entity_SetTransform);
 		mono_add_internal_call("Key.Entity::CreateComponent_Native", Key::Script::Key_Entity_CreateComponent);
 		mono_add_internal_call("Key.Entity::HasComponent_Native", Key::Script::Key_Entity_HasComponent);
-		
+		mono_add_internal_call("Key.Entity::FindEntityByTag_Native", Key::Script::Key_Entity_FindEntityByTag);
+
 		mono_add_internal_call("Key.MeshComponent::GetMesh_Native", Key::Script::Key_MeshComponent_GetMesh);
 		mono_add_internal_call("Key.MeshComponent::SetMesh_Native", Key::Script::Key_MeshComponent_SetMesh);
+
+		mono_add_internal_call("Key.RigidBody2DComponent::ApplyLinearImpulse_Native", Key::Script::Key_RigidBody2DComponent_ApplyLinearImpulse);
+		mono_add_internal_call("Key.RigidBody2DComponent::GetLinearVelocity_Native", Key::Script::Key_RigidBody2DComponent_GetLinearVelocity);
+		mono_add_internal_call("Key.RigidBody2DComponent::SetLinearVelocity_Native", Key::Script::Key_RigidBody2DComponent_SetLinearVelocity);
 
 		mono_add_internal_call("Key.Input::IsKeyPressed_Native", Key::Script::Key_Input_IsKeyPressed);
 
@@ -67,6 +74,7 @@ namespace Key {
 		mono_add_internal_call("Key.MaterialInstance::Destructor_Native", Key::Script::Key_MaterialInstance_Destructor);
 		mono_add_internal_call("Key.MaterialInstance::SetFloat_Native", Key::Script::Key_MaterialInstance_SetFloat);
 		mono_add_internal_call("Key.MaterialInstance::SetVector3_Native", Key::Script::Key_MaterialInstance_SetVector3);
+		mono_add_internal_call("Key.MaterialInstance::SetVector4_Native", Key::Script::Key_MaterialInstance_SetVector4);
 		mono_add_internal_call("Key.MaterialInstance::SetTexture_Native", Key::Script::Key_MaterialInstance_SetTexture);
 
 		mono_add_internal_call("Key.Mesh::Constructor_Native", Key::Script::Key_Mesh_Constructor);

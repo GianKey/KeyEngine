@@ -12,6 +12,8 @@
 #include "Key/Core/Input.h"
 #include <mono/jit/jit.h>
 
+#include <box2d/box2d.h>
+
 namespace Key {
 	extern std::unordered_map<MonoType*, std::function<bool(Entity&)>> s_HasComponentFuncs;
 	extern std::unordered_map<MonoType*, std::function<void(Entity&)>> s_CreateComponentFuncs;
@@ -106,6 +108,18 @@ namespace Key {
 			return result;
 		}
 
+		uint64_t Key_Entity_FindEntityByTag(MonoString* tag)
+		{
+			Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
+			KEY_CORE_ASSERT(scene, "No active scene!");
+
+			Entity entity = scene->FindEntityByTag(mono_string_to_utf8(tag));
+			if (entity)
+				return entity.GetComponent<IDComponent>().ID;
+
+			return 0;
+		}
+
 		void* Key_MeshComponent_GetMesh(uint64_t entityID)
 		{
 			Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
@@ -128,6 +142,51 @@ namespace Key {
 			Entity entity = entityMap.at(entityID);
 			auto& meshComponent = entity.GetComponent<MeshComponent>();
 			meshComponent.Mesh = inMesh ? *inMesh : nullptr;
+		}
+
+		void Key_RigidBody2DComponent_ApplyLinearImpulse(uint64_t entityID, glm::vec2* impulse, glm::vec2* offset, bool wake)
+		{
+			Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
+			KEY_CORE_ASSERT(scene, "No active scene!");
+			const auto& entityMap = scene->GetEntityMap();
+			KEY_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
+
+			Entity entity = entityMap.at(entityID);
+			KEY_CORE_ASSERT(entity.HasComponent<RigidBody2DComponent>());
+			auto& component = entity.GetComponent<RigidBody2DComponent>();
+			b2Body* body = (b2Body*)component.RuntimeBody;
+			body->ApplyLinearImpulse(*(const b2Vec2*)impulse, body->GetWorldCenter() + *(const b2Vec2*)offset, wake);
+		}
+
+		void Key_RigidBody2DComponent_GetLinearVelocity(uint64_t entityID, glm::vec2* outVelocity)
+		{
+			Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
+			KEY_CORE_ASSERT(scene, "No active scene!");
+			const auto& entityMap = scene->GetEntityMap();
+			KEY_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
+
+			Entity entity = entityMap.at(entityID);
+			KEY_CORE_ASSERT(entity.HasComponent<RigidBody2DComponent>());
+			auto& component = entity.GetComponent<RigidBody2DComponent>();
+			b2Body* body = (b2Body*)component.RuntimeBody;
+			const auto& velocity = body->GetLinearVelocity();
+			KEY_CORE_ASSERT(outVelocity);
+			*outVelocity = { velocity.x, velocity.y };
+		}
+
+		void Key_RigidBody2DComponent_SetLinearVelocity(uint64_t entityID, glm::vec2* velocity)
+		{
+			Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
+			KEY_CORE_ASSERT(scene, "No active scene!");
+			const auto& entityMap = scene->GetEntityMap();
+			KEY_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
+
+			Entity entity = entityMap.at(entityID);
+			KEY_CORE_ASSERT(entity.HasComponent<RigidBody2DComponent>());
+			auto& component = entity.GetComponent<RigidBody2DComponent>();
+			b2Body* body = (b2Body*)component.RuntimeBody;
+			KEY_CORE_ASSERT(velocity);
+			body->SetLinearVelocity({ velocity->x, velocity->y });
 		}
 
 		Ref<Mesh>* Key_Mesh_Constructor(MonoString* filepath)
@@ -227,6 +286,12 @@ namespace Key {
 		}
 
 		void Key_MaterialInstance_SetVector3(Ref<MaterialInstance>* _this, MonoString* uniform, glm::vec3* value)
+		{
+			Ref<MaterialInstance>& instance = *(Ref<MaterialInstance>*)_this;
+			instance->Set(mono_string_to_utf8(uniform), *value);
+		}
+
+		void Key_MaterialInstance_SetVector4(Ref<MaterialInstance>* _this, MonoString* uniform, glm::vec4* value)
 		{
 			Ref<MaterialInstance>& instance = *(Ref<MaterialInstance>*)_this;
 			instance->Set(mono_string_to_utf8(uniform), *value);

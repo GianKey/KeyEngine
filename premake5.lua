@@ -10,6 +10,11 @@ workspace "KeyEngine"
 		"Dist"
 	}
 
+	flags
+	{
+		"MultiProcessorCompile"
+	}
+	
 	startproject "Keya"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
@@ -25,6 +30,7 @@ IncludeDir["assimp"] = "KeyEngine/vendor/assimp/include"
 IncludeDir["entt"] = "KeyEngine/vendor/entt/include"
 IncludeDir["FastNoise"] = "KeyEngine/vendor/FastNoise"
 IncludeDir["mono"] = "KeyEngine/vendor/mono/include"
+IncludeDir["Box2D"] = "KeyEngine/vendor/Box2D/include"
 
 LibraryDir = {}
 LibraryDir["mono"] = "vendor/mono/lib/Debug/mono-2.0-sgen.lib"
@@ -33,6 +39,7 @@ group "Dependencies"
 include "KeyEngine/vendor/GLFW"
 include "KeyEngine/vendor/Glad"
 include "KeyEngine/vendor/Imgui"
+include "KeyEngine/vendor/Box2D"
 group ""
 
 group "Core"
@@ -76,13 +83,15 @@ project "KeyEngine"
 		"%{IncludeDir.FastNoise}",
 		"%{prj.name}/vendor/assimp/include",
 		"%{IncludeDir.stb_image}",	
-		"%{prj.name}/vendor/yaml-cpp/include"
+		"%{prj.name}/vendor/yaml-cpp/include",
+		"%{IncludeDir.Box2D}",
 	}
 
 	links{
 		"GLFW",
 		"Glad",
 		"Imgui",
+		"Box2D",
 		"opengl32.lib",
 		"%{LibraryDir.mono}"
 	}
@@ -101,17 +110,17 @@ project "KeyEngine"
 		}
 
 	filter "configurations:Debug"
-		defines "KE_DEBUG"
+		defines "KEY_DEBUG"
 		runtime "Debug"
 		symbols "on"
 
 	filter "configurations:Release"
-		defines "KE_RELEASE"
+		defines "KEY_RELEASE"
 		runtime "Release"
 		optimize "on"
 
 	filter "configurations:Dist"
-		defines "KE_DIST"
+		defines "KEY_DIST"
 		runtime "Release"
 		optimize "on"
 
@@ -178,7 +187,7 @@ project "Keya"
 	
 	
 		filter "configurations:Debug"
-			defines "KE_DEBUG"
+			defines "KEY_DEBUG"
 			runtime "Debug"
 			symbols "on"
 
@@ -193,7 +202,7 @@ project "Keya"
 			}
 	
 		filter "configurations:Release"
-			defines "KE_RELEASE"
+			defines "KEY_RELEASE"
 			runtime "Release"
 			optimize "on"
 			links
@@ -207,7 +216,7 @@ project "Keya"
 			}
 	
 		filter "configurations:Dist"
-			defines "KE_DIST"
+			defines "KEY_DIST"
 			runtime "Release"
 			optimize "on"
 			links

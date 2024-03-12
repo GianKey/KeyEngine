@@ -57,7 +57,7 @@ namespace Key {
 						DrawEntityNode(e);
 				});
 
-			if (ImGui::BeginPopupContextWindow(0, false))
+			if (ImGui::BeginPopupContextWindow(0, 1, false))
 			{
 				if (ImGui::MenuItem("Create Empty Entity"))
 				{
@@ -108,6 +108,30 @@ namespace Key {
 						if (ImGui::Button("Sprite Renderer"))
 						{
 							m_SelectionContext.AddComponent<SpriteRendererComponent>();
+							ImGui::CloseCurrentPopup();
+						}
+					}
+					if (!m_SelectionContext.HasComponent<RigidBody2DComponent>())
+					{
+						if (ImGui::Button("Rigidbody 2D"))
+						{
+							m_SelectionContext.AddComponent<RigidBody2DComponent>();
+							ImGui::CloseCurrentPopup();
+						}
+					}
+					if (!m_SelectionContext.HasComponent<BoxCollider2DComponent>())
+					{
+						if (ImGui::Button("Box Collider 2D"))
+						{
+							m_SelectionContext.AddComponent<BoxCollider2DComponent>();
+							ImGui::CloseCurrentPopup();
+						}
+					}
+					if (!m_SelectionContext.HasComponent<CircleCollider2DComponent>())
+					{
+						if (ImGui::Button("Circle Collider 2D"))
+						{
+							m_SelectionContext.AddComponent<CircleCollider2DComponent>();
 							ImGui::CloseCurrentPopup();
 						}
 					}
@@ -305,6 +329,27 @@ namespace Key {
 		ImGui::NextColumn();
 	}
 
+	static bool Property(const char* label, bool& value)
+	{
+		bool modified = false;
+
+		ImGui::Text(label);
+		ImGui::NextColumn();
+		ImGui::PushItemWidth(-1);
+
+		s_IDBuffer[0] = '#';
+		s_IDBuffer[1] = '#';
+		memset(s_IDBuffer + 2, 0, 14);
+		itoa(s_Counter++, s_IDBuffer + 2, 16);
+		if (ImGui::Checkbox(s_IDBuffer, &value))
+			modified = true;
+
+		ImGui::PopItemWidth();
+		ImGui::NextColumn();
+
+		return modified;
+	}
+
 	static bool Property(const char* label, int& value)
 	{
 		bool modified = false;
@@ -416,6 +461,48 @@ namespace Key {
 		PopID();
 	}
 
+	template<typename T, typename UIFunction>
+	static void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction)
+	{
+		if (entity.HasComponent<T>())
+		{
+			bool removeComponent = false;
+
+			auto& component = entity.GetComponent<T>();
+			bool open = ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(T).hash_code()), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap, name.c_str());
+			ImGui::SameLine();
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+			if (ImGui::Button("+"))
+			{
+				ImGui::OpenPopup("ComponentSettings");
+			}
+
+			ImGui::PopStyleColor();
+			ImGui::PopStyleColor();
+
+			if (ImGui::BeginPopup("ComponentSettings"))
+			{
+				if (ImGui::MenuItem("Remove component"))
+					removeComponent = true;
+
+				ImGui::EndPopup();
+			}
+
+			if (open)
+			{
+				uiFunction(component);
+				ImGui::NextColumn();
+				ImGui::Columns(1);
+				ImGui::TreePop();
+			}
+			ImGui::Separator();
+
+			if (removeComponent)
+				entity.RemoveComponent<T>();
+		}
+	}
+
 	void SceneHierarchyPanel::DrawComponents(Entity entity)
 	{
 		ImGui::AlignTextToFramePadding();
@@ -503,11 +590,7 @@ namespace Key {
 			ImGui::Separator();
 		}
 
-
-		if (entity.HasComponent<MeshComponent>())
-		{
-			auto& mc = entity.GetComponent<MeshComponent>();
-			if (ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(TransformComponent).hash_code()), ImGuiTreeNodeFlags_DefaultOpen, "Mesh"))
+		DrawComponent<MeshComponent>("Mesh", entity, [](MeshComponent& mc)
 			{
 				ImGui::Columns(3);
 				ImGui::SetColumnWidth(0, 100);
@@ -528,17 +611,9 @@ namespace Key {
 					if (!file.empty())
 						mc.Mesh = Ref<Mesh>::Create(file);
 				}
-				ImGui::NextColumn();
-				ImGui::Columns(1);
-				ImGui::TreePop();
-			}
-			ImGui::Separator();
-		}
+			});
 
-		if (entity.HasComponent<CameraComponent>())
-		{
-			auto& cc = entity.GetComponent<CameraComponent>();
-			if (ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(CameraComponent).hash_code()), ImGuiTreeNodeFlags_DefaultOpen, "Camera"))
+		DrawComponent<CameraComponent>("Camera", entity, [](CameraComponent& cc)
 			{
 				// Projection Type
 				const char* projTypeStrings[] = { "Perspective", "Orthographic" };
@@ -593,26 +668,13 @@ namespace Key {
 				}
 
 				EndPropertyGrid();
-				ImGui::TreePop();
-			}
-			ImGui::Separator();
-		}
+			});
 
-		if (entity.HasComponent<SpriteRendererComponent>())
-		{
-			auto& src = entity.GetComponent<SpriteRendererComponent>();
-			if (ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(SpriteRendererComponent).hash_code()), ImGuiTreeNodeFlags_DefaultOpen, "Sprite Renderer"))
+		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](SpriteRendererComponent& mc)
 			{
+			});
 
-				ImGui::TreePop();
-			}
-			ImGui::Separator();
-		}
-
-		if (entity.HasComponent<ScriptComponent>())
-		{
-			auto& sc = entity.GetComponent<ScriptComponent>();
-			if (ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(ScriptComponent).hash_code()), ImGuiTreeNodeFlags_DefaultOpen, "Script"))
+		DrawComponent<ScriptComponent>("Script", entity, [=](ScriptComponent& sc) mutable
 			{
 				BeginPropertyGrid();
 				std::string oldName = sc.ModuleName;
@@ -711,10 +773,60 @@ namespace Key {
 					ScriptEngine::OnCreateEntity(entity);
 				}
 #endif
-				ImGui::TreePop();
-			}
-			ImGui::Separator();
-		}
+			});
+
+		DrawComponent<RigidBody2DComponent>("Rigidbody 2D", entity, [](RigidBody2DComponent& rb2dc)
+			{
+				// Rigidbody2D Type
+				const char* rb2dTypeStrings[] = { "Static", "Dynamic", "Kinematic" };
+				const char* currentType = rb2dTypeStrings[(int)rb2dc.BodyType];
+				if (ImGui::BeginCombo("Type", currentType))
+				{
+					for (int type = 0; type < 3; type++)
+					{
+						bool is_selected = (currentType == rb2dTypeStrings[type]);
+						if (ImGui::Selectable(rb2dTypeStrings[type], is_selected))
+						{
+							currentType = rb2dTypeStrings[type];
+							rb2dc.BodyType = (RigidBody2DComponent::Type)type;
+						}
+						if (is_selected)
+							ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
+				}
+
+				if (rb2dc.BodyType == RigidBody2DComponent::Type::Dynamic)
+				{
+					BeginPropertyGrid();
+					Property("Fixed Rotation", rb2dc.FixedRotation);
+					EndPropertyGrid();
+				}
+			});
+
+		DrawComponent<BoxCollider2DComponent>("Box Collider 2D", entity, [](BoxCollider2DComponent& bc2dc)
+			{
+				BeginPropertyGrid();
+
+				Property("Offset", bc2dc.Offset);
+				Property("Size", bc2dc.Size);
+				Property("Density", bc2dc.Density);
+				Property("Friction", bc2dc.Friction);
+
+				EndPropertyGrid();
+			});
+
+		DrawComponent<CircleCollider2DComponent>("Circle Collider 2D", entity, [](CircleCollider2DComponent& cc2dc)
+			{
+				BeginPropertyGrid();
+
+				Property("Offset", cc2dc.Offset);
+				Property("Radius", cc2dc.Radius);
+				Property("Density", cc2dc.Density);
+				Property("Friction", cc2dc.Friction);
+
+				EndPropertyGrid();
+			});
 
 	}
 
