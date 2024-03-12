@@ -40,7 +40,8 @@ namespace Key {
 		virtual void OnShutdown() {}
 		virtual void OnUpdate() {}
 		void RenderImGui();
-		std::string OpenFile(const std::string& filter) const;
+		std::string OpenFile(const char* filter = "All\0*.*\0") const;
+		std::string SaveFile(const char* filter = "All\0*.*\0") const;
 		//3D---end
 		void OnEvent(Event& e);
 		

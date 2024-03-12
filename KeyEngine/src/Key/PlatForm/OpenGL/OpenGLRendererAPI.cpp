@@ -4,26 +4,29 @@
 #include <Glad/glad.h>
 
 #include "Key/Renderer/Shader.h"
+
 namespace Key {
+
 	static void OpenGLLogMessage(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 	{
 		switch (severity)
 		{
-			case GL_DEBUG_SEVERITY_HIGH:
-				KEY_CORE_ERROR("[OpenGL Debug HIGH] {0}", message);
-				KEY_CORE_ASSERT(false, "GL_DEBUG_SEVERITY_HIGH");
-				break;
-			case GL_DEBUG_SEVERITY_MEDIUM:
-				KEY_CORE_WARN("[OpenGL Debug MEDIUM] {0}", message);
-				break;
-			case GL_DEBUG_SEVERITY_LOW:
-				KEY_CORE_INFO("[OpenGL Debug LOW] {0}", message);
-				break;
-			case GL_DEBUG_SEVERITY_NOTIFICATION:
-				// KEY_CORE_TRACE("[OpenGL Debug NOTIFICATION] {0}", message);
-				break;
+		case GL_DEBUG_SEVERITY_HIGH:
+			KEY_CORE_ERROR("[OpenGL Debug HIGH] {0}", message);
+			KEY_CORE_ASSERT(false, "GL_DEBUG_SEVERITY_HIGH");
+			break;
+		case GL_DEBUG_SEVERITY_MEDIUM:
+			KEY_CORE_WARN("[OpenGL Debug MEDIUM] {0}", message);
+			break;
+		case GL_DEBUG_SEVERITY_LOW:
+			KEY_CORE_INFO("[OpenGL Debug LOW] {0}", message);
+			break;
+		case GL_DEBUG_SEVERITY_NOTIFICATION:
+			// KEY_CORE_TRACE("[OpenGL Debug NOTIFICATION] {0}", message);
+			break;
 		}
 	}
+
 	void RendererAPI::Init()
 	{
 		glDebugMessageCallback(OpenGLLogMessage, nullptr);
@@ -43,6 +46,7 @@ namespace Key {
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		glEnable(GL_MULTISAMPLE);
+		glEnable(GL_STENCIL_TEST);
 
 		auto& caps = RendererAPI::GetCapabilities();
 
@@ -69,7 +73,6 @@ namespace Key {
 	{
 	}
 
-
 	void RendererAPI::LoadRequiredAssets()
 	{
 	}
@@ -77,7 +80,7 @@ namespace Key {
 	void RendererAPI::Clear(float r, float g, float b, float a)
 	{
 		glClearColor(r, g, b, a);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	}
 
 	void RendererAPI::SetClearColor(float r, float g, float b, float a)
@@ -105,13 +108,11 @@ namespace Key {
 
 		if (!depthTest)
 			glEnable(GL_DEPTH_TEST);
-
 	}
 
 	void RendererAPI::SetLineThickness(float thickness)
 	{
 		glLineWidth(thickness);
 	}
-
 
 }

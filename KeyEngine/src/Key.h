@@ -36,4 +36,6 @@
 // Scenes
 #include "Key/Scene/Entity.h"
 #include "Key/Scene/Scene.h"
+#include "Key/Scene/SceneCamera.h"
+#include "Key/Scene/SceneSerializer.h"
 #include "Key/Scene/Components.h"

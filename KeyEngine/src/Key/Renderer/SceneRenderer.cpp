@@ -6,6 +6,7 @@
 #include <glad/glad.h>
 
 #include <glm/gtc/matrix_transform.hpp>
+
 #include "Renderer2D.h"
 
 namespace Key {
@@ -15,7 +16,7 @@ namespace Key {
 		const Scene* ActiveScene = nullptr;
 		struct SceneInfo
 		{
-			Camera SceneCamera;
+			SceneRendererCamera SceneCamera;
 
 			// Resources
 			Ref<MaterialInstance> SkyboxMaterial;
@@ -36,9 +37,11 @@ namespace Key {
 			glm::mat4 Transform;
 		};
 		std::vector<DrawCommand> DrawList;
+		std::vector<DrawCommand> SelectedMeshDrawList;
 
 		// Grid
 		Ref<MaterialInstance> GridMaterial;
+		Ref<MaterialInstance> OutlineMaterial;
 
 		SceneRendererOptions Options;
 	};
@@ -77,6 +80,11 @@ namespace Key {
 		float gridScale = 16.025f, gridSize = 0.025f;
 		s_Data.GridMaterial->Set("u_Scale", gridScale);
 		s_Data.GridMaterial->Set("u_Res", gridSize);
+
+		// Outline
+		auto outlineShader = Shader::Create("assets/shaders/Outline.glsl");
+		s_Data.OutlineMaterial = MaterialInstance::Create(Material::Create(outlineShader));
+		s_Data.OutlineMaterial->SetFlag(MaterialFlag::DepthTest, false);
 	}
 
 	void SceneRenderer::SetViewportSize(uint32_t width, uint32_t height)
@@ -85,7 +93,7 @@ namespace Key {
 		s_Data.CompositePass->GetSpecification().TargetFramebuffer->Resize(width, height);
 	}
 
-	void SceneRenderer::BeginScene(const Scene* scene, const Camera& camera)
+	void SceneRenderer::BeginScene(const Scene* scene, const SceneRendererCamera& camera)
 	{
 		KEY_CORE_ASSERT(!s_Data.ActiveScene, "");
 
@@ -112,6 +120,11 @@ namespace Key {
 		s_Data.DrawList.push_back({ mesh, overrideMaterial, transform });
 	}
 
+	void SceneRenderer::SubmitSelectedMesh(Ref<Mesh> mesh, const glm::mat4& transform)
+	{
+		s_Data.SelectedMeshDrawList.push_back({ mesh, nullptr, transform });
+	}
+
 	static Ref<Shader> equirectangularConversionShader, envFilteringShader, envIrradianceShader;
 
 	std::pair<Ref<TextureCube>, Ref<TextureCube>> SceneRenderer::CreateEnvironmentMap(const std::string& filepath)
@@ -128,11 +141,11 @@ namespace Key {
 		equirectangularConversionShader->Bind();
 		envEquirect->Bind();
 		Renderer::Submit([envUnfiltered, cubemapSize, envEquirect]()
-		{
-			glBindImageTexture(0, envUnfiltered->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
-			glDispatchCompute(cubemapSize / 32, cubemapSize / 32, 6);
-			glGenerateTextureMipmap(envUnfiltered->GetRendererID());		
-		});
+			{
+				glBindImageTexture(0, envUnfiltered->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
+				glDispatchCompute(cubemapSize / 32, cubemapSize / 32, 6);
+				glGenerateTextureMipmap(envUnfiltered->GetRendererID());
+			});
 
 
 		if (!envFilteringShader)
@@ -141,11 +154,11 @@ namespace Key {
 		Ref<TextureCube> envFiltered = TextureCube::Create(TextureFormat::Float16, cubemapSize, cubemapSize);
 
 		Renderer::Submit([envUnfiltered, envFiltered]()
-		{
-			glCopyImageSubData(envUnfiltered->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
+			{
+				glCopyImageSubData(envUnfiltered->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
 				envFiltered->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
 				envFiltered->GetWidth(), envFiltered->GetHeight(), 6);
-		});
+			});
 
 		envFilteringShader->Bind();
 		envUnfiltered->Bind();
@@ -159,7 +172,7 @@ namespace Key {
 				glProgramUniform1f(envFilteringShader->GetRendererID(), 0, level * deltaRoughness);
 				glDispatchCompute(numGroups, numGroups, 6);
 			}
-		});
+			});
 
 		if (!envIrradianceShader)
 			envIrradianceShader = Shader::Create("assets/shaders/EnvironmentIrradiance.glsl");
@@ -168,20 +181,39 @@ namespace Key {
 		envIrradianceShader->Bind();
 		envFiltered->Bind();
 		Renderer::Submit([irradianceMap]()
-		{
+			{
 				glBindImageTexture(0, irradianceMap->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
 				glDispatchCompute(irradianceMap->GetWidth() / 32, irradianceMap->GetHeight() / 32, 6);
 				glGenerateTextureMipmap(irradianceMap->GetRendererID());
-		});
+			});
 
 		return { envFiltered, irradianceMap };
 	}
 
 	void SceneRenderer::GeometryPass()
 	{
+		bool outline = s_Data.SelectedMeshDrawList.size() > 0;
+
+		if (outline)
+		{
+			Renderer::Submit([]()
+				{
+					glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+				});
+		}
+
 		Renderer::BeginRenderPass(s_Data.GeoPass);
 
-		auto viewProjection = s_Data.SceneData.SceneCamera.GetViewProjection();
+		if (outline)
+		{
+			Renderer::Submit([]()
+				{
+					glStencilMask(0);
+				});
+		}
+
+		auto viewProjection = s_Data.SceneData.SceneCamera.Camera.GetProjectionMatrix() * s_Data.SceneData.SceneCamera.ViewMatrix;
+		glm::vec3 cameraPosition = glm::inverse(s_Data.SceneData.SceneCamera.ViewMatrix)[3];
 
 		// Skybox
 		auto skyboxShader = s_Data.SceneData.SkyboxMaterial->GetShader();
@@ -193,7 +225,7 @@ namespace Key {
 		{
 			auto baseMaterial = dc.Mesh->GetMaterial();
 			baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
-			baseMaterial->Set("u_CameraPosition", s_Data.SceneData.SceneCamera.GetPosition());
+			baseMaterial->Set("u_CameraPosition", cameraPosition);
 
 			// Environment (TODO: don't do this per mesh)
 			baseMaterial->Set("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
@@ -205,6 +237,71 @@ namespace Key {
 
 			auto overrideMaterial = nullptr; // dc.Material;
 			Renderer::SubmitMesh(dc.Mesh, dc.Transform, overrideMaterial);
+		}
+
+		if (outline)
+		{
+			Renderer::Submit([]()
+				{
+					glStencilFunc(GL_ALWAYS, 1, 0xff);
+					glStencilMask(0xff);
+				});
+		}
+		for (auto& dc : s_Data.SelectedMeshDrawList)
+		{
+			auto baseMaterial = dc.Mesh->GetMaterial();
+			baseMaterial->Set("u_ViewProjectionMatrix", viewProjection);
+			baseMaterial->Set("u_CameraPosition", cameraPosition);
+
+			// Environment (TODO: don't do this per mesh)
+			baseMaterial->Set("u_EnvRadianceTex", s_Data.SceneData.SceneEnvironment.RadianceMap);
+			baseMaterial->Set("u_EnvIrradianceTex", s_Data.SceneData.SceneEnvironment.IrradianceMap);
+			baseMaterial->Set("u_BRDFLUTTexture", s_Data.BRDFLUT);
+
+			// Set lights (TODO: move to light environment and don't do per mesh)
+			baseMaterial->Set("lights", s_Data.SceneData.ActiveLight);
+
+			auto overrideMaterial = nullptr; // dc.Material;
+			Renderer::SubmitMesh(dc.Mesh, dc.Transform, overrideMaterial);
+		}
+
+		if (outline)
+		{
+			Renderer::Submit([]()
+				{
+					glStencilFunc(GL_NOTEQUAL, 1, 0xff);
+					glStencilMask(0);
+
+					glLineWidth(10);
+					glEnable(GL_LINE_SMOOTH);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+					glDisable(GL_DEPTH_TEST);
+				});
+
+			// Draw outline here
+			s_Data.OutlineMaterial->Set("u_ViewProjection", viewProjection);
+			for (auto& dc : s_Data.SelectedMeshDrawList)
+			{
+				Renderer::SubmitMesh(dc.Mesh, dc.Transform, s_Data.OutlineMaterial);
+			}
+
+			Renderer::Submit([]()
+				{
+					glPointSize(10);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+				});
+			for (auto& dc : s_Data.SelectedMeshDrawList)
+			{
+				Renderer::SubmitMesh(dc.Mesh, dc.Transform, s_Data.OutlineMaterial);
+			}
+
+			Renderer::Submit([]()
+				{
+					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+					glStencilMask(0xff);
+					glStencilFunc(GL_ALWAYS, 1, 0xff);
+					glEnable(GL_DEPTH_TEST);
+				});
 		}
 
 		// Grid
@@ -229,7 +326,7 @@ namespace Key {
 	{
 		Renderer::BeginRenderPass(s_Data.CompositePass);
 		s_Data.CompositeShader->Bind();
-		s_Data.CompositeShader->SetFloat("u_Exposure", s_Data.SceneData.SceneCamera.GetExposure());
+		s_Data.CompositeShader->SetFloat("u_Exposure", s_Data.SceneData.SceneCamera.Camera.GetExposure());
 		s_Data.CompositeShader->SetInt("u_TextureSamples", s_Data.GeoPass->GetSpecification().TargetFramebuffer->GetSpecification().Samples);
 		s_Data.GeoPass->GetSpecification().TargetFramebuffer->BindTexture();
 		Renderer::SubmitFullscreenQuad(nullptr);
@@ -244,6 +341,7 @@ namespace Key {
 		CompositePass();
 
 		s_Data.DrawList.clear();
+		s_Data.SelectedMeshDrawList.clear();
 		s_Data.SceneData = {};
 	}
 
