@@ -196,6 +196,27 @@ namespace Key {
 		return (float)glfwGetTime();
 	}
 
+	const char* Application::GetConfigurationName()
+	{
+#if defined(KEY_DEBUG)
+		return "Debug";
+#elif defined(KEY_RELEASE)
+		return "Release";
+#elif defined(KEY_DIST)
+		return "Dist";
+#else
+	#error Undefined configuration?
+#endif
+	}
+
+	const char* Application::GetPlatformName()
+	{
+#if defined(KEY_PLATFORM_WINDOWS)
+		return "Windows x64";
+#else
+	#error Undefined platform?
+#endif
+	}
 	/**
 	 * @brief 应用程序的主循环.
 	 * 

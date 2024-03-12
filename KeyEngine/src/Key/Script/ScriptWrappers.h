@@ -24,9 +24,14 @@ namespace Key {
 		void Key_Entity_SetTransform(uint64_t entityID, glm::mat4* inTransform);
 		void Key_Entity_CreateComponent(uint64_t entityID, void* type);
 		bool Key_Entity_HasComponent(uint64_t entityID, void* type);
+		uint64_t Key_Entity_FindEntityByTag(MonoString* tag);
 
 		void* Key_MeshComponent_GetMesh(uint64_t entityID);
 		void Key_MeshComponent_SetMesh(uint64_t entityID, Ref<Mesh>* inMesh);
+
+		void Key_RigidBody2DComponent_ApplyLinearImpulse(uint64_t entityID, glm::vec2* impulse, glm::vec2* offset, bool wake);
+		void Key_RigidBody2DComponent_GetLinearVelocity(uint64_t entityID, glm::vec2* outVelocity);
+		void Key_RigidBody2DComponent_SetLinearVelocity(uint64_t entityID, glm::vec2* velocity);
 
 		// Renderer
 		// Texture2D
@@ -42,6 +47,7 @@ namespace Key {
 		void Key_MaterialInstance_Destructor(Ref<MaterialInstance>* _this);
 		void Key_MaterialInstance_SetFloat(Ref<MaterialInstance>* _this, MonoString* uniform, float value);
 		void Key_MaterialInstance_SetVector3(Ref<MaterialInstance>* _this, MonoString* uniform, glm::vec3* value);
+		void Key_MaterialInstance_SetVector4(Ref<MaterialInstance>* _this, MonoString* uniform, glm::vec4* value);
 		void Key_MaterialInstance_SetTexture(Ref<MaterialInstance>* _this, MonoString* uniform, Ref<Texture2D>* texture);
 
 		// Mesh

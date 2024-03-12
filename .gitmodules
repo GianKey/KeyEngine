@@ -10,3 +10,6 @@
 [submodule "KeyEngine/vendor/FastNoise"]
 	path = KeyEngine/vendor/FastNoise
 	url = https://github.com/Auburns/FastNoise
+[submodule "KeyEngine/vendor/Box2D"]
+	path = KeyEngine/vendor/Box2D
+	url = https://github.com/TheCherno/Box2D
