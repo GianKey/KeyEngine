@@ -92,13 +92,13 @@ namespace Key {
 			result.resize(in.tellg());
 			in.seekg(0, std::ios::beg);
 			in.read(&result[0], result.size());
-			in.close();
 		}
 		else
 		{
 			KEY_CORE_ASSERT(false, "Could not load shader!");
 		}
 
+		in.close();
 		return result;
 	}
 

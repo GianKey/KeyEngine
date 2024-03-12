@@ -56,7 +56,11 @@ project "KeyEngine"
 		"%{prj.name}/src/**.hpp", 
 		"%{prj.name}/src/**.cpp",
 
-		"%{prj.name}/vendor/FastNoise/**.cpp"
+		"%{prj.name}/vendor/FastNoise/**.cpp",
+
+		"%{prj.name}/vendor/yaml-cpp/src/**.cpp",
+		"%{prj.name}/vendor/yaml-cpp/src/**.h",
+		"%{prj.name}/vendor/yaml-cpp/include/**.h"
 	}
 	
 	includedirs
@@ -72,6 +76,7 @@ project "KeyEngine"
 		"%{IncludeDir.FastNoise}",
 		"%{prj.name}/vendor/assimp/include",
 		"%{IncludeDir.stb_image}",	
+		"%{prj.name}/vendor/yaml-cpp/include"
 	}
 
 	links{
@@ -82,7 +87,7 @@ project "KeyEngine"
 		"%{LibraryDir.mono}"
 	}
 
-	filter "files:KeyEngine/vendor/FastNoise/**.cpp"
+	filter "files:KeyEngine/vendor/FastNoise/**.cpp or files:KeyEngine/vendor/yaml-cpp/src/**.cpp"
 		flags { "NoPCH" }
 
 
@@ -217,7 +222,30 @@ project "Keya"
 	
 	group ""
 
-group "Examples"
+workspace "Sandbox"
+	architecture "x64"
+	targetdir "build"
+	
+	configurations 
+	{ 
+		"Debug", 
+		"Release",
+		"Dist"
+	}
+
+project "Key-ScriptCore"
+	location "Key-ScriptCore"
+	kind "SharedLib"
+	language "C#"
+
+	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+	files 
+	{
+		"%{prj.name}/src/**.cs", 
+	}
+
 project "ExampleApp"
 	location "ExampleApp"
 	kind "SharedLib"
@@ -235,6 +263,7 @@ project "ExampleApp"
 	{
 		"Key-ScriptCore"
 	}
+
 
 --[[project "Sandbox"
     location "Sandbox"
@@ -291,4 +320,3 @@ project "ExampleApp"
 		optimize "on"
 
 --]]
-group ""
