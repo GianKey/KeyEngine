@@ -7,3 +7,6 @@
 [submodule "KeyEngine/vendor/imgui"]
 	path = KeyEngine/vendor/imgui
 	url = git@github.com:TheCherno/imgui.git
+[submodule "KeyEngine/vendor/FastNoise"]
+	path = KeyEngine/vendor/FastNoise
+	url = https://github.com/Auburns/FastNoise

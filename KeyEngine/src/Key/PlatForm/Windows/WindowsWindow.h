@@ -3,7 +3,6 @@
 #include "Key/Core/Window.h"
 #include <GLFW/glfw3.h>
 #include "Key/Core/input.h"
-#include "Key/Renderer/GraphicsContext.h"
 
 namespace Key {
 
@@ -45,7 +44,6 @@ namespace Key {
 		};
 
 		WindowData m_Data;
-		GraphicsContext* m_Context;
 
 		//3D
 		GLFWcursor* m_ImGuiMouseCursors[9] = { 0 };

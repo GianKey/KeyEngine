@@ -46,11 +46,20 @@ namespace Key {
 		void Property(const std::string& name, glm::vec3& value, float min = -1.0f, float max = 1.0f, PropertyFlag flags = PropertyFlag::None);
 		void Property(const std::string& name, glm::vec4& value, PropertyFlag flags);
 		void Property(const std::string& name, glm::vec4& value, float min = -1.0f, float max = 1.0f, PropertyFlag flags = PropertyFlag::None);
-		
+
 		void ShowBoundingBoxes(bool show, bool onTop = false);
 	private:
 		std::pair<float, float> GetMouseViewportSpace();
 		std::pair<glm::vec3, glm::vec3> CastRay(float mx, float my);
+
+		struct SelectedSubmesh
+		{
+			Key::Entity Entity;
+			Submesh* Mesh;
+			float Distance;
+		};
+		void OnSelected(const SelectedSubmesh& selectionContext);
+		Ray CastMouseRay();
 	private:
 		Scope<SceneHierarchyPanel> m_SceneHierarchyPanel;
 
@@ -58,17 +67,15 @@ namespace Key {
 		Ref<Scene> m_SphereScene;
 		Ref<Scene> m_ActiveScene;
 
-		Entity* m_MeshEntity = nullptr;
+		Entity m_MeshEntity;
+		Entity m_CameraEntity;
 
 		Ref<Shader> m_BrushShader;
-		Ref<Mesh> m_PlaneMesh;
 		Ref<Material> m_SphereBaseMaterial;
 
 		Ref<Material> m_MeshMaterial;
 		std::vector<Ref<MaterialInstance>> m_MetalSphereMaterialInstances;
 		std::vector<Ref<MaterialInstance>> m_DielectricSphereMaterialInstances;
-
-		float m_GridScale = 16.025f, m_GridSize = 0.025f;
 
 		struct AlbedoInput
 		{
@@ -102,7 +109,6 @@ namespace Key {
 		};
 		RoughnessInput m_RoughnessInput;
 
-
 		// PBR params
 		bool m_RadiancePrefilter = false;
 
@@ -126,12 +132,14 @@ namespace Key {
 		bool m_UIShowBoundingBoxes = false;
 		bool m_UIShowBoundingBoxesOnTop = false;
 
-		struct SelectedSubmesh
+		enum class SelectionMode
 		{
-			Submesh* Mesh;
-			float Distance;
+			None = 0, Entity = 1, SubMesh = 2
 		};
-		std::vector<SelectedSubmesh> m_SelectedSubmeshes;
+
+		SelectionMode m_SelectionMode = SelectionMode::Entity;
+		std::vector<SelectedSubmesh> m_SelectionContext;
+		glm::mat4* m_RelativeTransform = nullptr;
 		glm::mat4* m_CurrentlySelectedTransform = nullptr;
 	};
 

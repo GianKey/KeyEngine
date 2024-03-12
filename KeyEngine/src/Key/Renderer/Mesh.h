@@ -3,7 +3,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-#include "Key/Core/Timestep.h"
+#include "Key/Core/TimeStep.h"
 
 #include "Key/Renderer/VertexArray.h"
 #include "Key/Renderer/Buffer.h"

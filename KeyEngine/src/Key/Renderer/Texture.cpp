@@ -1,6 +1,6 @@
 #include "Kpch.h"
 #include "Texture.h"
-#include "Renderer.h"
+
 #include "RendererAPI.h"
 #include "Key/PlatForm/OpenGL/OpenGLTexture.h"
 namespace Key {

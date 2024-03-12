@@ -1,7 +1,10 @@
 #pragma once
 
-#include "Entity.h"
 #include "Key/Renderer/Camera.h"
+#include "Key/Renderer/Texture.h"
+#include "Key/Renderer/Material.h"
+
+#include "entt/entt.hpp"
 
 namespace Key {
 
@@ -21,8 +24,9 @@ namespace Key {
 		float Multiplier = 1.0f;
 	};
 
+	class Entity;
 
-	class Scene
+	class Scene : public RefCounted
 	{
 	public:
 		Scene(const std::string& debugName = "Scene");
@@ -33,9 +37,6 @@ namespace Key {
 		void OnUpdate(TimeStep ts);
 		void OnEvent(Event& e);
 
-		void SetCamera(const Camera& camera);
-		Camera& GetCamera() { return m_Camera; }
-
 		void SetEnvironment(const Environment& environment);
 		void SetSkybox(const Ref<TextureCube>& skybox);
 
@@ -43,12 +44,20 @@ namespace Key {
 
 		float& GetSkyboxLod() { return m_SkyboxLod; }
 
-		void AddEntity(Entity* entity);
-		Entity* CreateEntity(const std::string& name = "");
+		Entity CreateEntity(const std::string& name = "");
+		void DestroyEntity(Entity entity);
+
+		template<typename T>
+		auto GetAllEntitiesWith()
+		{
+			return m_Registry.view<T>();
+		}
 	private:
+		uint32_t m_SceneID;
+		entt::entity m_SceneEntity;
+		entt::registry m_Registry;
+
 		std::string m_DebugName;
-		std::vector<Entity*> m_Entities;
-		Camera m_Camera;
 
 		Light m_Light;
 		float m_LightMultiplier = 0.3f;
@@ -59,6 +68,7 @@ namespace Key {
 
 		float m_SkyboxLod = 1.0f;
 
+		friend class Entity;
 		friend class SceneRenderer;
 		friend class SceneHierarchyPanel;
 	};
