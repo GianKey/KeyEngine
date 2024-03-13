@@ -444,6 +444,12 @@
     <ClInclude Include="vendor\yaml-cpp\src\token.h">
       <Filter>vendor\yaml-cpp\src</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\ImGui\ImGui.h">
+      <Filter>src\Key\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Renderer\SceneEnvironment.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Key\Core\Application.cpp">
@@ -688,6 +694,9 @@
     </ClCompile>
     <ClCompile Include="vendor\yaml-cpp\src\tag.cpp">
       <Filter>vendor\yaml-cpp\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Renderer\SceneEnvironment.cpp">
+      <Filter>src\Key\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

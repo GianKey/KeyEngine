@@ -65,7 +65,7 @@ namespace Key {
 
 		virtual void write(const char* message) override
 		{
-			KEY_CORE_ERROR("Assimp error: {0}", message);
+			KEY_CORE_ERROR("Assimp: {0}", message);
 		}
 	};
 
