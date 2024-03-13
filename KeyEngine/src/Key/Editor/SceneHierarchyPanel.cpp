@@ -1,11 +1,14 @@
 #include "Kpch.h"
 #include "SceneHierarchyPanel.h"
 
-#include <imgui.h>
 
 #include "Key/Core/Application.h"
 #include "Key/Renderer/Mesh.h"
 #include "Key/Script/ScriptEngine.h"
+
+#include <imgui.h>
+#include <imgui/imgui_internal.h>
+
 #include <assimp/scene.h>
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -71,73 +74,7 @@ namespace Key {
 			ImGui::Begin("Properties");
 
 			if (m_SelectionContext)
-			{
 				DrawComponents(m_SelectionContext);
-
-				if (ImGui::Button("Add Component"))
-					ImGui::OpenPopup("AddComponentPanel");
-
-				if (ImGui::BeginPopup("AddComponentPanel"))
-				{
-					if (!m_SelectionContext.HasComponent<CameraComponent>())
-					{
-						if (ImGui::Button("Camera"))
-						{
-							m_SelectionContext.AddComponent<CameraComponent>();
-							ImGui::CloseCurrentPopup();
-						}
-					}
-					if (!m_SelectionContext.HasComponent<MeshComponent>())
-					{
-						if (ImGui::Button("Mesh"))
-						{
-							m_SelectionContext.AddComponent<MeshComponent>();
-							ImGui::CloseCurrentPopup();
-						}
-					}
-					if (!m_SelectionContext.HasComponent<ScriptComponent>())
-					{
-						if (ImGui::Button("Script"))
-						{
-							m_SelectionContext.AddComponent<ScriptComponent>();
-							ImGui::CloseCurrentPopup();
-						}
-					}
-					if (!m_SelectionContext.HasComponent<SpriteRendererComponent>())
-					{
-						if (ImGui::Button("Sprite Renderer"))
-						{
-							m_SelectionContext.AddComponent<SpriteRendererComponent>();
-							ImGui::CloseCurrentPopup();
-						}
-					}
-					if (!m_SelectionContext.HasComponent<RigidBody2DComponent>())
-					{
-						if (ImGui::Button("Rigidbody 2D"))
-						{
-							m_SelectionContext.AddComponent<RigidBody2DComponent>();
-							ImGui::CloseCurrentPopup();
-						}
-					}
-					if (!m_SelectionContext.HasComponent<BoxCollider2DComponent>())
-					{
-						if (ImGui::Button("Box Collider 2D"))
-						{
-							m_SelectionContext.AddComponent<BoxCollider2DComponent>();
-							ImGui::CloseCurrentPopup();
-						}
-					}
-					if (!m_SelectionContext.HasComponent<CircleCollider2DComponent>())
-					{
-						if (ImGui::Button("Circle Collider 2D"))
-						{
-							m_SelectionContext.AddComponent<CircleCollider2DComponent>();
-							ImGui::CloseCurrentPopup();
-						}
-					}
-					ImGui::EndPopup();
-				}
-			}
 		}
 		ImGui::End();
 
@@ -167,8 +104,9 @@ namespace Key {
 		if (entity.HasComponent<TagComponent>())
 			name = entity.GetComponent<TagComponent>().Tag.c_str();
 
-		ImGuiTreeNodeFlags node_flags = (entity == m_SelectionContext ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
-		bool opened = ImGui::TreeNodeEx((void*)(uint32_t)entity, node_flags, name);
+		ImGuiTreeNodeFlags flags = (entity == m_SelectionContext ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+		bool opened = ImGui::TreeNodeEx((void*)(uint32_t)entity, flags, name);
 		if (ImGui::IsItemClicked())
 		{
 			m_SelectionContext = entity;
@@ -186,13 +124,7 @@ namespace Key {
 		}
 		if (opened)
 		{
-			if (entity.HasComponent<MeshComponent>())
-			{
-				auto mesh = entity.GetComponent<MeshComponent>().Mesh;
-				// if (mesh)
-				// 	DrawMeshNode(mesh);
-			}
-
+			// TODO: Children
 			ImGui::TreePop();
 		}
 
@@ -464,23 +396,24 @@ namespace Key {
 	template<typename T, typename UIFunction>
 	static void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction)
 	{
+		const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
 		if (entity.HasComponent<T>())
 		{
-			bool removeComponent = false;
-
 			auto& component = entity.GetComponent<T>();
-			bool open = ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(T).hash_code()), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap, name.c_str());
-			ImGui::SameLine();
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
-			if (ImGui::Button("+"))
+			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
+			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+			ImGui::Separator();
+			bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, name.c_str());
+			ImGui::PopStyleVar();
+			ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
+			if (ImGui::Button("+", ImVec2{ lineHeight, lineHeight }))
 			{
 				ImGui::OpenPopup("ComponentSettings");
 			}
 
-			ImGui::PopStyleColor();
-			ImGui::PopStyleColor();
-
+			bool removeComponent = false;
 			if (ImGui::BeginPopup("ComponentSettings"))
 			{
 				if (ImGui::MenuItem("Remove component"))
@@ -492,15 +425,92 @@ namespace Key {
 			if (open)
 			{
 				uiFunction(component);
-				ImGui::NextColumn();
-				ImGui::Columns(1);
 				ImGui::TreePop();
 			}
-			ImGui::Separator();
 
 			if (removeComponent)
 				entity.RemoveComponent<T>();
 		}
+	}
+
+	static bool DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f)
+	{
+		bool modified = false;
+
+		ImGuiIO& io = ImGui::GetIO();
+		auto boldFont = io.Fonts->Fonts[0];
+
+		ImGui::PushID(label.c_str());
+
+		ImGui::Columns(2);
+		ImGui::SetColumnWidth(0, columnWidth);
+		ImGui::Text(label.c_str());
+		ImGui::NextColumn();
+
+		ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
+
+		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+		ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.9f, 0.2f, 0.2f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
+		ImGui::PushFont(boldFont);
+		if (ImGui::Button("X", buttonSize))
+		{
+			values.x = resetValue;
+			modified = true;
+		}
+		ImGui::PopFont();
+		ImGui::PopStyleColor(3);
+
+		ImGui::SameLine();
+		modified |= ImGui::DragFloat("##X", &values.x, 0.1f, 0.0f, 0.0f, "%.2f");
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.3f, 0.8f, 0.3f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
+		ImGui::PushFont(boldFont);
+		if (ImGui::Button("Y", buttonSize)) 
+		{
+			values.y = resetValue;
+			modified = true;
+		}
+		ImGui::PopFont();
+		ImGui::PopStyleColor(3);
+
+		ImGui::SameLine();
+		modified |= ImGui::DragFloat("##Y", &values.y, 0.1f, 0.0f, 0.0f, "%.2f");
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.2f, 0.35f, 0.9f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
+		ImGui::PushFont(boldFont);
+		if (ImGui::Button("Z", buttonSize))
+		{
+			values.z = resetValue;
+			modified = true;
+		}
+
+		ImGui::PopFont();
+		ImGui::PopStyleColor(3);
+
+		ImGui::SameLine();
+		modified |= ImGui::DragFloat("##Z", &values.z, 0.1f, 0.0f, 0.0f, "%.2f");
+		ImGui::PopItemWidth();
+
+		ImGui::PopStyleVar();
+
+		ImGui::Columns(1);
+
+		ImGui::PopID();
+
+		return modified;
 	}
 
 	void SceneHierarchyPanel::DrawComponents(Entity entity)
@@ -509,86 +519,109 @@ namespace Key {
 
 		auto id = entity.GetComponent<IDComponent>().ID;
 
+		ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+
 		if (entity.HasComponent<TagComponent>())
 		{
 			auto& tag = entity.GetComponent<TagComponent>().Tag;
 			char buffer[256];
 			memset(buffer, 0, 256);
 			memcpy(buffer, tag.c_str(), tag.length());
+			ImGui::PushItemWidth(contentRegionAvailable.x * 0.5f);
 			if (ImGui::InputText("##Tag", buffer, 256))
 			{
 				tag = std::string(buffer);
 			}
+			ImGui::PopItemWidth();
 		}
 
 		// ID
 		ImGui::SameLine();
 		ImGui::TextDisabled("%llx", id);
+		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+		ImVec2 textSize = ImGui::CalcTextSize("Add Component");
+		ImGui::SameLine(contentRegionAvailable.x - (textSize.x + GImGui->Style.FramePadding.y));
+		if (ImGui::Button("Add Component"))
+			ImGui::OpenPopup("AddComponentPanel");
 
-		ImGui::Separator();
-
-		if (entity.HasComponent<TransformComponent>())
+		if (ImGui::BeginPopup("AddComponentPanel"))
 		{
-			auto& tc = entity.GetComponent<TransformComponent>();
-			if (ImGui::TreeNodeEx((void*)((uint32_t)entity | typeid(TransformComponent).hash_code()), ImGuiTreeNodeFlags_DefaultOpen, "Transform"))
+			if (!m_SelectionContext.HasComponent<CameraComponent>())
 			{
-				auto [translation, rotationQuat, scale] = GetTransformDecomposition(tc);
-				glm::vec3 rotation = glm::degrees(glm::eulerAngles(rotationQuat));
+				if (ImGui::Button("Camera"))
+				{
+					m_SelectionContext.AddComponent<CameraComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectionContext.HasComponent<MeshComponent>())
+			{
+				if (ImGui::Button("Mesh"))
+				{
+					m_SelectionContext.AddComponent<MeshComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectionContext.HasComponent<ScriptComponent>())
+			{
+				if (ImGui::Button("Script"))
+				{
+					m_SelectionContext.AddComponent<ScriptComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectionContext.HasComponent<SpriteRendererComponent>())
+			{
+				if (ImGui::Button("Sprite Renderer"))
+				{
+					m_SelectionContext.AddComponent<SpriteRendererComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectionContext.HasComponent<RigidBody2DComponent>())
+			{
+				if (ImGui::Button("Rigidbody 2D"))
+				{
+					m_SelectionContext.AddComponent<RigidBody2DComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectionContext.HasComponent<BoxCollider2DComponent>())
+			{
+				if (ImGui::Button("Box Collider 2D"))
+				{
+					m_SelectionContext.AddComponent<BoxCollider2DComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectionContext.HasComponent<CircleCollider2DComponent>())
+			{
+				if (ImGui::Button("Circle Collider 2D"))
+				{
+					m_SelectionContext.AddComponent<CircleCollider2DComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			ImGui::EndPopup();
+		}
 
-				ImGui::Columns(2);
-				ImGui::Text("Translation");
-				ImGui::NextColumn();
-				ImGui::PushItemWidth(-1);
+		DrawComponent<TransformComponent>("Transform", entity, [](auto& component)
+			{
+				auto [translation, rotationQuat, scale] = GetTransformDecomposition(component);
 
 				bool updateTransform = false;
-
-				if (ImGui::DragFloat3("##translation", glm::value_ptr(translation), 0.25f))
-				{
-					//tc.Transform[3] = glm::vec4(translation, 1.0f);
-					updateTransform = true;
-				}
-
-				ImGui::PopItemWidth();
-				ImGui::NextColumn();
-
-				ImGui::Text("Rotation");
-				ImGui::NextColumn();
-				ImGui::PushItemWidth(-1);
-
-				if (ImGui::DragFloat3("##rotation", glm::value_ptr(rotation), 0.25f))
-				{
-					updateTransform = true;
-					// tc.Transform[3] = glm::vec4(translation, 1.0f);
-				}
-
-				ImGui::PopItemWidth();
-				ImGui::NextColumn();
-
-				ImGui::Text("Scale");
-				ImGui::NextColumn();
-				ImGui::PushItemWidth(-1);
-
-				if (ImGui::DragFloat3("##scale", glm::value_ptr(scale), 0.25f))
-				{
-					updateTransform = true;
-				}
-
-				ImGui::PopItemWidth();
-				ImGui::NextColumn();
-
-				ImGui::Columns(1);
+				updateTransform |= DrawVec3Control("Translation", translation);
+				glm::vec3 rotation = glm::degrees(glm::eulerAngles(rotationQuat));
+				updateTransform |= DrawVec3Control("Rotation", rotation);
+				updateTransform |= DrawVec3Control("Scale", scale, 1.0f);
 
 				if (updateTransform)
 				{
-					tc.Transform = glm::translate(glm::mat4(1.0f), translation) *
+					component.Transform = glm::translate(glm::mat4(1.0f), translation) *
 						glm::toMat4(glm::quat(glm::radians(rotation))) *
 						glm::scale(glm::mat4(1.0f), scale);
 				}
-
-				ImGui::TreePop();
-			}
-			ImGui::Separator();
-		}
+			});
 
 		DrawComponent<MeshComponent>("Mesh", entity, [](MeshComponent& mc)
 			{
@@ -611,6 +644,7 @@ namespace Key {
 					if (!file.empty())
 						mc.Mesh = Ref<Mesh>::Create(file);
 				}
+				ImGui::Columns(1);
 			});
 
 		DrawComponent<CameraComponent>("Camera", entity, [](CameraComponent& cc)
