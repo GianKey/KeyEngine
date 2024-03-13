@@ -159,10 +159,13 @@
     <ClInclude Include="src\Key\ImGui\ImGuizmo.h">
       <Filter>src\Key\ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLBuffer.h">
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLFramebuffer.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLFramebuffer.h">
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLIndexBuffer.h">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLPipeline.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLRenderPass.h">
@@ -177,14 +180,11 @@
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLTexture.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLVertexArray.h">
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLVertexBuffer.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\PlatForm\Windows\WindowsWindow.h">
       <Filter>src\Key\PlatForm\Windows</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\Renderer\Buffer.h">
-      <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\Camera.h">
       <Filter>src\Key\Renderer</Filter>
@@ -195,6 +195,9 @@
     <ClInclude Include="src\Key\Renderer\Framebuffer.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Renderer\IndexBuffer.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\Renderer\Material.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
@@ -202,6 +205,9 @@
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\OrthographicCamera.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Renderer\Pipeline.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\RenderCommandQueue.h">
@@ -231,7 +237,7 @@
     <ClInclude Include="src\Key\Renderer\Texture.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\Renderer\VertexArray.h">
+    <ClInclude Include="src\Key\Renderer\VertexBuffer.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Scene\Components.h">
@@ -482,10 +488,13 @@
     <ClCompile Include="src\Key\ImGui\ImGuizmo.cpp">
       <Filter>src\Key\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLBuffer.cpp">
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLFrameBbuffer.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLFrameBbuffer.cpp">
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLIndexBuffer.cpp">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLPipeline.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLRenderPass.cpp">
@@ -503,7 +512,7 @@
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLTexture.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLVertexArray.cpp">
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLVertexBuffer.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\Windows\WindowsInput.cpp">
@@ -511,9 +520,6 @@
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\Windows\WindowsWindow.cpp">
       <Filter>src\Key\PlatForm\Windows</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Key\Renderer\Buffer.cpp">
-      <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\Camera.cpp">
       <Filter>src\Key\Renderer</Filter>
@@ -524,6 +530,9 @@
     <ClCompile Include="src\Key\Renderer\Framebuffer.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\Key\Renderer\IndexBuffer.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\Renderer\Material.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
@@ -531,6 +540,9 @@
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\OrthographicCamera.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Renderer\Pipeline.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\RenderCommandQueue.cpp">
@@ -554,7 +566,7 @@
     <ClCompile Include="src\Key\Renderer\Texture.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="src\Key\Renderer\VertexArray.cpp">
+    <ClCompile Include="src\Key\Renderer\VertexBuffer.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Scene\Entity.cpp">
