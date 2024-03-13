@@ -38,6 +38,7 @@ namespace Key {
 		s_Instance = this;
 		m_Window = std::unique_ptr<Window>(Window::Create(WindowProps(props.Name, props.WindowWidth, props.WindowHeight)));
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
+		m_Window->Maximize();
 		m_Window->SetVSync(true);
 
 		m_ImGuiLayer = new ImGuiLayer("ImGui");
@@ -101,7 +102,10 @@ namespace Key {
 		Renderer::Submit([=]() { glViewport(0, 0, width, height); });
 		auto& fbs = FramebufferPool::GetGlobal()->GetAll();
 		for (auto& fb : fbs)
-			fb->Resize(width, height);
+		{
+			if (!fb->GetSpecification().NoResize)
+				fb->Resize(width, height);
+		}
 		return false;
 	}
 
