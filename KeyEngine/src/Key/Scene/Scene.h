@@ -45,7 +45,7 @@ namespace Key {
 	class Scene : public RefCounted
 	{
 	public:
-		Scene(const std::string& debugName = "Scene");
+		Scene(const std::string& debugName = "Scene", bool isEditorScene = false);
 		~Scene();
 
 		void Init();
@@ -84,6 +84,9 @@ namespace Key {
 		}
 
 		Entity FindEntityByTag(const std::string& tag);
+		Entity FindEntityByUUID(UUID id);
+
+		glm::mat4 GetTransformRelativeToParent(Entity entity);
 
 		const EntityMap& GetEntityMap() const { return m_EntityIDMap; }
 		void CopyTo(Ref<Scene>& target);

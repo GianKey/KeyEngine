@@ -9,9 +9,10 @@ namespace Key
     {
         public ulong ID { get; private set; }
 
-        private List<Action<float>> m_Collision2DBeginCallbacks = new List<Action<float>>();
-        private List<Action<float>> m_Collision2DEndCallbacks = new List<Action<float>>();
-
+        private Action<float> m_CollisionBeginCallbacks;
+        private Action<float> m_CollisionEndCallbacks;
+        private Action<float> m_Collision2DBeginCallbacks;
+        private Action<float> m_Collision2DEndCallbacks;
         protected Entity() { ID = 0; }
 
         internal Entity(ulong id)
@@ -21,6 +22,42 @@ namespace Key
 
         ~Entity()
         {
+        }
+
+        public Vector3 Translation
+        {
+            get
+            {
+                return GetComponent<TransformComponent>().Translation;
+            }
+            set
+            {
+                GetComponent<TransformComponent>().Translation = value;
+            }
+        }
+
+        public Vector3 Rotation
+        {
+            get
+            {
+                return GetComponent<TransformComponent>().Rotation;
+            }
+            set
+            {
+                GetComponent<TransformComponent>().Rotation = value;
+            }
+        }
+
+        public Vector3 Scale
+        {
+            get
+            {
+                return GetComponent<TransformComponent>().Scale;
+            }
+            set
+            {
+                GetComponent<TransformComponent>().Scale = value;
+            }
         }
 
         public T CreateComponent<T>() where T : Component, new()
@@ -53,48 +90,36 @@ namespace Key
             return new Entity(entityID);
         }
 
-        public Matrix4 GetTransform()
+        public Entity FindEntityByID(ulong entityID)
         {
-            Matrix4 mat4Instance;
-            GetTransform_Native(ID, out mat4Instance);
-            return mat4Instance;
-        }
-
-        public void SetTransform(Matrix4 transform)
-        {
-            SetTransform_Native(ID, ref transform);
+            // TODO: Verify the entity id
+            return new Entity(entityID);
         }
 
         public void AddCollision2DBeginCallback(Action<float> callback)
         {
-            m_Collision2DBeginCallbacks.Add(callback);
+            m_Collision2DBeginCallbacks += callback;
         }
 
         public void AddCollision2DEndCallback(Action<float> callback)
         {
-            m_Collision2DEndCallbacks.Add(callback);
+            m_Collision2DEndCallbacks += callback;
         }
 
-        private void OnCollision2DBegin(float data)
+        public void AddCollisionBeginCallback(Action<float> callback)
         {
-            foreach (var callback in m_Collision2DBeginCallbacks)
-                callback.Invoke(data);
+            m_CollisionBeginCallbacks += callback;
         }
 
-        private void OnCollision2DEnd(float data)
+        public void AddCollisionEndCallback(Action<float> callback)
         {
-            foreach (var callback in m_Collision2DEndCallbacks)
-                callback.Invoke(data);
+            m_CollisionEndCallbacks += callback;
         }
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void CreateComponent_Native(ulong entityID, Type type);
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern bool HasComponent_Native(ulong entityID, Type type);
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        private static extern void GetTransform_Native(ulong entityID, out Matrix4 matrix);
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        private static extern void SetTransform_Native(ulong entityID, ref Matrix4 matrix);
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern ulong FindEntityByTag_Native(string tag);
 

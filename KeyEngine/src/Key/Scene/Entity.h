@@ -45,8 +45,8 @@ namespace Key {
 			m_Scene->m_Registry.remove<T>(m_EntityHandle);
 		}
 
-		glm::mat4& Transform() { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle); }
-		const glm::mat4& Transform() const { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle); }
+		TransformComponent& Transform() { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle); }
+		const glm::mat4& Transform() const { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle).GetTransform(); }
 
 		operator uint32_t () const { return (uint32_t)m_EntityHandle; }
 		operator entt::entity() const { return m_EntityHandle; }
@@ -61,6 +61,11 @@ namespace Key {
 		{
 			return !(*this == other);
 		}
+
+		void SetParentUUID(UUID parent) { GetComponent<ParentComponent>().ParentHandle = parent; }
+		UUID GetParentUUID() { return GetComponent<ParentComponent>().ParentHandle; }
+		std::vector<UUID>& Children() { return GetComponent<ChildrenComponent>().Children; }
+
 
 		UUID GetUUID() { return GetComponent<IDComponent>().ID; }
 		UUID GetSceneUUID() { return m_Scene->GetUUID(); }

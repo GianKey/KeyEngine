@@ -13,6 +13,9 @@
 
 #include <imgui/imgui_internal.h>
 
+#include "Key/Math/Math.h"
+#include "Key/Utilities/DragDropData.h"
+
 namespace Key {
 
 	static void ImGuiShowHelpMarker(const char* desc)
@@ -59,7 +62,11 @@ namespace Key {
 		m_SceneHierarchyPanel->SetSelectionChangedCallback(std::bind(&EditorLayer::SelectEntity, this, std::placeholders::_1));
 		m_SceneHierarchyPanel->SetEntityDeletedCallback(std::bind(&EditorLayer::OnEntityDeleted, this, std::placeholders::_1));
 
-		OpenScene("assets/scenes/LightingTest.hsc");
+		m_AssetManagerPanel = CreateScope<AssetManagerPanel>();
+		m_ObjectsPanel = CreateScope<ObjectsPanel>();
+
+		//OpenScene("assets/scenes/AnimationTest.hsc");
+		NewScene();
 	}
 
 	void EditorLayer::OnDetach()
@@ -80,6 +87,7 @@ namespace Key {
 
 		m_RuntimeScene->OnRuntimeStart();
 		m_SceneHierarchyPanel->SetContext(m_RuntimeScene);
+		m_CurrentScene = m_RuntimeScene;
 	}
 
 	void EditorLayer::OnSceneStop()
@@ -93,11 +101,12 @@ namespace Key {
 		m_SelectionContext.clear();
 		ScriptEngine::SetSceneContext(m_EditorScene);
 		m_SceneHierarchyPanel->SetContext(m_EditorScene);
+		m_CurrentScene = m_EditorScene;
 	}
 
 	void EditorLayer::UpdateWindowTitle(const std::string& sceneName)
 	{
-		std::string title = sceneName + " - Keynut - " + Application::GetPlatformName() + " (" + Application::GetConfigurationName() + ")";
+		std::string title = sceneName + " - Keya - " + Application::GetPlatformName() + " (" + Application::GetConfigurationName() + ")";
 		Application::Get().GetWindow().SetTitle(title);
 	}
 
@@ -147,7 +156,7 @@ namespace Key {
 					auto viewProj = m_EditorCamera.GetViewProjection();
 					Renderer2D::BeginScene(viewProj, false);
 					glm::vec4 color = (m_SelectionMode == SelectionMode::Entity) ? glm::vec4{ 1.0f, 1.0f, 1.0f, 1.0f } : glm::vec4{ 0.2f, 0.9f, 0.2f, 1.0f };
-					Renderer::DrawAABB(selection.Mesh->BoundingBox, selection.Entity.GetComponent<TransformComponent>().Transform * selection.Mesh->Transform, color);
+					Renderer::DrawAABB(selection.Mesh->BoundingBox, selection.Entity.Transform().GetTransform() * selection.Mesh->Transform, color);
 					Renderer2D::EndScene();
 					Renderer::EndRenderPass();
 				}
@@ -160,13 +169,12 @@ namespace Key {
 				if (selection.Entity.HasComponent<BoxCollider2DComponent>())
 				{
 					const auto& size = selection.Entity.GetComponent<BoxCollider2DComponent>().Size;
-					auto [translation, rotationQuat, scale] = GetTransformDecomposition(selection.Entity.GetComponent<TransformComponent>().Transform);
-					glm::vec3 rotation = glm::eulerAngles(rotationQuat);
+					const TransformComponent& transform = selection.Entity.GetComponent<TransformComponent>();
 
 					Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
 					auto viewProj = m_EditorCamera.GetViewProjection();
 					Renderer2D::BeginScene(viewProj, false);
-					Renderer2D::DrawRotatedQuad({ translation.x, translation.y }, size * 2.0f, glm::degrees(rotation.z), { 1.0f, 0.0f, 1.0f, 1.0f });
+					Renderer2D::DrawRotatedRect({ transform.Translation.x, transform.Translation.y }, size * 2.0f, transform.Rotation.z, { 0.0f, 1.0f, 1.0f, 1.0f });
 					Renderer2D::EndScene();
 					Renderer::EndRenderPass();
 				}
@@ -315,9 +323,12 @@ namespace Key {
 		SelectedSubmesh selection;
 		if (entity.HasComponent<MeshComponent>())
 		{
-			auto mesh = entity.GetComponent<MeshComponent>().Mesh;
-			if (mesh)
-				selection.Mesh = &mesh->GetSubmeshes()[0];
+			auto& meshComp = entity.GetComponent<MeshComponent>();
+
+			if (meshComp.Mesh)
+			{
+				selection.Mesh = &meshComp.Mesh->GetSubmeshes()[0];
+			}
 		}
 		selection.Entity = entity;
 		m_SelectionContext.clear();
@@ -328,7 +339,7 @@ namespace Key {
 
 	void EditorLayer::NewScene()
 	{
-		m_EditorScene = Ref<Scene>::Create();
+		m_EditorScene = Ref<Scene>::Create("Empty Scene", true);
 		m_SceneHierarchyPanel->SetContext(m_EditorScene);
 		ScriptEngine::SetSceneContext(m_EditorScene);
 		UpdateWindowTitle("Untitled Scene");
@@ -347,10 +358,11 @@ namespace Key {
 
 	void EditorLayer::OpenScene(const std::string& filepath)
 	{
-		Ref<Scene> newScene = Ref<Scene>::Create();
+		Ref<Scene> newScene = Ref<Scene>::Create("New Scene", true);
 		SceneSerializer serializer(newScene);
 		serializer.Deserialize(filepath);
 		m_EditorScene = newScene;
+		m_SceneFilePath = filepath;
 
 		std::filesystem::path path = filepath;
 		UpdateWindowTitle(path.filename().string());
@@ -359,6 +371,8 @@ namespace Key {
 
 		m_EditorScene->SetSelectedEntity({});
 		m_SelectionContext.clear();
+
+		m_CurrentScene = m_EditorScene;
 	}
 
 	void EditorLayer::SaveScene()
@@ -476,6 +490,9 @@ namespace Key {
 			ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);
 		if (m_UIShowBoundingBoxes && Property("On Top", m_UIShowBoundingBoxesOnTop))
 			ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);
+
+		m_AssetManagerPanel->OnImGuiRender();
+		m_ObjectsPanel->OnImGuiRender();
 
 		char* label = m_SelectionMode == SelectionMode::Entity ? "Entity" : "Mesh";
 		if (ImGui::Button(label))
@@ -603,22 +620,35 @@ namespace Key {
 
 			bool snap = Input::IsKeyPressed(KEY_KEY_LEFT_CONTROL);
 
-			auto& entityTransform = selection.Entity.Transform();
+			TransformComponent& entityTransform = selection.Entity.Transform();
+			glm::mat4 transform = entityTransform.GetTransform();// m_CurrentScene->GetTransformRelativeToParent(selection.Entity);
 			float snapValue = GetSnapValue();
 			float snapValues[3] = { snapValue, snapValue, snapValue };
+
 			if (m_SelectionMode == SelectionMode::Entity)
 			{
 				ImGuizmo::Manipulate(glm::value_ptr(m_EditorCamera.GetViewMatrix()),
 					glm::value_ptr(m_EditorCamera.GetProjectionMatrix()),
 					(ImGuizmo::OPERATION)m_GizmoType,
 					ImGuizmo::LOCAL,
-					glm::value_ptr(entityTransform),
+					glm::value_ptr(transform),
 					nullptr,
 					snap ? snapValues : nullptr);
+
+				if (ImGuizmo::IsUsing())
+				{
+					glm::vec3 translation, rotation, scale;
+					Math::DecomposeTransform(transform, translation, rotation, scale);
+
+					glm::vec3 deltaRotation = rotation - entityTransform.Rotation;
+					entityTransform.Translation = translation;
+					entityTransform.Rotation += deltaRotation;
+					entityTransform.Scale = scale;
+				}
 			}
 			else
 			{
-				glm::mat4 transformBase = entityTransform * selection.Mesh->Transform;
+				glm::mat4 transformBase = transform * selection.Mesh->Transform;
 				ImGuizmo::Manipulate(glm::value_ptr(m_EditorCamera.GetViewMatrix()),
 					glm::value_ptr(m_EditorCamera.GetProjectionMatrix()),
 					(ImGuizmo::OPERATION)m_GizmoType,
@@ -627,8 +657,46 @@ namespace Key {
 					nullptr,
 					snap ? snapValues : nullptr);
 
-				selection.Mesh->Transform = glm::inverse(entityTransform) * transformBase;
+				selection.Mesh->Transform = glm::inverse(transform) * transformBase;
 			}
+		}
+
+		if (ImGui::BeginDragDropTarget())
+		{
+			auto data = ImGui::AcceptDragDropPayload("scene_entity_objectP");
+			if (data)
+			{
+				auto d = (DragDropData*)data->Data;
+				if (d->Type == "Mesh")
+				{
+					auto entity = m_EditorScene->CreateEntity(d->Name);
+					entity.AddComponent<MeshComponent>(Ref<Mesh>::Create(d->SourcePath));
+				}
+			}
+			ImGui::EndDragDropTarget();
+		}
+
+		/* Payload Implementation For Getting Assets In The Viewport From Asset Manager */
+		if (ImGui::BeginDragDropTarget())
+		{
+			auto data = ImGui::AcceptDragDropPayload("scene_entity_assetsP");
+			if (data)
+			{
+				auto d = (DragDropData*)data->Data;
+
+				if (d->Type == "KeyScene")
+				{
+					auto sceneName = d->SourcePath;
+					OpenScene(sceneName);
+				}
+
+				if (d->Type == "Mesh")
+				{
+					auto entity = m_EditorScene->CreateEntity(d->Name);
+					entity.AddComponent<MeshComponent>(Ref<Mesh>::Create(d->SourcePath));
+				}
+			}
+			ImGui::EndDragDropTarget();
 		}
 
 		ImGui::End();
@@ -660,6 +728,12 @@ namespace Key {
 					ScriptEngine::ReloadAssembly("assets/scripts/ExampleApp.dll");
 
 				ImGui::MenuItem("Reload assembly on play", nullptr, &m_ReloadScriptOnPlay);
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Edit"))
+			{
+
 				ImGui::EndMenu();
 			}
 
@@ -1002,8 +1076,8 @@ namespace Key {
 					{
 						auto& submesh = submeshes[i];
 						Ray ray = {
-							glm::inverse(entity.Transform() * submesh.Transform) * glm::vec4(origin, 1.0f),
-							glm::inverse(glm::mat3(entity.Transform()) * glm::mat3(submesh.Transform)) * direction
+							glm::inverse(entity.Transform().GetTransform() * submesh.Transform) * glm::vec4(origin, 1.0f),
+							glm::inverse(glm::mat3(entity.Transform().GetTransform()) * glm::mat3(submesh.Transform)) * direction
 						};
 
 						float t;

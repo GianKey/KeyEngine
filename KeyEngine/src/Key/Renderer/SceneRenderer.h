@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Key/Scene/Scene.h"
+#include "Key/Scene/Components.h"
 #include "Key/Renderer/Mesh.h"
 #include "RenderPass.h"
 

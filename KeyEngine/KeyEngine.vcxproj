@@ -171,12 +171,15 @@
     <ClInclude Include="src\Key\Core\UUID.h" />
     <ClInclude Include="src\Key\Core\Window.h" />
     <ClInclude Include="src\Key\Core\input.h" />
+    <ClInclude Include="src\Key\Editor\AssetManagerPanel.h" />
     <ClInclude Include="src\Key\Editor\EditorCamera.h" />
+    <ClInclude Include="src\Key\Editor\ObjectsPanel.h" />
     <ClInclude Include="src\Key\Editor\SceneHierarchyPanel.h" />
     <ClInclude Include="src\Key\EntryPoint.h" />
     <ClInclude Include="src\Key\ImGui\ImGui.h" />
     <ClInclude Include="src\Key\ImGui\ImGuiLayer.h" />
     <ClInclude Include="src\Key\ImGui\ImGuizmo.h" />
+    <ClInclude Include="src\Key\Math\Math.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLFramebuffer.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLIndexBuffer.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLPipeline.h" />
@@ -213,6 +216,8 @@
     <ClInclude Include="src\Key\Script\ScriptEngine.h" />
     <ClInclude Include="src\Key\Script\ScriptEngineRegistry.h" />
     <ClInclude Include="src\Key\Script\ScriptWrappers.h" />
+    <ClInclude Include="src\Key\Utilities\AssetManager.h" />
+    <ClInclude Include="src\Key\Utilities\DragDropData.h" />
     <ClInclude Include="src\Kpch.h" />
     <ClInclude Include="vendor\yaml-cpp\include\yaml-cpp\anchor.h" />
     <ClInclude Include="vendor\yaml-cpp\include\yaml-cpp\binary.h" />
@@ -284,11 +289,14 @@
     <ClCompile Include="src\Key\Core\Math\Noise.cpp" />
     <ClCompile Include="src\Key\Core\UUID.cpp" />
     <ClCompile Include="src\Key\Core\Window.cpp" />
+    <ClCompile Include="src\Key\Editor\AssetManagerPanel.cpp" />
     <ClCompile Include="src\Key\Editor\EditorCamera.cpp" />
+    <ClCompile Include="src\Key\Editor\ObjectsPanel.cpp" />
     <ClCompile Include="src\Key\Editor\SceneHierarchyPanel.cpp" />
     <ClCompile Include="src\Key\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="src\Key\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="src\Key\ImGui\ImGuizmo.cpp" />
+    <ClCompile Include="src\Key\Math\Math.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLFrameBbuffer.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLIndexBuffer.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLPipeline.cpp" />
@@ -324,6 +332,7 @@
     <ClCompile Include="src\Key\Script\ScriptEngine.cpp" />
     <ClCompile Include="src\Key\Script\ScriptEngineRegistry.cpp" />
     <ClCompile Include="src\Key\Script\ScriptWrappers.cpp" />
+    <ClCompile Include="src\Key\Utilities\AssetManager.cpp" />
     <ClCompile Include="src\Kpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

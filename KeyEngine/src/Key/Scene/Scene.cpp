@@ -10,6 +10,8 @@
 
 #include "Key/Renderer/Renderer2D.h"
 
+#include "Key/Math/Math.h"
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -122,7 +124,7 @@ namespace Key {
 		ScriptEngine::OnScriptComponentDestroyed(sceneID, entityID);
 	}
 
-	Scene::Scene(const std::string& debugName)
+	Scene::Scene(const std::string& debugName, bool isEditorScene)
 		: m_DebugName(debugName)
 	{
 		m_Registry.on_construct<ScriptComponent>().connect<&OnScriptComponentConstruct>();
@@ -156,15 +158,6 @@ namespace Key {
 		m_SkyboxMaterial->SetFlag(MaterialFlag::DepthTest, false);
 	}
 
-	static std::tuple<glm::vec3, glm::quat, glm::vec3> GetTransformDecomposition(const glm::mat4& transform)
-	{
-		glm::vec3 scale, translation, skew;
-		glm::vec4 perspective;
-		glm::quat orientation;
-		glm::decompose(transform, scale, orientation, translation, skew, perspective);
-
-		return { translation, orientation, scale };
-	}
 
 	// Merge OnUpdate/Render into one function?
 	void Scene::OnUpdate(TimeStep ts)
@@ -181,17 +174,14 @@ namespace Key {
 			for (auto entity : view)
 			{
 				Entity e = { entity, this };
-				auto& transform = e.Transform();
 				auto& rb2d = e.GetComponent<RigidBody2DComponent>();
 				b2Body* body = static_cast<b2Body*>(rb2d.RuntimeBody);
 
 				auto& position = body->GetPosition();
-				auto [translation, rotationQuat, scale] = GetTransformDecomposition(transform);
-				glm::vec3 rotation = glm::eulerAngles(rotationQuat);
-
-				transform = glm::translate(glm::mat4(1.0f), { position.x, position.y, transform[3].z }) *
-					glm::toMat4(glm::quat({ rotation.x, rotation.y, body->GetAngle() })) *
-					glm::scale(glm::mat4(1.0f), scale);
+				auto& transform = e.GetComponent<TransformComponent>();
+				transform.Translation.x = position.x;
+				transform.Translation.y = position.y;
+				transform.Rotation.z = body->GetAngle();
 			}
 		}
 
@@ -200,10 +190,27 @@ namespace Key {
 			auto view = m_Registry.view<ScriptComponent>();
 			for (auto entity : view)
 			{
-				UUID entityID = m_Registry.get<IDComponent>(entity).ID;
 				Entity e = { entity, this };
 				if (ScriptEngine::ModuleExists(e.GetComponent<ScriptComponent>().ModuleName))
-					ScriptEngine::OnUpdateEntity(m_SceneID, entityID, ts);
+					ScriptEngine::OnUpdateEntity(e, ts);
+			}
+		}
+
+		{
+			auto view = m_Registry.view<TransformComponent>();
+			for (auto entity : view)
+			{
+				auto& transformComponent = view.get(entity);
+				glm::mat4 transform = GetTransformRelativeToParent(Entity(entity, this));
+				glm::vec3 translation;
+				glm::vec3 rotation;
+				glm::vec3 scale;
+				Math::DecomposeTransform(transform, translation, rotation, scale);
+
+				glm::quat rotationQuat = glm::quat(rotation);
+				transformComponent.Up = glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0F, 1.0F, 0.0F)));
+				transformComponent.Right = glm::normalize(glm::rotate(rotationQuat, glm::vec3(1.0F, 0.0F, 0.0F)));
+				transformComponent.Forward = glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0F, 0.0F, -1.0F)));
 			}
 		}
 	}
@@ -218,7 +225,7 @@ namespace Key {
 			return;
 
 		// Process camera entity
-		glm::mat4 cameraViewMatrix = glm::inverse(cameraEntity.GetComponent<TransformComponent>().Transform);
+		glm::mat4 cameraViewMatrix = glm::inverse(GetTransformRelativeToParent(cameraEntity));
 		KEY_CORE_ASSERT(cameraEntity, "Scene does not contain any cameras!");
 		SceneCamera& camera = cameraEntity.GetComponent<CameraComponent>();
 		camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
@@ -231,7 +238,7 @@ namespace Key {
 			for (auto entity : lights)
 			{
 				auto [transformComponent, lightComponent] = lights.get<TransformComponent, DirectionalLightComponent>(entity);
-				glm::vec3 direction = -glm::normalize(glm::mat3(transformComponent.Transform) * glm::vec3(1.0f));
+				glm::vec3 direction = -glm::normalize(glm::mat3(transformComponent.GetTransform()) * glm::vec3(1.0f));
 				m_LightEnvironment.DirectionalLights[directionalLightIndex++] =
 				{
 					direction,
@@ -265,9 +272,10 @@ namespace Key {
 			if (meshComponent.Mesh)
 			{
 				meshComponent.Mesh->OnUpdate(ts);
+				glm::mat4 transform = GetTransformRelativeToParent(Entity(entity, this));
 
 				// TODO: Should we render (logically)
-				SceneRenderer::SubmitMesh(meshComponent, transformComponent, nullptr);
+				SceneRenderer::SubmitMesh(meshComponent, transform);
 			}
 		}
 		SceneRenderer::EndScene();
@@ -306,7 +314,7 @@ namespace Key {
 			for (auto entity : lights)
 			{
 				auto [transformComponent, lightComponent] = lights.get<TransformComponent, DirectionalLightComponent>(entity);
-				glm::vec3 direction = -glm::normalize(glm::mat3(transformComponent.Transform) * glm::vec3(1.0f));
+				glm::vec3 direction = -glm::normalize(glm::mat3(transformComponent.GetTransform()) * glm::vec3(1.0f));
 				m_LightEnvironment.DirectionalLights[directionalLightIndex++] =
 				{
 					direction,
@@ -317,7 +325,6 @@ namespace Key {
 			}
 		}
 
-		// TODO: only one sky light at the moment!
 		{
 			m_Environment = Environment();
 			auto lights = m_Registry.group<SkyLightComponent>(entt::get<TransformComponent>);
@@ -341,12 +348,13 @@ namespace Key {
 			{
 				meshComponent.Mesh->OnUpdate(ts);
 
-				// TODO: Should we render (logically)
+				glm::mat4 transform = GetTransformRelativeToParent(Entity{ entity, this });
 
+				// TODO: Should we render (logically)
 				if (m_SelectedEntity == entity)
-					SceneRenderer::SubmitSelectedMesh(meshComponent, transformComponent);
+					SceneRenderer::SubmitSelectedMesh(meshComponent, transform);
 				else
-					SceneRenderer::SubmitMesh(meshComponent, transformComponent);
+					SceneRenderer::SubmitMesh(meshComponent, transform);
 			}
 		}
 		SceneRenderer::EndScene();
@@ -401,7 +409,7 @@ namespace Key {
 			{
 				Entity e = { entity, this };
 				UUID entityID = e.GetComponent<IDComponent>().ID;
-				auto& transform = e.Transform();
+				TransformComponent& transform = e.GetComponent<TransformComponent>();
 				auto& rigidBody2D = m_Registry.get<RigidBody2DComponent>(entity);
 
 				b2BodyDef bodyDef;
@@ -411,11 +419,9 @@ namespace Key {
 					bodyDef.type = b2_dynamicBody;
 				else if (rigidBody2D.BodyType == RigidBody2DComponent::Type::Kinematic)
 					bodyDef.type = b2_kinematicBody;
-				bodyDef.position.Set(transform[3].x, transform[3].y);
+				bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
 
-				auto [translation, rotationQuat, scale] = GetTransformDecomposition(transform);
-				glm::vec3 rotation = glm::eulerAngles(rotationQuat);
-				bodyDef.angle = rotation.z;
+				bodyDef.angle = transform.Rotation.z;
 
 				b2Body* body = world->CreateBody(&bodyDef);
 				body->SetFixedRotation(rigidBody2D.FixedRotation);
@@ -517,9 +523,12 @@ namespace Key {
 		auto& idComponent = entity.AddComponent<IDComponent>();
 		idComponent.ID = {};
 
-		entity.AddComponent<TransformComponent>(glm::mat4(1.0f));
+		entity.AddComponent<TransformComponent>();
 		if (!name.empty())
 			entity.AddComponent<TagComponent>(name);
+
+		entity.AddComponent<ParentComponent>();
+		entity.AddComponent<ChildrenComponent>();
 
 		m_EntityIDMap[idComponent.ID] = entity;
 		return entity;
@@ -531,7 +540,7 @@ namespace Key {
 		auto& idComponent = entity.AddComponent<IDComponent>();
 		idComponent.ID = uuid;
 
-		entity.AddComponent<TransformComponent>(glm::mat4(1.0f));
+		entity.AddComponent<TransformComponent>();
 		if (!name.empty())
 			entity.AddComponent<TagComponent>(name);
 
@@ -580,6 +589,11 @@ namespace Key {
 			newEntity = CreateEntity();
 
 		CopyComponentIfExists<TransformComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
+
+		// TODO: Should we maintain parent?
+		CopyComponentIfExists<ParentComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
+		CopyComponentIfExists<ChildrenComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
+
 		CopyComponentIfExists<MeshComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
 		CopyComponentIfExists<DirectionalLightComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
 		CopyComponentIfExists<SkyLightComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
@@ -605,6 +619,30 @@ namespace Key {
 		return Entity{};
 	}
 
+	Entity Scene::FindEntityByUUID(UUID id)
+	{
+		auto view = m_Registry.view<IDComponent>();
+		for (auto entity : view)
+		{
+			auto& idComponent = m_Registry.get<IDComponent>(entity);
+			if (idComponent.ID == id)
+				return Entity(entity, this);
+		}
+
+		return Entity{};
+	}
+
+	glm::mat4 Scene::GetTransformRelativeToParent(Entity entity)
+	{
+		glm::mat4 transform(1.0F);
+
+		Entity parent = FindEntityByUUID(entity.GetParentUUID());
+		if (parent)
+			transform = GetTransformRelativeToParent(parent);
+
+		return transform * entity.Transform().GetTransform();
+	}
+
 	// Copy to runtime
 	void Scene::CopyTo(Ref<Scene>& target)
 	{
@@ -628,6 +666,8 @@ namespace Key {
 
 		CopyComponent<TagComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<TransformComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<ParentComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<ChildrenComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<MeshComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<DirectionalLightComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<SkyLightComponent>(target->m_Registry, m_Registry, enttMap);

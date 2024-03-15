@@ -59,8 +59,10 @@
     <Compile Include="src\KeyEngine\Entity.cs" />
     <Compile Include="src\KeyEngine\Input.cs" />
     <Compile Include="src\KeyEngine\KeyCodes.cs" />
+    <Compile Include="src\KeyEngine\Math\Mathf.cs" />
     <Compile Include="src\KeyEngine\Math\Matrix4.cs" />
     <Compile Include="src\KeyEngine\Math\Noise.cs" />
+    <Compile Include="src\KeyEngine\Math\Transform.cs" />
     <Compile Include="src\KeyEngine\Math\Vector2.cs" />
     <Compile Include="src\KeyEngine\Math\Vector3.cs" />
     <Compile Include="src\KeyEngine\Math\Vector4.cs" />

@@ -49,7 +49,10 @@ namespace Key {
 		Renderer::Init();
 		Renderer::WaitAndRender();
 	}
-	Application::~Application() {
+	Application::~Application() 
+	{
+		for (Layer* layer : m_LayerStack)
+			layer->OnDetach();
 		ScriptEngine::Shutdown();
 	}
 
@@ -248,7 +251,7 @@ namespace Key {
 				/*m_ImGuiLayer->End();*/
 				///End imgui
 
-					// Render ImGui on render thread
+					// Render ImGui on render threads
 				Application* app = this;
 				Renderer::Submit([app]() { app->RenderImGui(); });
 
