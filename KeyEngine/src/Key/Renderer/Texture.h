@@ -2,6 +2,7 @@
 #include "Key/Core/Base.h"
 #include "Key/Core/Buffer.h"
 #include "RendererAPI.h"
+#include "Key/Asset/Assets.h"
 #include <string>
 namespace Key {
 
@@ -20,7 +21,7 @@ namespace Key {
 		Repeat = 2
 	};
 
-	class Texture : public RefCounted
+	class Texture : public Asset
 	{
 	public:
 		virtual ~Texture() = default;

@@ -4,6 +4,8 @@
 #include "Entity.h"
 #include "Components.h"
 #include "Key/Script/ScriptEngine.h"
+#include "Key/Renderer/MeshFactory.h"
+#include "Key/Asset/AssetManager.h"
 
 #include "yaml-cpp/yaml.h"
 
@@ -169,6 +171,23 @@ namespace Key {
 		out << YAML::Key << "Entity";
 		out << YAML::Value << uuid;
 
+		if (entity.HasComponent<RelationshipComponent>())
+		{
+			auto& relationshipComponent = entity.GetComponent<RelationshipComponent>();
+			out << YAML::Key << "Parent" << YAML::Value << relationshipComponent.ParentHandle;
+
+			out << YAML::Key << "Children";
+			out << YAML::Value << YAML::BeginSeq;
+
+			for (auto child : relationshipComponent.Children)
+			{
+				out << YAML::BeginMap;
+				out << YAML::Key << "Handle" << YAML::Value << child;
+				out << YAML::EndMap;
+			}
+			out << YAML::EndSeq;
+		}
+
 		if (entity.HasComponent<TagComponent>())
 		{
 			out << YAML::Key << "TagComponent";
@@ -185,11 +204,10 @@ namespace Key {
 			out << YAML::Key << "TransformComponent";
 			out << YAML::BeginMap; // TransformComponent
 
-			auto& transform = entity.GetComponent<TransformComponent>().Transform;
-			auto [pos, rot, scale] = GetTransformDecomposition(transform);
-			out << YAML::Key << "Position" << YAML::Value << pos;
-			out << YAML::Key << "Rotation" << YAML::Value << rot;
-			out << YAML::Key << "Scale" << YAML::Value << scale;
+			auto& transform = entity.GetComponent<TransformComponent>();
+			out << YAML::Key << "Position" << YAML::Value << transform.Translation;
+			out << YAML::Key << "Rotation" << YAML::Value << transform.Rotation;
+			out << YAML::Key << "Scale" << YAML::Value << transform.Scale;
 
 			out << YAML::EndMap; // TransformComponent
 		}
@@ -251,21 +269,31 @@ namespace Key {
 			out << YAML::BeginMap; // MeshComponent
 
 			auto mesh = entity.GetComponent<MeshComponent>().Mesh;
-			out << YAML::Key << "AssetPath" << YAML::Value << mesh->GetFilePath();
+			if (mesh)
+				out << YAML::Key << "AssetID" << YAML::Value << mesh->Handle;
+			else
+				out << YAML::Key << "AssetID" << YAML::Value << 0;
 
 			out << YAML::EndMap; // MeshComponent
 		}
 
 		if (entity.HasComponent<CameraComponent>())
 		{
-			out << YAML::Key << "CameraComponent";
 			out << YAML::BeginMap; // CameraComponent
 
 			auto& cameraComponent = entity.GetComponent<CameraComponent>();
-			out << YAML::Key << "Camera" << YAML::Value << "some camera data...";
+			auto& camera = cameraComponent.Camera;
+			out << YAML::Key << "Camera" << YAML::Value;
+			out << YAML::BeginMap; // Camera
+			out << YAML::Key << "ProjectionType" << YAML::Value << (int)camera.GetProjectionType();
+			out << YAML::Key << "PerspectiveFOV" << YAML::Value << camera.GetPerspectiveVerticalFOV();
+			out << YAML::Key << "PerspectiveNear" << YAML::Value << camera.GetPerspectiveNearClip();
+			out << YAML::Key << "PerspectiveFar" << YAML::Value << camera.GetPerspectiveFarClip();
+			out << YAML::Key << "OrthographicSize" << YAML::Value << camera.GetOrthographicSize();
+			out << YAML::Key << "OrthographicNear" << YAML::Value << camera.GetOrthographicNearClip();
+			out << YAML::Key << "OrthographicFar" << YAML::Value << camera.GetOrthographicFarClip();
+			out << YAML::EndMap; // Camera
 			out << YAML::Key << "Primary" << YAML::Value << cameraComponent.Primary;
-
-			out << YAML::EndMap; // CameraComponent
 		}
 
 		if (entity.HasComponent<DirectionalLightComponent>())
@@ -288,7 +316,7 @@ namespace Key {
 			out << YAML::BeginMap; // SkyLightComponent
 
 			auto& skyLightComponent = entity.GetComponent<SkyLightComponent>();
-			out << YAML::Key << "EnvironmentAssetPath" << YAML::Value << skyLightComponent.SceneEnvironment.FilePath;
+			out << YAML::Key << "EnvironmentMap" << YAML::Value << skyLightComponent.SceneEnvironment->Handle;
 			out << YAML::Key << "Intensity" << YAML::Value << skyLightComponent.Intensity;
 			out << YAML::Key << "Angle" << YAML::Value << skyLightComponent.Angle;
 
@@ -357,7 +385,7 @@ namespace Key {
 		out << YAML::Key << "Environment";
 		out << YAML::Value;
 		out << YAML::BeginMap; // Environment
-		out << YAML::Key << "AssetPath" << YAML::Value << scene->GetEnvironment().FilePath;
+		out << YAML::Key << "AssetHandle" << YAML::Value << scene->GetEnvironment()->Handle;
 		const auto& light = scene->GetLight();
 		out << YAML::Key << "Light" << YAML::Value;
 		out << YAML::BeginMap; // Light
@@ -422,10 +450,19 @@ namespace Key {
 		std::string sceneName = data["Scene"].as<std::string>();
 		KEY_CORE_INFO("Deserializing scene '{0}'", sceneName);
 
-		auto environment = data["Environment"];
+		/*auto environment = data["Environment"];
 		if (environment)
 		{
-			std::string envPath = environment["AssetPath"].as<std::string>();
+			AssetHandle assetHandle;
+			if (environment["AssetPath"])
+			{
+				std::string envPath = environment["AssetPath"].as<std::string>();
+				assetHandle = AssetManager::GetAssetIDForFile(envPath);
+			}
+			else
+			{
+				assetHandle = environment["AssetHandle"].as<uint64_t>();
+			}
 			//m_Scene->SetEnvironment(Environment::Load(envPath));
 
 			auto lightNode = environment["Light"];
@@ -436,7 +473,7 @@ namespace Key {
 				light.Radiance = lightNode["Radiance"].as<glm::vec3>();
 				light.Multiplier = lightNode["Multiplier"].as<float>();
 			}
-		}
+		}*/
 
 		std::vector<std::string> missingPaths;
 
@@ -456,22 +493,44 @@ namespace Key {
 
 				Entity deserializedEntity = m_Scene->CreateEntityWithID(uuid, name);
 
+				auto& relationshipComponent = deserializedEntity.GetComponent<RelationshipComponent>();
+				uint64_t parentHandle = entity["Parent"] ? entity["Parent"].as<uint64_t>() : 0;
+				relationshipComponent.ParentHandle = parentHandle;
+
+				auto children = entity["Children"];
+				if (children)
+				{
+					for (auto child : children)
+					{
+						uint64_t childHandle = child["Handle"].as<uint64_t>();
+						relationshipComponent.Children.push_back(childHandle);
+					}
+				}
+
 				auto transformComponent = entity["TransformComponent"];
 				if (transformComponent)
 				{
 					// Entities always have transforms
-					auto& transform = deserializedEntity.GetComponent<TransformComponent>().Transform;
-					glm::vec3 translation = transformComponent["Position"].as<glm::vec3>();
-					glm::quat rotation = transformComponent["Rotation"].as<glm::quat>();
-					glm::vec3 scale = transformComponent["Scale"].as<glm::vec3>();
-
-					transform = glm::translate(glm::mat4(1.0f), translation) *
-						glm::toMat4(rotation) * glm::scale(glm::mat4(1.0f), scale);
+					auto& transform = deserializedEntity.GetComponent<TransformComponent>();
+					transform.Translation = transformComponent["Position"].as<glm::vec3>();
+					auto& rotationNode = transformComponent["Rotation"];
+					// Rotations used to be stored as quaternions
+					if (rotationNode.size() == 4)
+					{
+						glm::quat rotation = transformComponent["Rotation"].as<glm::quat>();
+						transform.Rotation = glm::eulerAngles(rotation);
+					}
+					else
+					{
+						KEY_CORE_ASSERT(rotationNode.size() == 3);
+						transform.Rotation = transformComponent["Rotation"].as<glm::vec3>();
+					}
+					transform.Scale = transformComponent["Scale"].as<glm::vec3>();
 
 					KEY_CORE_INFO("  Entity Transform:");
-					KEY_CORE_INFO("    Translation: {0}, {1}, {2}", translation.x, translation.y, translation.z);
-					KEY_CORE_INFO("    Rotation: {0}, {1}, {2}, {3}", rotation.w, rotation.x, rotation.y, rotation.z);
-					KEY_CORE_INFO("    Scale: {0}, {1}, {2}", scale.x, scale.y, scale.z);
+					KEY_CORE_INFO("    Translation: {0}, {1}, {2}", transform.Translation.x, transform.Translation.y, transform.Translation.z);
+					KEY_CORE_INFO("    Rotation: {0}, {1}, {2}", transform.Rotation.x, transform.Rotation.y, transform.Rotation.z);
+					KEY_CORE_INFO("    Scale: {0}, {1}, {2}", transform.Scale.x, transform.Scale.y, transform.Scale.z);
 				}
 
 				auto scriptComponent = entity["ScriptComponent"];
@@ -489,14 +548,14 @@ namespace Key {
 						{
 							for (auto field : storedFields)
 							{
-								std::string name = field["Name"].as<std::string>();
+								std::string typeName = field["TypeName"] ? field["TypeName"].as<std::string>() : "";
 								FieldType type = (FieldType)field["Type"].as<uint32_t>();
 								EntityInstanceData& data = ScriptEngine::GetEntityInstanceData(m_Scene->GetUUID(), uuid);
 								auto& moduleFieldMap = data.ModuleFieldMap;
 								auto& publicFields = moduleFieldMap[moduleName];
 								if (publicFields.find(name) == publicFields.end())
 								{
-									PublicField pf = { name, type };
+									PublicField pf = { name, typeName, type };
 									publicFields.emplace(name, std::move(pf));
 								}
 								auto dataNode = field["Data"];
@@ -546,31 +605,50 @@ namespace Key {
 				auto meshComponent = entity["MeshComponent"];
 				if (meshComponent)
 				{
-					std::string meshPath = meshComponent["AssetPath"].as<std::string>();
-
-					// TEMP (because script creates mesh component...)
-					if (!deserializedEntity.HasComponent<MeshComponent>())
+					UUID assetID;
+					if (meshComponent["AssetPath"])
 					{
-						Ref<Mesh> mesh;
-						if (!CheckPath(meshPath))
-							missingPaths.emplace_back(meshPath);
-						else
-							mesh = Ref<Mesh>::Create(meshPath);
-
-						deserializedEntity.AddComponent<MeshComponent>(mesh);
+						std::string filepath = meshComponent["AssetPath"].as<std::string>();
+						assetID = AssetManager::GetAssetHandleFromFilePath(filepath);
 					}
-					KEY_CORE_INFO("  Mesh Asset Path: {0}", meshPath);
+					else
+					{
+						assetID = meshComponent["AssetID"].as<uint64_t>();
+					}
+					
+					if (AssetManager::IsAssetHandleValid(assetID) && !deserializedEntity.HasComponent<MeshComponent>())
+					{
+						deserializedEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>(assetID));
+					}
+					
 				}
 
 				auto cameraComponent = entity["CameraComponent"];
 				if (cameraComponent)
 				{
 					auto& component = deserializedEntity.AddComponent<CameraComponent>();
-					component.Camera = SceneCamera();
-					component.Primary = cameraComponent["Primary"].as<bool>();
+					auto& cameraNode = cameraComponent["Camera"];
 
-					KEY_CORE_INFO("  Primary Camera: {0}", component.Primary);
+					component.Camera = SceneCamera();
+					auto& camera = component.Camera;
+					if (cameraNode["ProjectionType"])
+						camera.SetProjectionType((SceneCamera::ProjectionType)cameraNode["ProjectionType"].as<int>());
+					if (cameraNode["PerspectiveFOV"])
+						camera.SetPerspectiveVerticalFOV(cameraNode["PerspectiveFOV"].as<float>());
+					if (cameraNode["PerspectiveNear"])
+						camera.SetPerspectiveNearClip(cameraNode["PerspectiveNear"].as<float>());
+					if (cameraNode["PerspectiveFar"])
+						camera.SetPerspectiveFarClip(cameraNode["PerspectiveFar"].as<float>());
+					if (cameraNode["OrthographicSize"])
+						camera.SetOrthographicSize(cameraNode["OrthographicSize"].as<float>());
+					if (cameraNode["OrthographicNear"])
+						camera.SetOrthographicNearClip(cameraNode["OrthographicNear"].as<float>());
+					if (cameraNode["OrthographicFar"])
+						camera.SetOrthographicFarClip(cameraNode["OrthographicFar"].as<float>());
+
+					component.Primary = cameraComponent["Primary"].as<bool>();
 				}
+
 
 				auto directionalLightComponent = entity["DirectionalLightComponent"];
 				if (directionalLightComponent)
@@ -586,18 +664,23 @@ namespace Key {
 				if (skyLightComponent)
 				{
 					auto& component = deserializedEntity.AddComponent<SkyLightComponent>();
-					std::string env = skyLightComponent["EnvironmentAssetPath"].as<std::string>();
-					if (!env.empty())
+
+					AssetHandle assetHandle;
+					if (skyLightComponent["EnvironmentAssetPath"])
 					{
-						if (!CheckPath(env))
-						{
-							missingPaths.emplace_back(env);
-						}
-						else
-						{
-							component.SceneEnvironment = Environment::Load(env);
-						}
+						std::string filepath = skyLightComponent["EnvironmentAssetPath"].as<std::string>();
+						assetHandle = AssetManager::GetAssetHandleFromFilePath(filepath);
 					}
+					else
+					{
+						assetHandle = skyLightComponent["EnvironmentMap"].as<uint64_t>();
+					}
+
+					if (AssetManager::IsAssetHandleValid(assetHandle))
+					{
+						component.SceneEnvironment = AssetManager::GetAsset<Environment>(assetHandle);
+					}
+
 					component.Intensity = skyLightComponent["Intensity"].as<float>();
 					component.Angle = skyLightComponent["Angle"].as<float>();
 				}

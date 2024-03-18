@@ -7,6 +7,9 @@
     <Filter Include="src\Key">
       <UniqueIdentifier>{058C2FA9-716B-AE44-7A83-391BE6E114A6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Key\Asset">
+      <UniqueIdentifier>{5470075D-C030-8393-896B-CC10F5EAC76F}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Key\Core">
       <UniqueIdentifier>{7DFBE95F-695E-7904-12E4-B1BAFE254587}</UniqueIdentifier>
     </Filter>
@@ -21,6 +24,9 @@
     </Filter>
     <Filter Include="src\Key\ImGui">
       <UniqueIdentifier>{EF30945D-5BF1-0F94-242C-591190AB5470}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Key\Math">
+      <UniqueIdentifier>{FE3BEF5F-EA9E-7E04-9324-B7BA7F664A87}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Key\PlatForm">
       <UniqueIdentifier>{D9913EE5-C58A-5D37-EEBC-42BCDA143D43}</UniqueIdentifier>
@@ -39,6 +45,9 @@
     </Filter>
     <Filter Include="src\Key\Script">
       <UniqueIdentifier>{A952D026-9520-C42C-7EB4-34536A21A091}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Key\Utilities">
+      <UniqueIdentifier>{B03A328D-1C51-3023-65C8-BB44D11D01AB}</UniqueIdentifier>
     </Filter>
     <Filter Include="vendor">
       <UniqueIdentifier>{B3738122-9F15-ACF8-88D0-BF4C74113349}</UniqueIdentifier>
@@ -74,6 +83,15 @@
   <ItemGroup>
     <ClInclude Include="src\Key.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Asset\Assets.h">
+      <Filter>src\Key\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Asset\AssetManager.h">
+      <Filter>src\Key\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Asset\AssetSerializer.h">
+      <Filter>src\Key\Asset</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Core\Application.h">
       <Filter>src\Key\Core</Filter>
@@ -144,7 +162,13 @@
     <ClInclude Include="src\Key\Core\input.h">
       <Filter>src\Key\Core</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Editor\AssetManagerPanel.h">
+      <Filter>src\Key\Editor</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\Editor\EditorCamera.h">
+      <Filter>src\Key\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Editor\ObjectsPanel.h">
       <Filter>src\Key\Editor</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Editor\SceneHierarchyPanel.h">
@@ -153,11 +177,17 @@
     <ClInclude Include="src\Key\EntryPoint.h">
       <Filter>src\Key</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\ImGui\ImGui.h">
+      <Filter>src\Key\ImGui</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\ImGui\ImGuiLayer.h">
       <Filter>src\Key\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\ImGui\ImGuizmo.h">
       <Filter>src\Key\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Math\Math.h">
+      <Filter>src\Key\Math</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLFramebuffer.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
@@ -204,6 +234,9 @@
     <ClInclude Include="src\Key\Renderer\Mesh.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Renderer\MeshFactory.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\Renderer\OrthographicCamera.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
@@ -223,6 +256,9 @@
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\RendererAPI.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Renderer\SceneEnvironment.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\SceneRenderer.h">
@@ -263,6 +299,12 @@
     </ClInclude>
     <ClInclude Include="src\Key\Script\ScriptWrappers.h">
       <Filter>src\Key\Script</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Utilities\DragDropData.h">
+      <Filter>src\Key\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Utilities\FileSystem.h">
+      <Filter>src\Key\Utilities</Filter>
     </ClInclude>
     <ClInclude Include="src\Kpch.h">
       <Filter>src</Filter>
@@ -444,14 +486,23 @@
     <ClInclude Include="vendor\yaml-cpp\src\token.h">
       <Filter>vendor\yaml-cpp\src</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\ImGui\ImGui.h">
-      <Filter>src\Key\ImGui</Filter>
+    <ClInclude Include="src\Key\Utilities\StringUtils.h">
+      <Filter>src\Key\Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\Renderer\SceneEnvironment.h">
-      <Filter>src\Key\Renderer</Filter>
+    <ClInclude Include="src\Key\Editor\AssetEditorPanel.h">
+      <Filter>src\Key\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Editor\DefaultAssetEditors.h">
+      <Filter>src\Key\Editor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Key\Asset\AssetManager.cpp">
+      <Filter>src\Key\Asset</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Asset\AssetSerializer.cpp">
+      <Filter>src\Key\Asset</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\Core\Application.cpp">
       <Filter>src\Key\Core</Filter>
     </ClCompile>
@@ -479,7 +530,13 @@
     <ClCompile Include="src\Key\Core\Window.cpp">
       <Filter>src\Key\Core</Filter>
     </ClCompile>
+    <ClCompile Include="src\Key\Editor\AssetManagerPanel.cpp">
+      <Filter>src\Key\Editor</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\Editor\EditorCamera.cpp">
+      <Filter>src\Key\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Editor\ObjectsPanel.cpp">
       <Filter>src\Key\Editor</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Editor\SceneHierarchyPanel.cpp">
@@ -493,6 +550,9 @@
     </ClCompile>
     <ClCompile Include="src\Key\ImGui\ImGuizmo.cpp">
       <Filter>src\Key\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Math\Math.cpp">
+      <Filter>src\Key\Math</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLFrameBbuffer.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
@@ -521,6 +581,9 @@
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLVertexBuffer.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Windows\WindowsFileSystem.cpp">
+      <Filter>src\Key\PlatForm\Windows</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\PlatForm\Windows\WindowsInput.cpp">
       <Filter>src\Key\PlatForm\Windows</Filter>
     </ClCompile>
@@ -545,6 +608,9 @@
     <ClCompile Include="src\Key\Renderer\Mesh.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\Key\Renderer\MeshFactory.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\Renderer\OrthographicCamera.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
@@ -561,6 +627,9 @@
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\Renderer2D.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Renderer\SceneEnvironment.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\SceneRenderer.cpp">
@@ -695,8 +764,14 @@
     <ClCompile Include="vendor\yaml-cpp\src\tag.cpp">
       <Filter>vendor\yaml-cpp\src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Key\Renderer\SceneEnvironment.cpp">
-      <Filter>src\Key\Renderer</Filter>
+    <ClCompile Include="src\Key\Utilities\StringUtils.cpp">
+      <Filter>src\Key\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Editor\AssetEditorPanel.cpp">
+      <Filter>src\Key\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Editor\DefaultAssetEditors.cpp">
+      <Filter>src\Key\Editor</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

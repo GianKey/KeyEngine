@@ -10,6 +10,7 @@
 #include <Windows.h>
 
 #include "Key/Script/ScriptEngine.h"
+#include "Key/Asset/AssetManager.h"
 #include <imgui/imgui.h>
 
 namespace Key {
@@ -48,9 +49,17 @@ namespace Key {
 
 		Renderer::Init();
 		Renderer::WaitAndRender();
+
+		AssetTypes::Init();
+		AssetManager::Init();
 	}
-	Application::~Application() {
+	Application::~Application() 
+	{
+		for (Layer* layer : m_LayerStack)
+			layer->OnDetach();
 		ScriptEngine::Shutdown();
+
+		AssetManager::Shutdown();
 	}
 
 	/**
@@ -248,7 +257,7 @@ namespace Key {
 				/*m_ImGuiLayer->End();*/
 				///End imgui
 
-					// Render ImGui on render thread
+					// Render ImGui on render threads
 				Application* app = this;
 				Renderer::Submit([app]() { app->RenderImGui(); });
 

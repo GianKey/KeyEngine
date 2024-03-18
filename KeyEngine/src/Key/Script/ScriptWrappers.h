@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Key/Script/ScriptEngine.h"
-#include "Key/Core/KeyCodes.h"
+#include "Key/Core/Input.h"
 
 #include <glm/glm.hpp>
 
@@ -18,13 +18,24 @@ namespace Key {
 
 		// Input
 		bool Key_Input_IsKeyPressed(KeyCode key);
+		bool Key_Input_IsMouseButtonPressed(MouseButton button);
+		void Key_Input_GetMousePosition(glm::vec2* outPosition);
+		void Key_Input_SetCursorMode(CursorMode mode);
+		CursorMode Key_Input_GetCursorMode();
 
 		// Entity
-		void Key_Entity_GetTransform(uint64_t entityID, glm::mat4* outTransform);
-		void Key_Entity_SetTransform(uint64_t entityID, glm::mat4* inTransform);
 		void Key_Entity_CreateComponent(uint64_t entityID, void* type);
 		bool Key_Entity_HasComponent(uint64_t entityID, void* type);
 		uint64_t Key_Entity_FindEntityByTag(MonoString* tag);
+
+		void Key_TransformComponent_GetTransform(uint64_t entityID, TransformComponent* outTransform);
+		void Key_TransformComponent_SetTransform(uint64_t entityID, TransformComponent* inTransform);
+		void Key_TransformComponent_GetTranslation(uint64_t entityID, glm::vec3* outTranslation);
+		void Key_TransformComponent_SetTranslation(uint64_t entityID, glm::vec3* inTranslation);
+		void Key_TransformComponent_GetRotation(uint64_t entityID, glm::vec3* outRotation);
+		void Key_TransformComponent_SetRotation(uint64_t entityID, glm::vec3* inRotation);
+		void Key_TransformComponent_GetScale(uint64_t entityID, glm::vec3* outScale);
+		void Key_TransformComponent_SetScale(uint64_t entityID, glm::vec3* inScale);
 
 		void* Key_MeshComponent_GetMesh(uint64_t entityID);
 		void Key_MeshComponent_SetMesh(uint64_t entityID, Ref<Mesh>* inMesh);

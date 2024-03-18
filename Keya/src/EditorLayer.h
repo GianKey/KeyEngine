@@ -15,6 +15,8 @@
 #include <string>
 
 #include "Key/Editor/SceneHierarchyPanel.h"
+#include "Key/Editor/AssetManagerPanel.h"
+#include "Key/Editor/ObjectsPanel.h"
 
 namespace Key {
 
@@ -79,8 +81,10 @@ namespace Key {
 		float GetSnapValue();
 	private:
 		Scope<SceneHierarchyPanel> m_SceneHierarchyPanel;
+		Scope<AssetManagerPanel> m_AssetManagerPanel;
+		Scope<ObjectsPanel> m_ObjectsPanel;
 
-		Ref<Scene> m_RuntimeScene, m_EditorScene;
+		Ref<Scene> m_RuntimeScene, m_EditorScene, m_CurrentScene;
 		std::string m_SceneFilePath;
 		bool m_ReloadScriptOnPlay = true;
 

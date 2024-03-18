@@ -102,10 +102,10 @@ namespace Key {
 	{
 	}
 
-	void Renderer::DrawIndexed(uint32_t count, PrimitiveType type, bool depthTest)
+	void Renderer::DrawIndexed(uint32_t count, PrimitiveType type, bool depthTest, bool faceCulling)
 	{
 		Renderer::Submit([=]() {
-			RendererAPI::DrawIndexed(count, type, depthTest);
+			RendererAPI::DrawIndexed(count, type, depthTest, faceCulling);
 			});
 	}
 
@@ -159,15 +159,10 @@ namespace Key {
 			shader->SetMat4("u_Transform", transform);
 		}
 
-		if (cullFace)
-			Renderer::Submit([]() { glEnable(GL_CULL_FACE); });
-		else
-			Renderer::Submit([]() { glDisable(GL_CULL_FACE); });
-
 		s_Data.m_FullscreenQuadVertexBuffer->Bind();
 		s_Data.m_FullscreenQuadPipeline->Bind();
 		s_Data.m_FullscreenQuadIndexBuffer->Bind();
-		Renderer::DrawIndexed(6, PrimitiveType::Triangles, depthTest);
+		Renderer::DrawIndexed(6, PrimitiveType::Triangles, depthTest, cullFace);
 	}
 
 	void Renderer::SubmitFullscreenQuad(Ref<MaterialInstance> material)
@@ -185,12 +180,7 @@ namespace Key {
 		s_Data.m_FullscreenQuadPipeline->Bind();
 		s_Data.m_FullscreenQuadIndexBuffer->Bind();
 
-		if (cullFace)
-			Renderer::Submit([]() { glEnable(GL_CULL_FACE); });
-		else
-			Renderer::Submit([]() { glDisable(GL_CULL_FACE); });
-
-		Renderer::DrawIndexed(6, PrimitiveType::Triangles, depthTest);
+		Renderer::DrawIndexed(6, PrimitiveType::Triangles, depthTest, cullFace);
 	}
 
 	void Renderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> overrideMaterial)
@@ -227,9 +217,9 @@ namespace Key {
 					glDisable(GL_DEPTH_TEST);
 
 				if (!material->GetFlag(MaterialFlag::TwoSided))
-					Renderer::Submit([]() { glEnable(GL_CULL_FACE); });
+					glEnable(GL_CULL_FACE);
 				else
-					Renderer::Submit([]() { glDisable(GL_CULL_FACE); });
+					glDisable(GL_CULL_FACE);
 
 				glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
 				});
