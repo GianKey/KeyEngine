@@ -1,5 +1,5 @@
 #pragma once
-
+#include "Key/Asset/Assets.h"
 #include "imgui/imgui.h"
 
 #include <glm/glm.hpp>
@@ -139,7 +139,7 @@ namespace Key::UI {
 		return modified;
 	}
 
-	static bool Property(const char* label, float& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f)
+	static bool Property(const char* label, float& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f, bool readOnly = false) 
 	{
 		bool modified = false;
 
@@ -151,8 +151,16 @@ namespace Key::UI {
 		s_IDBuffer[1] = '#';
 		memset(s_IDBuffer + 2, 0, 14);
 		itoa(s_Counter++, s_IDBuffer + 2, 16);
-		if (ImGui::DragFloat(s_IDBuffer, &value, delta, min, max))
-			modified = true;
+
+		if (!readOnly)
+		{
+			if (ImGui::DragFloat(s_IDBuffer, &value, delta, min, max))
+				modified = true;
+		}
+		else
+		{
+			ImGui::InputFloat(s_IDBuffer, &value, 0.0F, 0.0F, "%.3f", ImGuiInputTextFlags_ReadOnly);
+		}
 
 		ImGui::PopItemWidth();
 		ImGui::NextColumn();
@@ -243,6 +251,78 @@ namespace Key::UI {
 
 		return modified;
 	}
+	static bool PropertyDropdown(const char* label, const char** options, int32_t optionCount, int32_t* selected)
+	{
+		const char* current = options[*selected];
+		ImGui::Text(label);
+		ImGui::NextColumn();
+		ImGui::PushItemWidth(-1);
+
+		bool changed = false;
+
+		std::string id = "##" + std::string(label);
+		if (ImGui::BeginCombo(id.c_str(), current))
+		{
+			for (int i = 0; i < optionCount; i++)
+			{
+				bool is_selected = (current == options[i]);
+				if (ImGui::Selectable(options[i], is_selected))
+				{
+					current = options[i];
+					*selected = i;
+					changed = true;
+				}
+				if (is_selected)
+					ImGui::SetItemDefaultFocus();
+			}
+			ImGui::EndCombo();
+		}
+
+		ImGui::PopItemWidth();
+		ImGui::NextColumn();
+
+		return changed;
+	}
+
+	template<typename T>
+	static bool PropertyAssetReference(const char* label, Ref<T>& object, AssetType supportedType = AssetType::Any)
+	{
+		bool modified = false;
+
+		ImGui::Text(label);
+		ImGui::NextColumn();
+		ImGui::PushItemWidth(-1);
+
+		if (object)
+		{
+			char* assetName = ((Ref<Asset>&)object)->FileName.data();
+			ImGui::InputText("##assetRef", assetName, 256, ImGuiInputTextFlags_ReadOnly);
+		}
+		else
+		{
+			ImGui::InputText("##assetRef", (char*)"Null", 256, ImGuiInputTextFlags_ReadOnly);
+		}
+
+		if (ImGui::BeginDragDropTarget())
+		{
+			auto data = ImGui::AcceptDragDropPayload("asset_payload");
+
+			if (data)
+			{
+				AssetHandle assetHandle = *(AssetHandle*)data->Data;
+				if (supportedType == AssetType::Any || AssetManager::IsAssetType(assetHandle, supportedType))
+				{
+					object = AssetManager::GetAsset<T>(assetHandle);
+					modified = true;
+				}
+			}
+		}
+
+		ImGui::PopItemWidth();
+		ImGui::NextColumn();
+		return modified;
+	}
+
 
 	static void EndPropertyGrid()
 	{

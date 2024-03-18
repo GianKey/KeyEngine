@@ -52,36 +52,32 @@ namespace Key {
 		{
 			return Input::IsKeyPressed(key);
 		}
+		bool Key_Input_IsMouseButtonPressed(MouseButton button)
+		{
+			return Input::IsMouseButtonPressed(button);
+		}
+
+		void Key_Input_GetMousePosition(glm::vec2* outPosition)
+		{
+			auto [x, y] = Input::GetMousePosition();
+			*outPosition = { x, y };
+		}
+
+		void Key_Input_SetCursorMode(CursorMode mode)
+		{
+			Input::SetCursorMode(mode);
+		}
+
+		CursorMode Key_Input_GetCursorMode()
+		{
+			return Input::GetCursorMode();
+		}
 
 		////////////////////////////////////////////////////////////////
 
 		////////////////////////////////////////////////////////////////
 		// Entity //////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////////////
-
-		void Key_Entity_GetTransform(uint64_t entityID, glm::mat4* outTransform)
-		{
-			Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
-			KEY_CORE_ASSERT(scene, "No active scene!");
-			const auto& entityMap = scene->GetEntityMap();
-			KEY_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
-
-			Entity entity = entityMap.at(entityID);
-			auto& transformComponent = entity.GetComponent<TransformComponent>();
-			memcpy(outTransform, glm::value_ptr(transformComponent.Transform), sizeof(glm::mat4));
-		}
-
-		void Key_Entity_SetTransform(uint64_t entityID, glm::mat4* inTransform)
-		{
-			Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
-			KEY_CORE_ASSERT(scene, "No active scene!");
-			const auto& entityMap = scene->GetEntityMap();
-			KEY_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
-
-			Entity entity = entityMap.at(entityID);
-			auto& transformComponent = entity.GetComponent<TransformComponent>();
-			memcpy(glm::value_ptr(transformComponent.Transform), inTransform, sizeof(glm::mat4));
-		}
 
 		void Key_Entity_CreateComponent(uint64_t entityID, void* type)
 		{
@@ -119,6 +115,96 @@ namespace Key {
 
 			return 0;
 		}
+
+		void Key_TransformComponent_GetTransform(uint64_t entityID, TransformComponent* outTransform)
+		{
+			Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
+			KEY_CORE_ASSERT(scene, "No active scene!");
+			const auto& entityMap = scene->GetEntityMap();
+			KEY_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
+
+			Entity entity = entityMap.at(entityID);
+			*outTransform = entity.GetComponent<TransformComponent>();
+		}
+
+		void Key_TransformComponent_SetTransform(uint64_t entityID, TransformComponent* inTransform)
+		{
+			Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
+			KEY_CORE_ASSERT(scene, "No active scene!");
+			const auto& entityMap = scene->GetEntityMap();
+			KEY_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
+
+			Entity entity = entityMap.at(entityID);
+			entity.GetComponent<TransformComponent>() = *inTransform;
+		}
+
+		void Key_TransformComponent_GetTranslation(uint64_t entityID, glm::vec3* outTranslation)
+		{
+			Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
+			KEY_CORE_ASSERT(scene, "No active scene!");
+			const auto& entityMap = scene->GetEntityMap();
+			KEY_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
+
+			Entity entity = entityMap.at(entityID);
+			*outTranslation = entity.GetComponent<TransformComponent>().Translation;
+		}
+
+		void Key_TransformComponent_SetTranslation(uint64_t entityID, glm::vec3* inTranslation)
+		{
+			Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
+			KEY_CORE_ASSERT(scene, "No active scene!");
+			const auto& entityMap = scene->GetEntityMap();
+			KEY_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
+
+			Entity entity = entityMap.at(entityID);
+			entity.GetComponent<TransformComponent>().Translation = *inTranslation;
+		}
+
+		void Key_TransformComponent_GetRotation(uint64_t entityID, glm::vec3* outRotation)
+		{
+			Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
+			KEY_CORE_ASSERT(scene, "No active scene!");
+			const auto& entityMap = scene->GetEntityMap();
+			KEY_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
+
+			Entity entity = entityMap.at(entityID);
+			*outRotation = entity.GetComponent<TransformComponent>().Rotation;
+		}
+
+		void Key_TransformComponent_SetRotation(uint64_t entityID, glm::vec3* inRotation)
+		{
+			Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
+			KEY_CORE_ASSERT(scene, "No active scene!");
+			const auto& entityMap = scene->GetEntityMap();
+			KEY_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
+
+			Entity entity = entityMap.at(entityID);
+			entity.GetComponent<TransformComponent>().Rotation = *inRotation;
+		}
+
+		void Key_TransformComponent_GetScale(uint64_t entityID, glm::vec3* outScale)
+		{
+			Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
+			KEY_CORE_ASSERT(scene, "No active scene!");
+			const auto& entityMap = scene->GetEntityMap();
+			KEY_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
+
+			Entity entity = entityMap.at(entityID);
+			*outScale = entity.GetComponent<TransformComponent>().Scale;
+		}
+
+		void Key_TransformComponent_SetScale(uint64_t entityID, glm::vec3* inScale)
+		{
+			Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
+			KEY_CORE_ASSERT(scene, "No active scene!");
+			const auto& entityMap = scene->GetEntityMap();
+			KEY_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
+
+			Entity entity = entityMap.at(entityID);
+			entity.GetComponent<TransformComponent>().Scale = *inScale;
+		}
+
+
 
 		void* Key_MeshComponent_GetMesh(uint64_t entityID)
 		{
