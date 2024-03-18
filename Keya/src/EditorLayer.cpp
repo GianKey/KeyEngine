@@ -3,13 +3,19 @@
 #include "Key/ImGui/ImGuizmo.h"
 #include "Key/Renderer/Renderer2D.h"
 #include "Key/Script/ScriptEngine.h"
-
+#include "Key/Editor/AssetEditorPanel.h"
 #include <filesystem>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include <imgui/imgui_internal.h>
+
+#include "Key/Math/Math.h"
+
+#include "Key/Utilities/FileSystem.h"
 
 namespace Key {
 
@@ -37,7 +43,7 @@ namespace Key {
 	}
 
 	EditorLayer::EditorLayer()
-		: m_SceneType(SceneType::Model), m_EditorCamera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f))
+		: m_SceneType(SceneType::Model), m_EditorCamera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 1000.0f))
 	{
 	}
 
@@ -47,71 +53,29 @@ namespace Key {
 
 	void EditorLayer::OnAttach()
 	{
-		// ImGui Colors
-		ImVec4* colors = ImGui::GetStyle().Colors;
-		colors[ImGuiCol_Text] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-		colors[ImGuiCol_TextDisabled] = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
-		colors[ImGuiCol_WindowBg] = ImVec4(0.18f, 0.18f, 0.18f, 1.0f); // Window background
-		colors[ImGuiCol_ChildBg] = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
-		colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
-		colors[ImGuiCol_Border] = ImVec4(0.43f, 0.43f, 0.50f, 0.5f);
-		colors[ImGuiCol_BorderShadow] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-		colors[ImGuiCol_FrameBg] = ImVec4(0.3f, 0.3f, 0.3f, 0.5f); // Widget backgrounds
-		colors[ImGuiCol_FrameBgHovered] = ImVec4(0.4f, 0.4f, 0.4f, 0.4f);
-		colors[ImGuiCol_FrameBgActive] = ImVec4(0.4f, 0.4f, 0.4f, 0.6f);
-		colors[ImGuiCol_TitleBg] = ImVec4(0.04f, 0.04f, 0.04f, 1.0f);
-		colors[ImGuiCol_TitleBgActive] = ImVec4(0.29f, 0.29f, 0.29f, 1.0f);
-		colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.0f, 0.0f, 0.0f, 0.51f);
-		colors[ImGuiCol_MenuBarBg] = ImVec4(0.14f, 0.14f, 0.14f, 1.0f);
-		colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
-		colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.31f, 0.31f, 0.31f, 1.0f);
-		colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.41f, 0.41f, 0.41f, 1.0f);
-		colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.51f, 0.51f, 0.51f, 1.0f);
-		colors[ImGuiCol_CheckMark] = ImVec4(0.94f, 0.94f, 0.94f, 1.0f);
-		colors[ImGuiCol_SliderGrab] = ImVec4(0.51f, 0.51f, 0.51f, 0.7f);
-		colors[ImGuiCol_SliderGrabActive] = ImVec4(0.66f, 0.66f, 0.66f, 1.0f);
-		colors[ImGuiCol_Button] = ImVec4(0.44f, 0.44f, 0.44f, 0.4f);
-		colors[ImGuiCol_ButtonHovered] = ImVec4(0.46f, 0.47f, 0.48f, 1.0f);
-		colors[ImGuiCol_ButtonActive] = ImVec4(0.42f, 0.42f, 0.42f, 1.0f);
-		colors[ImGuiCol_Header] = ImVec4(0.7f, 0.7f, 0.7f, 0.31f);
-		colors[ImGuiCol_HeaderHovered] = ImVec4(0.7f, 0.7f, 0.7f, 0.8f);
-		colors[ImGuiCol_HeaderActive] = ImVec4(0.48f, 0.5f, 0.52f, 1.0f);
-		colors[ImGuiCol_Separator] = ImVec4(0.43f, 0.43f, 0.5f, 0.5f);
-		colors[ImGuiCol_SeparatorHovered] = ImVec4(0.72f, 0.72f, 0.72f, 0.78f);
-		colors[ImGuiCol_SeparatorActive] = ImVec4(0.51f, 0.51f, 0.51f, 1.0f);
-		colors[ImGuiCol_ResizeGrip] = ImVec4(0.91f, 0.91f, 0.91f, 0.25f);
-		colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.81f, 0.81f, 0.81f, 0.67f);
-		colors[ImGuiCol_ResizeGripActive] = ImVec4(0.46f, 0.46f, 0.46f, 0.95f);
-		colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.0f);
-		colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.0f, 0.43f, 0.35f, 1.0f);
-		colors[ImGuiCol_PlotHistogram] = ImVec4(0.73f, 0.6f, 0.15f, 1.0f);
-		colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.0f, 0.6f, 0.0f, 1.0f);
-		colors[ImGuiCol_TextSelectedBg] = ImVec4(0.87f, 0.87f, 0.87f, 0.35f);
-		colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.8f, 0.8f, 0.8f, 0.35f);
-		colors[ImGuiCol_DragDropTarget] = ImVec4(1.0f, 1.0f, 0.0f, 0.9f);
-		colors[ImGuiCol_NavHighlight] = ImVec4(0.60f, 0.6f, 0.6f, 1.0f);
-		colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.0f, 1.0f, 1.0f, 0.7f);
-
 		using namespace glm;
-
 
 		// Editor
 		m_CheckerboardTex = Texture2D::Create("assets/editor/Checkerboard.tga");
 		m_PlayButtonTex = Texture2D::Create("assets/editor/PlayButton.png");
 
-		m_EditorScene = Ref<Scene>::Create();
-		UpdateWindowTitle("Untitled Scene");
-		ScriptEngine::SetSceneContext(m_EditorScene);
 		m_SceneHierarchyPanel = CreateScope<SceneHierarchyPanel>(m_EditorScene);
 		m_SceneHierarchyPanel->SetSelectionChangedCallback(std::bind(&EditorLayer::SelectEntity, this, std::placeholders::_1));
 		m_SceneHierarchyPanel->SetEntityDeletedCallback(std::bind(&EditorLayer::OnEntityDeleted, this, std::placeholders::_1));
 
-		SceneSerializer serializer(m_EditorScene);
-		serializer.Deserialize("assets/scenes/Physics2DTest.hsc");
+		m_AssetManagerPanel = CreateScope<AssetManagerPanel>();
+		m_ObjectsPanel = CreateScope<ObjectsPanel>();
+
+		//OpenScene("assets/scenes/AnimationTest.hsc");
+		NewScene();
+
+		AssetEditorPanel::RegisterDefaultEditors();
+		FileSystem::StartWatching();
 	}
 
 	void EditorLayer::OnDetach()
 	{
+		FileSystem::StopWatching();
 	}
 
 	void EditorLayer::OnScenePlay()
@@ -128,6 +92,7 @@ namespace Key {
 
 		m_RuntimeScene->OnRuntimeStart();
 		m_SceneHierarchyPanel->SetContext(m_RuntimeScene);
+		m_CurrentScene = m_RuntimeScene;
 	}
 
 	void EditorLayer::OnSceneStop()
@@ -141,11 +106,12 @@ namespace Key {
 		m_SelectionContext.clear();
 		ScriptEngine::SetSceneContext(m_EditorScene);
 		m_SceneHierarchyPanel->SetContext(m_EditorScene);
+		m_CurrentScene = m_EditorScene;
 	}
 
 	void EditorLayer::UpdateWindowTitle(const std::string& sceneName)
 	{
-		std::string title = sceneName + " - Keynut - " + Application::GetPlatformName() + " (" + Application::GetConfigurationName() + ")";
+		std::string title = sceneName + " - Keya - " + Application::GetPlatformName() + " (" + Application::GetConfigurationName() + ")";
 		Application::Get().GetWindow().SetTitle(title);
 	}
 
@@ -162,6 +128,10 @@ namespace Key {
 
 	void EditorLayer::OnUpdate(TimeStep ts)
 	{
+		auto [x, y] = GetMouseViewportSpace();
+
+		SceneRenderer::SetFocusPoint({ x * 0.5f + 0.5f, y * 0.5f + 0.5f });
+
 		switch (m_SceneState)
 		{
 		case SceneState::Edit:
@@ -191,7 +161,7 @@ namespace Key {
 					auto viewProj = m_EditorCamera.GetViewProjection();
 					Renderer2D::BeginScene(viewProj, false);
 					glm::vec4 color = (m_SelectionMode == SelectionMode::Entity) ? glm::vec4{ 1.0f, 1.0f, 1.0f, 1.0f } : glm::vec4{ 0.2f, 0.9f, 0.2f, 1.0f };
-					Renderer::DrawAABB(selection.Mesh->BoundingBox, selection.Entity.GetComponent<TransformComponent>().Transform * selection.Mesh->Transform, color);
+					Renderer::DrawAABB(selection.Mesh->BoundingBox, selection.Entity.Transform().GetTransform() * selection.Mesh->Transform, color);
 					Renderer2D::EndScene();
 					Renderer::EndRenderPass();
 				}
@@ -204,13 +174,12 @@ namespace Key {
 				if (selection.Entity.HasComponent<BoxCollider2DComponent>())
 				{
 					const auto& size = selection.Entity.GetComponent<BoxCollider2DComponent>().Size;
-					auto [translation, rotationQuat, scale] = GetTransformDecomposition(selection.Entity.GetComponent<TransformComponent>().Transform);
-					glm::vec3 rotation = glm::eulerAngles(rotationQuat);
+					const TransformComponent& transform = selection.Entity.GetComponent<TransformComponent>();
 
 					Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
 					auto viewProj = m_EditorCamera.GetViewProjection();
 					Renderer2D::BeginScene(viewProj, false);
-					Renderer2D::DrawRotatedQuad({ translation.x, translation.y }, size * 2.0f, glm::degrees(rotation.z), { 1.0f, 0.0f, 1.0f, 1.0f });
+					Renderer2D::DrawRotatedRect({ transform.Translation.x, transform.Translation.y }, size * 2.0f, transform.Rotation.z, { 0.0f, 1.0f, 1.0f, 1.0f });
 					Renderer2D::EndScene();
 					Renderer::EndRenderPass();
 				}
@@ -359,7 +328,12 @@ namespace Key {
 		SelectedSubmesh selection;
 		if (entity.HasComponent<MeshComponent>())
 		{
-			selection.Mesh = &entity.GetComponent<MeshComponent>().Mesh->GetSubmeshes()[0];
+			auto& meshComp = entity.GetComponent<MeshComponent>();
+
+			if (meshComp.Mesh)
+			{
+				selection.Mesh = &meshComp.Mesh->GetSubmeshes()[0];
+			}
 		}
 		selection.Entity = entity;
 		m_SelectionContext.clear();
@@ -368,32 +342,55 @@ namespace Key {
 		m_EditorScene->SetSelectedEntity(entity);
 	}
 
+	void EditorLayer::NewScene()
+	{
+		m_EditorScene = Ref<Scene>::Create("Empty Scene", true);
+		m_SceneHierarchyPanel->SetContext(m_EditorScene);
+		ScriptEngine::SetSceneContext(m_EditorScene);
+		UpdateWindowTitle("Untitled Scene");
+		m_SceneFilePath = std::string();
+
+		m_EditorCamera = EditorCamera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 1000.0f));
+	}
+
 	void EditorLayer::OpenScene()
 	{
 		auto& app = Application::Get();
 		std::string filepath = app.OpenFile("Key Scene (*.hsc)\0*.hsc\0");
 		if (!filepath.empty())
-		{
-			Ref<Scene> newScene = Ref<Scene>::Create();
-			SceneSerializer serializer(newScene);
-			serializer.Deserialize(filepath);
-			m_EditorScene = newScene;
-			std::filesystem::path path = filepath;
-			UpdateWindowTitle(path.filename().string());
-			m_SceneHierarchyPanel->SetContext(m_EditorScene);
-			ScriptEngine::SetSceneContext(m_EditorScene);
+			OpenScene(filepath);
+	}
 
-			m_EditorScene->SetSelectedEntity({});
-			m_SelectionContext.clear();
+	void EditorLayer::OpenScene(const std::string& filepath)
+	{
+		Ref<Scene> newScene = Ref<Scene>::Create("New Scene", true);
+		SceneSerializer serializer(newScene);
+		serializer.Deserialize(filepath);
+		m_EditorScene = newScene;
+		m_SceneFilePath = filepath;
 
-			m_SceneFilePath = filepath;
-		}
+		std::filesystem::path path = filepath;
+		UpdateWindowTitle(path.filename().string());
+		m_SceneHierarchyPanel->SetContext(m_EditorScene);
+		ScriptEngine::SetSceneContext(m_EditorScene);
+
+		m_EditorScene->SetSelectedEntity({});
+		m_SelectionContext.clear();
+
+		m_CurrentScene = m_EditorScene;
 	}
 
 	void EditorLayer::SaveScene()
 	{
-		SceneSerializer serializer(m_EditorScene);
-		serializer.Serialize(m_SceneFilePath);
+		if (!m_SceneFilePath.empty())
+		{
+			SceneSerializer serializer(m_EditorScene);
+			serializer.Serialize(m_SceneFilePath);
+		}
+		else
+		{
+			SaveSceneAs();
+		}
 	}
 
 	void EditorLayer::SaveSceneAs()
@@ -447,22 +444,20 @@ namespace Key {
 
 		// Dockspace
 		ImGuiIO& io = ImGui::GetIO();
+		ImGuiStyle& style = ImGui::GetStyle();
+		float minWinSizeX = style.WindowMinSize.x;
+		style.WindowMinSize.x = 370.0f;
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 		{
 			ImGuiID dockspace_id = ImGui::GetID("MyDockspace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), opt_flags);
 		}
 
+		style.WindowMinSize.x = minWinSizeX;
+
 		// Editor Panel ------------------------------------------------------------------------------
 		ImGui::Begin("Model");
 		ImGui::Begin("Environment");
-
-		if (ImGui::Button("Load Environment Map"))
-		{
-			std::string filename = Application::Get().OpenFile("*.hdr");
-			if (filename != "")
-				m_EditorScene->SetEnvironment(Environment::Load(filename));
-		}
 
 		ImGui::SliderFloat("Skybox LOD", &m_EditorScene->GetSkyboxLod(), 0.0f, 11.0f);
 
@@ -500,6 +495,10 @@ namespace Key {
 			ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);
 		if (m_UIShowBoundingBoxes && Property("On Top", m_UIShowBoundingBoxesOnTop))
 			ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);
+
+		m_AssetManagerPanel->OnImGuiRender();
+		m_ObjectsPanel->OnImGuiRender();
+		AssetEditorPanel::OnImGuiRender();
 
 		char* label = m_SelectionMode == SelectionMode::Entity ? "Entity" : "Mesh";
 		if (ImGui::Button(label))
@@ -599,7 +598,7 @@ namespace Key {
 		m_EditorScene->SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
 		if (m_RuntimeScene)
 			m_RuntimeScene->SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
-		m_EditorCamera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
+		m_EditorCamera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 1000.0f));
 		m_EditorCamera.SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
 		ImGui::Image((void*)SceneRenderer::GetFinalColorBufferRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
 
@@ -627,22 +626,49 @@ namespace Key {
 
 			bool snap = Input::IsKeyPressed(KEY_KEY_LEFT_CONTROL);
 
-			auto& entityTransform = selection.Entity.Transform();
+			TransformComponent& entityTransform = selection.Entity.Transform();
+			glm::mat4 transform = m_CurrentScene->GetTransformRelativeToParent(selection.Entity);
 			float snapValue = GetSnapValue();
 			float snapValues[3] = { snapValue, snapValue, snapValue };
+
 			if (m_SelectionMode == SelectionMode::Entity)
 			{
 				ImGuizmo::Manipulate(glm::value_ptr(m_EditorCamera.GetViewMatrix()),
 					glm::value_ptr(m_EditorCamera.GetProjectionMatrix()),
 					(ImGuizmo::OPERATION)m_GizmoType,
 					ImGuizmo::LOCAL,
-					glm::value_ptr(entityTransform),
+					glm::value_ptr(transform),
 					nullptr,
 					snap ? snapValues : nullptr);
+
+				if (ImGuizmo::IsUsing())
+				{
+					glm::vec3 translation, rotation, scale;
+					Math::DecomposeTransform(transform, translation, rotation, scale);
+
+					Entity parent = m_CurrentScene->FindEntityByUUID(selection.Entity.GetParentUUID());
+					if (parent)
+					{
+						glm::vec3 parentTranslation, parentRotation, parentScale;
+						Math::DecomposeTransform(m_CurrentScene->GetTransformRelativeToParent(parent), parentTranslation, parentRotation, parentScale);
+
+						glm::vec3 deltaRotation = (rotation - parentRotation) - entityTransform.Rotation;
+						entityTransform.Translation = translation - parentTranslation;
+						entityTransform.Rotation += deltaRotation;
+						entityTransform.Scale = scale;
+					}
+					else
+					{
+						glm::vec3 deltaRotation = rotation - entityTransform.Rotation;
+						entityTransform.Translation = translation;
+						entityTransform.Rotation += deltaRotation;
+						entityTransform.Scale = scale;
+					}
+				}
 			}
 			else
 			{
-				glm::mat4 transformBase = entityTransform * selection.Mesh->Transform;
+				glm::mat4 transformBase = transform * selection.Mesh->Transform;
 				ImGuizmo::Manipulate(glm::value_ptr(m_EditorCamera.GetViewMatrix()),
 					glm::value_ptr(m_EditorCamera.GetProjectionMatrix()),
 					(ImGuizmo::OPERATION)m_GizmoType,
@@ -651,8 +677,38 @@ namespace Key {
 					nullptr,
 					snap ? snapValues : nullptr);
 
-				selection.Mesh->Transform = glm::inverse(entityTransform) * transformBase;
+				selection.Mesh->Transform = glm::inverse(transform) * transformBase;
 			}
+		}
+
+		
+		if (ImGui::BeginDragDropTarget())
+		{
+			auto data = ImGui::AcceptDragDropPayload("asset_payload");
+			if (data)
+			{
+				int count = data->DataSize / sizeof(AssetHandle);
+
+				for (int i = 0; i < count; i++)
+				{
+					AssetHandle assetHandle = *(((AssetHandle*)data->Data) + i);
+					Ref<Asset> asset = AssetManager::GetAsset<Asset>(assetHandle);
+
+					// We can't really support dragging and dropping scenes when we're dropping multiple assets
+					if (count == 1 && asset->Type == AssetType::Scene)
+					{
+						OpenScene(asset->FilePath);
+					}
+
+					if (asset->Type == AssetType::Mesh)
+					{
+						Entity entity = m_EditorScene->CreateEntity(asset->FileName);
+						entity.AddComponent<MeshComponent>(Ref<Mesh>(asset));
+						SelectEntity(entity);
+					}
+				}
+			}
+			ImGui::EndDragDropTarget();
 		}
 
 		ImGui::End();
@@ -662,10 +718,8 @@ namespace Key {
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("New Scene", "Ctrl-N"))
-				{
-					// TODO:
-				}
+				if (ImGui::MenuItem("New Scene", "Ctrl+N"))
+					NewScene();
 				if (ImGui::MenuItem("Open Scene...", "Ctrl+O"))
 					OpenScene();
 				ImGui::Separator();
@@ -686,6 +740,12 @@ namespace Key {
 					ScriptEngine::ReloadAssembly("assets/scripts/ExampleApp.dll");
 
 				ImGui::MenuItem("Reload assembly on play", nullptr, &m_ReloadScriptOnPlay);
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Edit"))
+			{
+
 				ImGui::EndMenu();
 			}
 
@@ -895,6 +955,7 @@ namespace Key {
 		ImGui::End();
 
 		ScriptEngine::OnImGuiRender();
+		SceneRenderer::OnImGuiRender();
 
 		ImGui::End();
 	}
@@ -920,23 +981,30 @@ namespace Key {
 
 	bool EditorLayer::OnKeyPressedEvent(KeyPressedEvent& e)
 	{
-		if (m_ViewportPanelFocused)
+		if (GImGui->ActiveId == 0)
 		{
+			if (m_ViewportPanelMouseOver)
+			{
+				switch (e.GetKeyCode())
+				{
+				case KeyCode::Q:
+					m_GizmoType = -1;
+					break;
+				case KeyCode::W:
+					m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+					break;
+				case KeyCode::E:
+					m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+					break;
+				case KeyCode::R:
+					m_GizmoType = ImGuizmo::OPERATION::SCALE;
+					break;
+				}
+
+			}
 			switch (e.GetKeyCode())
 			{
-			case KeyCode::Q:
-				m_GizmoType = -1;
-				break;
-			case KeyCode::W:
-				m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
-				break;
-			case KeyCode::E:
-				m_GizmoType = ImGuizmo::OPERATION::ROTATE;
-				break;
-			case KeyCode::R:
-				m_GizmoType = ImGuizmo::OPERATION::SCALE;
-				break;
-			case KeyCode::Delete:
+			case KeyCode::Delete: // TODO: this should be in the scene hierarchy panel
 				if (m_SelectionContext.size())
 				{
 					Entity selectedEntity = m_SelectionContext[0].Entity;
@@ -969,6 +1037,9 @@ namespace Key {
 				// Toggle grid
 				SceneRenderer::GetOptions().ShowGrid = !SceneRenderer::GetOptions().ShowGrid;
 				break;
+			case KeyCode::N:
+				NewScene();
+				break;
 			case KeyCode::O:
 				OpenScene();
 				break;
@@ -994,7 +1065,7 @@ namespace Key {
 	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
 	{
 		auto [mx, my] = Input::GetMousePosition();
-		if (e.GetMouseButton() == KEY_MOUSE_BUTTON_LEFT && !Input::IsKeyPressed(KeyCode::LeftAlt) && !ImGuizmo::IsOver() && m_SceneState != SceneState::Play)
+		if (e.GetMouseButton() == KEY_MOUSE_BUTTON_LEFT && m_ViewportPanelMouseOver && !Input::IsKeyPressed(KeyCode::LeftAlt) && !ImGuizmo::IsOver() && m_SceneState != SceneState::Play)
 		{
 			auto [mouseX, mouseY] = GetMouseViewportSpace();
 			if (mouseX > -1.0f && mouseX < 1.0f && mouseY > -1.0f && mouseY < 1.0f)
@@ -1017,8 +1088,8 @@ namespace Key {
 					{
 						auto& submesh = submeshes[i];
 						Ray ray = {
-							glm::inverse(entity.Transform() * submesh.Transform) * glm::vec4(origin, 1.0f),
-							glm::inverse(glm::mat3(entity.Transform()) * glm::mat3(submesh.Transform)) * direction
+							glm::inverse(entity.Transform().GetTransform() * submesh.Transform) * glm::vec4(origin, 1.0f),
+							glm::inverse(glm::mat3(entity.Transform().GetTransform()) * glm::mat3(submesh.Transform)) * direction
 						};
 
 						float t;
@@ -1080,7 +1151,7 @@ namespace Key {
 
 	void EditorLayer::OnEntityDeleted(Entity e)
 	{
-		if (m_SelectionContext[0].Entity == e)
+		if (m_SelectionContext.size() > 0 && m_SelectionContext[0].Entity == e)
 		{
 			m_SelectionContext.clear();
 			m_EditorScene->SetSelectedEntity({});

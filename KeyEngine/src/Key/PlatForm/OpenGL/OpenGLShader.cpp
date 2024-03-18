@@ -8,6 +8,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Key/Renderer/Renderer.h"
+#include "Key/Utilities/StringUtils.h"
 
 namespace Key {
 
@@ -77,7 +78,7 @@ namespace Key {
 
 	void OpenGLShader::Bind()
 	{
-		Renderer::Submit([=]() { 
+		Renderer::Submit([=]() {
 			glUseProgram(m_RendererID);
 			});
 	}
@@ -97,7 +98,6 @@ namespace Key {
 		{
 			KEY_CORE_ASSERT(false, "Could not load shader!");
 		}
-
 		in.close();
 		return result;
 	}
@@ -154,42 +154,14 @@ namespace Key {
 		return FindToken(string.c_str(), token);
 	}
 
-	std::vector<std::string> SplitString(const std::string& string, const std::string& delimiters)
-	{
-		size_t start = 0;
-		size_t end = string.find_first_of(delimiters);
-
-		std::vector<std::string> result;
-
-		while (end <= std::string::npos)
-		{
-			std::string token = string.substr(start, end - start);
-			if (!token.empty())
-				result.push_back(token);
-
-			if (end == std::string::npos)
-				break;
-
-			start = end + 1;
-			end = string.find_first_of(delimiters, start);
-		}
-
-		return result;
-	}
-
-	std::vector<std::string> SplitString(const std::string& string, const char delimiter)
-	{
-		return SplitString(string, std::string(1, delimiter));
-	}
-
 	std::vector<std::string> Tokenize(const std::string& string)
 	{
-		return SplitString(string, " \t\n");
+		return Utils::SplitString(string, " \t\n\r");
 	}
 
 	std::vector<std::string> GetLines(const std::string& string)
 	{
-		return SplitString(string, "\n");
+		return Utils::SplitString(string, "\n");
 	}
 
 	std::string GetBlock(const char* str, const char** outPosition)
@@ -214,11 +186,6 @@ namespace Key {
 			*outPosition = end;
 		uint32_t length = end - str + 1;
 		return std::string(str, length);
-	}
-
-	bool StartsWith(const std::string& string, const std::string& start)
-	{
-		return string.find(start) == 0;
 	}
 
 
@@ -257,8 +224,9 @@ namespace Key {
 
 	static bool IsTypeStringResource(const std::string& type)
 	{
+		if (type == "sampler1D")		return true;
 		if (type == "sampler2D")		return true;
-		if (type == "sampler2DMS")        return true;
+		if (type == "sampler2DMS")		return true;
 		if (type == "samplerCube")		return true;
 		if (type == "sampler2DShadow")	return true;
 		return false;
@@ -320,7 +288,7 @@ namespace Key {
 				declaration = new OpenGLShaderUniformDeclaration(domain, t, name, count);
 			}
 
-			if (StartsWith(name, "r_"))
+			if (Utils::StartsWith(name, "r_"))
 			{
 				if (domain == ShaderDomain::Vertex)
 					((OpenGLShaderUniformBufferDeclaration*)m_VSRendererUniformBuffers.front())->PushUniform(declaration);
@@ -504,11 +472,11 @@ namespace Key {
 			}
 			else if (resource->GetCount() > 1)
 			{
-				resource->m_Register = 0;
+				resource->m_Register = sampler;
 				uint32_t count = resource->GetCount();
 				int* samplers = new int[count];
 				for (uint32_t s = 0; s < count; s++)
-					samplers[s] = s;
+					samplers[s] = sampler++;
 				UploadUniformIntArray(resource->GetName(), samplers, count);
 				delete[] samplers;
 			}
@@ -568,7 +536,7 @@ namespace Key {
 				std::vector<GLchar> infoLog(maxLength);
 				glGetShaderInfoLog(shaderRendererID, maxLength, &maxLength, &infoLog[0]);
 
-				KEY_CORE_ERROR("Shader compilation failed:\n{0}", &infoLog[0]);
+				KEY_CORE_ERROR("Shader compilation failed ({0}):\n{1}", m_AssetPath, &infoLog[0]);
 
 				// We don't need the shader anymore.
 				glDeleteShader(shaderRendererID);
@@ -594,7 +562,7 @@ namespace Key {
 			// The maxLength includes the NULL character
 			std::vector<GLchar> infoLog(maxLength);
 			glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
-			KEY_CORE_ERROR("Shader compilation failed:\n{0}", &infoLog[0]);
+			KEY_CORE_ERROR("Shader linking failed ({0}):\n{1}", m_AssetPath, &infoLog[0]);
 
 			// We don't need the program anymore.
 			glDeleteProgram(program);
@@ -649,6 +617,9 @@ namespace Key {
 		uint32_t offset = uniform->GetOffset();
 		switch (uniform->GetType())
 		{
+		case OpenGLShaderUniformDeclaration::Type::BOOL:
+			UploadUniformFloat(uniform->GetLocation(), *(bool*)&buffer.Data[offset]);
+			break;
 		case OpenGLShaderUniformDeclaration::Type::FLOAT32:
 			UploadUniformFloat(uniform->GetLocation(), *(float*)&buffer.Data[offset]);
 			break;
@@ -685,6 +656,9 @@ namespace Key {
 		uint32_t offset = uniform->GetOffset();
 		switch (uniform->GetType())
 		{
+		case OpenGLShaderUniformDeclaration::Type::BOOL:
+			UploadUniformFloat(uniform->GetLocation(), *(bool*)&buffer.Data[offset]);
+			break;
 		case OpenGLShaderUniformDeclaration::Type::FLOAT32:
 			UploadUniformFloat(uniform->GetLocation(), *(float*)&buffer.Data[offset]);
 			break;
@@ -718,6 +692,9 @@ namespace Key {
 	{
 		switch (field.GetType())
 		{
+		case OpenGLShaderUniformDeclaration::Type::BOOL:
+			UploadUniformFloat(field.GetLocation(), *(bool*)&data[offset]);
+			break;
 		case OpenGLShaderUniformDeclaration::Type::FLOAT32:
 			UploadUniformFloat(field.GetLocation(), *(float*)&data[offset]);
 			break;
@@ -798,6 +775,20 @@ namespace Key {
 	{
 		Renderer::Submit([=]() {
 			UploadUniformInt(name, value);
+			});
+	}
+
+	void OpenGLShader::SetBool(const std::string& name, bool value)
+	{
+		Renderer::Submit([=]() {
+			UploadUniformInt(name, value);
+			});
+	}
+
+	void OpenGLShader::SetFloat2(const std::string& name, const glm::vec2& value)
+	{
+		Renderer::Submit([=]() {
+			UploadUniformFloat2(name, value);
 			});
 	}
 
@@ -914,6 +905,17 @@ namespace Key {
 		else
 			KEY_LOG_UNIFORM("Uniform '{0}' not found!", name);
 	}
+
+	void OpenGLShader::UploadUniformFloat2(const std::string& name, const glm::vec2& values)
+	{
+		glUseProgram(m_RendererID);
+		auto location = glGetUniformLocation(m_RendererID, name.c_str());
+		if (location != -1)
+			glUniform2f(location, values.x, values.y);
+		else
+			KEY_LOG_UNIFORM("Uniform '{0}' not found!", name);
+	}
+
 
 	void OpenGLShader::UploadUniformFloat3(const std::string& name, const glm::vec3& values)
 	{

@@ -20,13 +20,13 @@ namespace Example
 
         public void OnUpdate(float ts)
         {
-            Matrix4 transform = GetTransform();
+            /*Matrix4 transform = GetTransform();
 
             Vector3 translation = transform.Translation;
             translation.XY = m_PlayerEntity.GetTransform().Translation.XY;
             translation.Y = Math.Max(translation.Y, 4.5f);
             transform.Translation = translation;
-            SetTransform(transform);
+            SetTransform(transform);*/
         }
 
 

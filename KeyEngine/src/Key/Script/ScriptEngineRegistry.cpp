@@ -9,7 +9,7 @@
 
 #include "Key/Scene/Entity.h"
 #include "ScriptWrappers.h"
-#include <iostream>
+
 
 namespace Key {
 
@@ -30,6 +30,7 @@ namespace Key {
 		}\
 	}
 
+
 	static void InitComponentTypes()
 	{
 		Component_RegisterType(TagComponent);
@@ -48,11 +49,18 @@ namespace Key {
 
 		mono_add_internal_call("Key.Noise::PerlinNoise_Native", Key::Script::Key_Noise_PerlinNoise);
 
-		mono_add_internal_call("Key.Entity::GetTransform_Native", Key::Script::Key_Entity_GetTransform);
-		mono_add_internal_call("Key.Entity::SetTransform_Native", Key::Script::Key_Entity_SetTransform);
 		mono_add_internal_call("Key.Entity::CreateComponent_Native", Key::Script::Key_Entity_CreateComponent);
 		mono_add_internal_call("Key.Entity::HasComponent_Native", Key::Script::Key_Entity_HasComponent);
 		mono_add_internal_call("Key.Entity::FindEntityByTag_Native", Key::Script::Key_Entity_FindEntityByTag);
+
+		mono_add_internal_call("Key.TransformComponent::GetTransform_Native", Key::Script::Key_TransformComponent_GetTransform);
+		mono_add_internal_call("Key.TransformComponent::SetTransform_Native", Key::Script::Key_TransformComponent_SetTransform);
+		mono_add_internal_call("Key.TransformComponent::GetTranslation_Native", Key::Script::Key_TransformComponent_GetTranslation);
+		mono_add_internal_call("Key.TransformComponent::SetTranslation_Native", Key::Script::Key_TransformComponent_SetTranslation);
+		mono_add_internal_call("Key.TransformComponent::GetRotation_Native", Key::Script::Key_TransformComponent_GetRotation);
+		mono_add_internal_call("Key.TransformComponent::SetRotation_Native", Key::Script::Key_TransformComponent_SetRotation);
+		mono_add_internal_call("Key.TransformComponent::GetScale_Native", Key::Script::Key_TransformComponent_GetScale);
+		mono_add_internal_call("Key.TransformComponent::SetScale_Native", Key::Script::Key_TransformComponent_SetScale);
 
 		mono_add_internal_call("Key.MeshComponent::GetMesh_Native", Key::Script::Key_MeshComponent_GetMesh);
 		mono_add_internal_call("Key.MeshComponent::SetMesh_Native", Key::Script::Key_MeshComponent_SetMesh);
@@ -62,6 +70,10 @@ namespace Key {
 		mono_add_internal_call("Key.RigidBody2DComponent::SetLinearVelocity_Native", Key::Script::Key_RigidBody2DComponent_SetLinearVelocity);
 
 		mono_add_internal_call("Key.Input::IsKeyPressed_Native", Key::Script::Key_Input_IsKeyPressed);
+		mono_add_internal_call("Key.Input::IsMouseButtonPressed_Native", Key::Script::Key_Input_IsMouseButtonPressed);
+		mono_add_internal_call("Key.Input::GetMousePosition_Native", Key::Script::Key_Input_GetMousePosition);
+		mono_add_internal_call("Key.Input::SetCursorMode_Native", Key::Script::Key_Input_SetCursorMode);
+		mono_add_internal_call("Key.Input::GetCursorMode_Native", Key::Script::Key_Input_GetCursorMode);
 
 		mono_add_internal_call("Key.Texture2D::Constructor_Native", Key::Script::Key_Texture2D_Constructor);
 		mono_add_internal_call("Key.Texture2D::Destructor_Native", Key::Script::Key_Texture2D_Destructor);
@@ -85,12 +97,7 @@ namespace Key {
 
 		mono_add_internal_call("Key.MeshFactory::CreatePlane_Native", Key::Script::Key_MeshFactory_CreatePlane);
 
-		// static bool IsKeyPressed(KeyCode key) { return s_Instance->IsKeyPressedImpl(key); }
-		// 
-		// static bool IsMouseButtonPressed(MouseCode button) { return s_Instance->IsMouseButtonPressedImpl(button); }
-		// static std::pair<float, float> GetMousePosition() { return s_Instance->GetMousePositionImpl(); }
-		// static float GetMouseX() { return s_Instance->GetMouseXImpl(); }
-		// static float GetMouseY() { return s_Instance->GetMouseYImpl(); }
+	
 	}
 
 }

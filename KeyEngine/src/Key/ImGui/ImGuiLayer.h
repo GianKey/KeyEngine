@@ -16,6 +16,8 @@ namespace Key {
 		ImGuiLayer(const std::string& name);
 		virtual ~ImGuiLayer();
 
+		virtual void OnEvent(Event& e) override;
+
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
 		virtual void OnImGuiRender() override;
@@ -23,6 +25,7 @@ namespace Key {
 		void Begin();
 		void End();
 
+		void SetDarkThemeColors();
 	private:
 		float m_Time = 0;
 	};

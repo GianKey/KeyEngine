@@ -1,12 +1,13 @@
 #include "Kpch.h"
 #include "Renderer.h"
-#include "RendererAPI.h"
-#include "Renderer2D.h"
+
 #include "Shader.h"
 
 #include <glad/glad.h>
 
+#include "RendererAPI.h"
 #include "SceneRenderer.h"
+#include "Renderer2D.h"
 
 namespace Key {
 
@@ -17,7 +18,10 @@ namespace Key {
 		Ref<RenderPass> m_ActiveRenderPass;
 		RenderCommandQueue m_CommandQueue;
 		Ref<ShaderLibrary> m_ShaderLibrary;
-		Ref<VertexArray> m_FullscreenQuadVertexArray;
+
+		Ref<VertexBuffer> m_FullscreenQuadVertexBuffer;
+		Ref<IndexBuffer> m_FullscreenQuadIndexBuffer;
+		Ref<Pipeline> m_FullscreenQuadPipeline;
 	};
 
 	static RendererData s_Data;
@@ -56,18 +60,16 @@ namespace Key {
 		data[3].Position = glm::vec3(x, y + height, 0.1f);
 		data[3].TexCoord = glm::vec2(0, 1);
 
-		s_Data.m_FullscreenQuadVertexArray = VertexArray::Create();
-		auto quadVB = VertexBuffer::Create(data, 4 * sizeof(QuadVertex));
-		quadVB->SetLayout({
+		PipelineSpecification pipelineSpecification;
+		pipelineSpecification.Layout = {
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float2, "a_TexCoord" }
-			});
+		};
+		s_Data.m_FullscreenQuadPipeline = Pipeline::Create(pipelineSpecification);
 
+		s_Data.m_FullscreenQuadVertexBuffer = VertexBuffer::Create(data, 4 * sizeof(QuadVertex));
 		uint32_t indices[6] = { 0, 1, 2, 2, 3, 0, };
-		auto quadIB = IndexBuffer::Create(indices, 6 * sizeof(uint32_t));
-
-		s_Data.m_FullscreenQuadVertexArray->AddVertexBuffer(quadVB);
-		s_Data.m_FullscreenQuadVertexArray->SetIndexBuffer(quadIB);
+		s_Data.m_FullscreenQuadIndexBuffer = IndexBuffer::Create(indices, 6 * sizeof(uint32_t));
 
 		Renderer2D::Init();
 	}
@@ -100,10 +102,10 @@ namespace Key {
 	{
 	}
 
-	void Renderer::DrawIndexed(uint32_t count, PrimitiveType type, bool depthTest)
+	void Renderer::DrawIndexed(uint32_t count, PrimitiveType type, bool depthTest, bool faceCulling)
 	{
 		Renderer::Submit([=]() {
-			RendererAPI::DrawIndexed(count, type, depthTest);
+			RendererAPI::DrawIndexed(count, type, depthTest, faceCulling);
 			});
 	}
 
@@ -146,39 +148,49 @@ namespace Key {
 	void Renderer::SubmitQuad(Ref<MaterialInstance> material, const glm::mat4& transform)
 	{
 		bool depthTest = true;
+		bool cullFace = true;
 		if (material)
 		{
 			material->Bind();
 			depthTest = material->GetFlag(MaterialFlag::DepthTest);
+			cullFace = !material->GetFlag(MaterialFlag::TwoSided);
 
 			auto shader = material->GetShader();
 			shader->SetMat4("u_Transform", transform);
 		}
 
-		s_Data.m_FullscreenQuadVertexArray->Bind();
-		Renderer::DrawIndexed(6, PrimitiveType::Triangles, depthTest);
+		s_Data.m_FullscreenQuadVertexBuffer->Bind();
+		s_Data.m_FullscreenQuadPipeline->Bind();
+		s_Data.m_FullscreenQuadIndexBuffer->Bind();
+		Renderer::DrawIndexed(6, PrimitiveType::Triangles, depthTest, cullFace);
 	}
 
 	void Renderer::SubmitFullscreenQuad(Ref<MaterialInstance> material)
 	{
 		bool depthTest = true;
+		bool cullFace = true;
 		if (material)
 		{
 			material->Bind();
 			depthTest = material->GetFlag(MaterialFlag::DepthTest);
+			cullFace = !material->GetFlag(MaterialFlag::TwoSided);
 		}
 
-		s_Data.m_FullscreenQuadVertexArray->Bind();
-		Renderer::DrawIndexed(6, PrimitiveType::Triangles, depthTest);
+		s_Data.m_FullscreenQuadVertexBuffer->Bind();
+		s_Data.m_FullscreenQuadPipeline->Bind();
+		s_Data.m_FullscreenQuadIndexBuffer->Bind();
+
+		Renderer::DrawIndexed(6, PrimitiveType::Triangles, depthTest, cullFace);
 	}
 
 	void Renderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<MaterialInstance> overrideMaterial)
 	{
 		// auto material = overrideMaterial ? overrideMaterial : mesh->GetMaterialInstance();
 		// auto shader = material->GetShader();
-
 		// TODO: Sort this out
-		mesh->m_VertexArray->Bind();
+		mesh->m_VertexBuffer->Bind();
+		mesh->m_Pipeline->Bind();
+		mesh->m_IndexBuffer->Bind();
 
 		auto& materials = mesh->GetMaterials();
 		for (Submesh& submesh : mesh->m_Submeshes)
@@ -193,7 +205,7 @@ namespace Key {
 				for (size_t i = 0; i < mesh->m_BoneTransforms.size(); i++)
 				{
 					std::string uniformName = std::string("u_BoneTransforms[") + std::to_string(i) + std::string("]");
-					mesh->m_MeshShader->SetMat4(uniformName, mesh->m_BoneTransforms[i]);
+					shader->SetMat4(uniformName, mesh->m_BoneTransforms[i]);
 				}
 			}
 			shader->SetMat4("u_Transform", transform * submesh.Transform);
@@ -204,6 +216,35 @@ namespace Key {
 				else
 					glDisable(GL_DEPTH_TEST);
 
+				if (!material->GetFlag(MaterialFlag::TwoSided))
+					glEnable(GL_CULL_FACE);
+				else
+					glDisable(GL_CULL_FACE);
+
+				glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
+				});
+		}
+	}
+
+	void Renderer::SubmitMeshWithShader(Ref<Mesh> mesh, const glm::mat4& transform, Ref<Shader> shader)
+	{
+		mesh->m_VertexBuffer->Bind();
+		mesh->m_Pipeline->Bind();
+		mesh->m_IndexBuffer->Bind();
+
+		for (Submesh& submesh : mesh->m_Submeshes)
+		{
+			if (mesh->m_IsAnimated)
+			{
+				for (size_t i = 0; i < mesh->m_BoneTransforms.size(); i++)
+				{
+					std::string uniformName = std::string("u_BoneTransforms[") + std::to_string(i) + std::string("]");
+					shader->SetMat4(uniformName, mesh->m_BoneTransforms[i]);
+				}
+			}
+			shader->SetMat4("u_Transform", transform * submesh.Transform);
+
+			Renderer::Submit([submesh]() {
 				glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
 				});
 		}
@@ -246,7 +287,6 @@ namespace Key {
 		for (uint32_t i = 0; i < 4; i++)
 			Renderer2D::DrawLine(corners[i], corners[i + 4], color);
 	}
-
 
 	RenderCommandQueue& Renderer::GetRenderCommandQueue()
 	{

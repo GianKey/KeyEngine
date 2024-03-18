@@ -6,6 +6,8 @@
 #include "Key/Renderer/Camera.h"
 #include "Key/Renderer/Texture.h"
 #include "Key/Renderer/Material.h"
+#include "Key/Renderer/SceneEnvironment.h"
+
 
 #include "entt/entt.hpp"
 
@@ -13,15 +15,6 @@
 #include "Key/Editor/EditorCamera.h"
 
 namespace Key {
-
-	struct Environment
-	{
-		std::string FilePath;
-		Ref<TextureCube> RadianceMap;
-		Ref<TextureCube> IrradianceMap;
-
-		static Environment Load(const std::string& filepath);
-	};
 
 	struct Light
 	{
@@ -31,13 +24,28 @@ namespace Key {
 		float Multiplier = 1.0f;
 	};
 
+	struct DirectionalLight
+	{
+		glm::vec3 Direction = { 0.0f, 0.0f, 0.0f };
+		glm::vec3 Radiance = { 0.0f, 0.0f, 0.0f };
+		float Multiplier = 0.0f;
+
+		// C++ only
+		bool CastShadows = true;
+	};
+
+	struct LightEnvironment
+	{
+		DirectionalLight DirectionalLights[4];
+	};
+
 	class Entity;
 	using EntityMap = std::unordered_map<UUID, Entity>;
 
 	class Scene : public RefCounted
 	{
 	public:
-		Scene(const std::string& debugName = "Scene");
+		Scene(const std::string& debugName = "Scene", bool isEditorScene = false);
 		~Scene();
 
 		void Init();
@@ -53,8 +61,7 @@ namespace Key {
 
 		void SetViewportSize(uint32_t width, uint32_t height);
 
-		void SetEnvironment(const Environment& environment);
-		const Environment& GetEnvironment() const { return m_Environment; }
+		const Ref<Environment>& GetEnvironment() const { return m_Environment; }
 		void SetSkybox(const Ref<TextureCube>& skybox);
 
 		Light& GetLight() { return m_Light; }
@@ -77,6 +84,9 @@ namespace Key {
 		}
 
 		Entity FindEntityByTag(const std::string& tag);
+		Entity FindEntityByUUID(UUID id);
+
+		glm::mat4 GetTransformRelativeToParent(Entity entity);
 
 		const EntityMap& GetEntityMap() const { return m_EntityIDMap; }
 		void CopyTo(Ref<Scene>& target);
@@ -103,7 +113,10 @@ namespace Key {
 		Light m_Light;
 		float m_LightMultiplier = 0.3f;
 
-		Environment m_Environment;
+		LightEnvironment m_LightEnvironment;
+
+		Ref<Environment> m_Environment;
+		float m_EnvironmentIntensity = 1.0f;
 		Ref<TextureCube> m_SkyboxTexture;
 		Ref<MaterialInstance> m_SkyboxMaterial;
 
