@@ -84,13 +84,13 @@
     <ClInclude Include="src\Key.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\Asset\Assets.h">
-      <Filter>src\Key\Asset</Filter>
-    </ClInclude>
     <ClInclude Include="src\Key\Asset\AssetManager.h">
       <Filter>src\Key\Asset</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Asset\AssetSerializer.h">
+      <Filter>src\Key\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Asset\Assets.h">
       <Filter>src\Key\Asset</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Core\Application.h">
@@ -162,7 +162,13 @@
     <ClInclude Include="src\Key\Core\input.h">
       <Filter>src\Key\Core</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Editor\AssetEditorPanel.h">
+      <Filter>src\Key\Editor</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\Editor\AssetManagerPanel.h">
+      <Filter>src\Key\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Editor\DefaultAssetEditors.h">
       <Filter>src\Key\Editor</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Editor\EditorCamera.h">
@@ -304,6 +310,9 @@
       <Filter>src\Key\Utilities</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Utilities\FileSystem.h">
+      <Filter>src\Key\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Utilities\StringUtils.h">
       <Filter>src\Key\Utilities</Filter>
     </ClInclude>
     <ClInclude Include="src\Kpch.h">
@@ -486,15 +495,6 @@
     <ClInclude Include="vendor\yaml-cpp\src\token.h">
       <Filter>vendor\yaml-cpp\src</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\Utilities\StringUtils.h">
-      <Filter>src\Key\Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\Editor\AssetEditorPanel.h">
-      <Filter>src\Key\Editor</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Key\Editor\DefaultAssetEditors.h">
-      <Filter>src\Key\Editor</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Key\Asset\AssetManager.cpp">
@@ -530,7 +530,13 @@
     <ClCompile Include="src\Key\Core\Window.cpp">
       <Filter>src\Key\Core</Filter>
     </ClCompile>
+    <ClCompile Include="src\Key\Editor\AssetEditorPanel.cpp">
+      <Filter>src\Key\Editor</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\Editor\AssetManagerPanel.cpp">
+      <Filter>src\Key\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Editor\DefaultAssetEditors.cpp">
       <Filter>src\Key\Editor</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Editor\EditorCamera.cpp">
@@ -665,6 +671,9 @@
     <ClCompile Include="src\Key\Script\ScriptWrappers.cpp">
       <Filter>src\Key\Script</Filter>
     </ClCompile>
+    <ClCompile Include="src\Key\Utilities\StringUtils.cpp">
+      <Filter>src\Key\Utilities</Filter>
+    </ClCompile>
     <ClCompile Include="src\Kpch.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -763,15 +772,6 @@
     </ClCompile>
     <ClCompile Include="vendor\yaml-cpp\src\tag.cpp">
       <Filter>vendor\yaml-cpp\src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Key\Utilities\StringUtils.cpp">
-      <Filter>src\Key\Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Key\Editor\AssetEditorPanel.cpp">
-      <Filter>src\Key\Editor</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Key\Editor\DefaultAssetEditors.cpp">
-      <Filter>src\Key\Editor</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

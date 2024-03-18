@@ -31,9 +31,16 @@ IncludeDir["entt"] = "KeyEngine/vendor/entt/include"
 IncludeDir["FastNoise"] = "KeyEngine/vendor/FastNoise"
 IncludeDir["mono"] = "KeyEngine/vendor/mono/include"
 IncludeDir["Box2D"] = "KeyEngine/vendor/Box2D/include"
+IncludeDir["shaderc"] = "KeyEngine/vendor/VulkanSDK/1.3.261.1/include/shaderc"
+IncludeDir["SPIRV_Cross"] = "KeyEngine/vendor/VulkanSDK/1.3.261.1/Include/spirv_cross"
+IncludeDir["Vulkan"] = "KeyEngine/vendor/VulkanSDK/1.3.261.1/Include/vulkan"
+IncludeDir["VulkanSDK"] = "KeyEngine/vendor/VulkanSDK/1.3.261.1/Include"
 
 LibraryDir = {}
 LibraryDir["mono"] = "vendor/mono/lib/Debug/mono-2.0-sgen.lib"
+LibraryDir["VulkanSDK"] = "vendor/VulkanSDK/1.3.261.1/Lib"
+LibraryDir["Vulkan"] = "vendor/VulkanSDK/1.3.261.1/Lib/vulkan-1.lib"
+
 
 group "Dependencies"
 include "KeyEngine/vendor/GLFW"
@@ -48,7 +55,7 @@ project "KeyEngine"
 	kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"
-	staticruntime "on"
+	staticruntime "off"
 
 	targetdir("bin/" ..outputdir.. "/%{prj.name}")
 	objdir("bin-int/" ..outputdir.. "/%{prj.name}")
@@ -81,6 +88,8 @@ project "KeyEngine"
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.mono}",
 		"%{IncludeDir.FastNoise}",
+		"%{IncludeDir.Vulkan}",
+		"%{IncludeDir.VulkanSDK}",
 		"%{prj.name}/vendor/assimp/include",
 		"%{IncludeDir.stb_image}",	
 		"%{prj.name}/vendor/yaml-cpp/include",
@@ -93,6 +102,11 @@ project "KeyEngine"
 		"Imgui",
 		"Box2D",
 		"opengl32.lib",
+		"%{LibraryDir.Vulkan}",
+
+        "%{LibraryDir.VulkanSDK}/shaderc_sharedd.lib",
+        "%{LibraryDir.VulkanSDK}/spirv-cross-cored.lib",
+        "%{LibraryDir.VulkanSDK}/spirv-cross-glsld.lib",
 		"%{LibraryDir.mono}"
 	}
 
@@ -144,7 +158,7 @@ project "Keya"
 		kind "ConsoleApp"
 		language "C++"
 		cppdialect "C++17"
-		staticruntime "on"
+		staticruntime "off"
 	
 		targetdir("bin/" ..outputdir.. "/%{prj.name}")
 		objdir("bin-int/" ..outputdir.. "/%{prj.name}")
@@ -168,7 +182,10 @@ project "Keya"
 			"KeyEngine/src/",
 			"KeyEngine/vendor",
 			"%{IncludeDir.entt}",
-			"%{IncludeDir.glm}"
+			"%{IncludeDir.glm}", 
+			"%{IncludeDir.ImGui}",
+			"%{IncludeDir.Vulkan}",
+			"%{IncludeDir.Glad}"
 		}
 	
 
@@ -279,7 +296,7 @@ project "ExampleApp"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
-    staticruntime "on"
+    staticruntime "off"
 
 	targetdir("bin/" ..outputdir.. "/%{prj.name}")
 	objdir("bin-int/" ..outputdir.. "/%{prj.name}")
@@ -295,7 +312,9 @@ project "ExampleApp"
 		"KeyEngine/vendor/spdlog/include",
 		"KeyEngine/src/",
 		"KeyEngine/vendor",
-		"%{IncludeDir.glm}"
+		"%{IncludeDir.glm}",
+		"%{IncludeDir.entt}",
+		"%{IncludeDir.Vulkan}",
 	}
 
 	links
