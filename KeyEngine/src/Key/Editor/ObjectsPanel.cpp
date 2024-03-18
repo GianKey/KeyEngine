@@ -1,6 +1,5 @@
 #include "Kpch.h"
 #include "ObjectsPanel.h"
-#include "Key/Utilities/DragDropData.h"
 #include "Key/ImGui/ImGui.h"
 
 namespace Key {
@@ -10,137 +9,45 @@ namespace Key {
 		m_CubeImage = Texture2D::Create("assets/editor/asset.png");
 	}
 
+	void ObjectsPanel::DrawObject(const char* label, AssetHandle handle)
+	{
+		ImGui::Image((ImTextureID)m_CubeImage->GetRendererID(), ImVec2(30, 30));
+		ImGui::SameLine();
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
+		ImGui::Selectable(label);
+
+		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+		{
+			ImGui::Image((ImTextureID)m_CubeImage->GetRendererID(), ImVec2(20, 20));
+			ImGui::SameLine();
+			ImGui::Text(label);
+
+			ImGui::SetDragDropPayload("asset_payload", &handle, sizeof(AssetHandle));
+			ImGui::EndDragDropSource();
+		}
+	}
+	
 	void ObjectsPanel::OnImGuiRender()
 	{
-		ImGui::Begin("Objects", NULL, ImGuiWindowFlags_None);
+		static const AssetHandle CubeHandle = AssetManager::GetAssetHandleFromFilePath("assets/meshes/Default/Cube.fbx");
+		static const AssetHandle CapsuleHandle = AssetManager::GetAssetHandleFromFilePath("assets/meshes/Default/Capsule.fbx");
+		static const AssetHandle SphereHandle = AssetManager::GetAssetHandleFromFilePath("assets/meshes/Default/Sphere.fbx");
+		static const AssetHandle CylinderHandle = AssetManager::GetAssetHandleFromFilePath("assets/meshes/Default/Cylinder.fbx");
+		static const AssetHandle TorusHandle = AssetManager::GetAssetHandleFromFilePath("assets/meshes/Default/Torus.fbx");
+		static const AssetHandle PlaneHandle = AssetManager::GetAssetHandleFromFilePath("assets/meshes/Default/Plane.fbx");
+		static const AssetHandle ConeHandle = AssetManager::GetAssetHandleFromFilePath("assets/meshes/Default/Cone.fbx");
+
+		ImGui::Begin("Objects");
 		{
-			char buff[100] = { 0 };
-			char* inputText;
-			char* inputHint;
-			inputText = "";
-			inputHint = "Start Typing To Search";
-			ImGui::PushItemWidth(ImGui::GetWindowWidth() - 20);
-			ImGui::InputTextWithHint(inputText, inputHint, buff, 100);
-
 			ImGui::BeginChild("##objects_window");
-			{
-				ImGui::Image((ImTextureID)m_CubeImage->GetRendererID(), ImVec2(30, 30));
-				ImGui::SameLine();
-				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
-				ImGui::Selectable("Cube");
-				
-				if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-				{
-					ImGui::Image((ImTextureID)m_CubeImage->GetRendererID(), ImVec2(20, 20));
-					ImGui::SameLine();
-
-					ImGui::Text("Cube");
-
-					DragDropData data("Mesh", "assets/meshes/Default/Cube.fbx", "Cube");
-					ImGui::SetDragDropPayload("scene_entity_objectP", &data, sizeof(data));
-					ImGui::EndDragDropSource();
-				}
-
-				ImGui::Image((ImTextureID)m_CubeImage->GetRendererID(), ImVec2(30, 30));
-				ImGui::SameLine();
-				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
-				ImGui::Selectable("Capsule");
-
-				if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-				{
-					ImGui::Image((ImTextureID)m_CubeImage->GetRendererID(), ImVec2(20, 20));
-					ImGui::SameLine();
-
-					ImGui::Text("Capsule");
-
-					DragDropData data("Mesh", "assets/meshes/Default/Capsule.fbx", "Capsule");
-					ImGui::SetDragDropPayload("scene_entity_objectP", &data, sizeof(data));
-					ImGui::EndDragDropSource();
-				}
-
-				ImGui::Image((ImTextureID)m_CubeImage->GetRendererID(), ImVec2(30, 30));
-				ImGui::SameLine();
-				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
-				ImGui::Selectable("Sphere");
-				
-				if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-				{
-					ImGui::Image((ImTextureID)m_CubeImage->GetRendererID(), ImVec2(20, 20));
-					ImGui::SameLine();
-
-					ImGui::Text("Sphere");
-					DragDropData data("Mesh", "assets/meshes/Default/Sphere.fbx", "Sphere");
-					ImGui::SetDragDropPayload("scene_entity_objectP", &data, sizeof(data));
-					ImGui::EndDragDropSource();
-				}
-
-				ImGui::Image((ImTextureID)m_CubeImage->GetRendererID(), ImVec2(30, 30));
-				ImGui::SameLine();
-				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
-				ImGui::Selectable("Cylinder");
-
-				if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-				{
-					ImGui::Image((ImTextureID)m_CubeImage->GetRendererID(), ImVec2(20, 20));
-					ImGui::SameLine();
-
-					ImGui::Text("Cylinder");
-					DragDropData data("Mesh", "assets/meshes/Default/Cylinder.fbx", "Cylinder");
-					ImGui::SetDragDropPayload("scene_entity_objectP", &data, sizeof(data));
-					ImGui::EndDragDropSource();
-				}
-
-				ImGui::Image((ImTextureID)m_CubeImage->GetRendererID(), ImVec2(30, 30));
-				ImGui::SameLine();
-				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
-				ImGui::Selectable("Torus");
-
-				if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-				{
-					ImGui::Image((ImTextureID)m_CubeImage->GetRendererID(), ImVec2(20, 20));
-					ImGui::SameLine();
-
-					ImGui::Text("Torus");
-					DragDropData data("Mesh", "assets/meshes/Default/Torus.fbx", "Torus");
-					ImGui::SetDragDropPayload("scene_entity_objectP", &data, sizeof(data));
-					ImGui::EndDragDropSource();
-				}
-
-
-				ImGui::Image((ImTextureID)m_CubeImage->GetRendererID(), ImVec2(30, 30));
-				ImGui::SameLine();
-				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
-				ImGui::Selectable("Plane");
-
-				if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-				{
-					ImGui::Image((ImTextureID)m_CubeImage->GetRendererID(), ImVec2(20, 20));
-					ImGui::SameLine();
-
-					ImGui::Text("Plane");
-					DragDropData data("Mesh", "assets/meshes/Default/Plane.fbx", "Plane");
-					ImGui::SetDragDropPayload("scene_entity_objectP", &data, sizeof(data));
-					ImGui::EndDragDropSource();
-				}
-
-				ImGui::Image((ImTextureID)m_CubeImage->GetRendererID(), ImVec2(30, 30));
-				ImGui::SameLine();
-				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
-				ImGui::Selectable("Cone");
-
-				if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-				{
-					ImGui::Image((ImTextureID)m_CubeImage->GetRendererID(), ImVec2(20, 20));
-					ImGui::SameLine();
-
-					ImGui::Text("Cone");
-					DragDropData data("Mesh", "assets/meshes/Default/Cone.fbx", "Cone");
-					ImGui::SetDragDropPayload("scene_entity_objectP", &data, sizeof(data));
-					ImGui::EndDragDropSource();
-				}
-
-				ImGui::EndChild();
-			}
+			DrawObject("Cube", CubeHandle);
+			DrawObject("Capsule", CapsuleHandle);
+			DrawObject("Sphere", SphereHandle);
+			DrawObject("Cylinder", CylinderHandle);
+			DrawObject("Torus", TorusHandle);
+			DrawObject("Plane", PlaneHandle);
+			DrawObject("Cone", ConeHandle);
+			ImGui::EndChild();
 		}
 
 		ImGui::End();

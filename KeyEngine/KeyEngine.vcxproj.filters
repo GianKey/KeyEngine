@@ -7,6 +7,9 @@
     <Filter Include="src\Key">
       <UniqueIdentifier>{058C2FA9-716B-AE44-7A83-391BE6E114A6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Key\Asset">
+      <UniqueIdentifier>{5470075D-C030-8393-896B-CC10F5EAC76F}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Key\Core">
       <UniqueIdentifier>{7DFBE95F-695E-7904-12E4-B1BAFE254587}</UniqueIdentifier>
     </Filter>
@@ -80,6 +83,15 @@
   <ItemGroup>
     <ClInclude Include="src\Key.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Asset\Assets.h">
+      <Filter>src\Key\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Asset\AssetManager.h">
+      <Filter>src\Key\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Asset\AssetSerializer.h">
+      <Filter>src\Key\Asset</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Core\Application.h">
       <Filter>src\Key\Core</Filter>
@@ -222,6 +234,9 @@
     <ClInclude Include="src\Key\Renderer\Mesh.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Renderer\MeshFactory.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\Renderer\OrthographicCamera.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
@@ -285,10 +300,10 @@
     <ClInclude Include="src\Key\Script\ScriptWrappers.h">
       <Filter>src\Key\Script</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\Utilities\AssetManager.h">
+    <ClInclude Include="src\Key\Utilities\DragDropData.h">
       <Filter>src\Key\Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\Utilities\DragDropData.h">
+    <ClInclude Include="src\Key\Utilities\FileSystem.h">
       <Filter>src\Key\Utilities</Filter>
     </ClInclude>
     <ClInclude Include="src\Kpch.h">
@@ -471,8 +486,23 @@
     <ClInclude Include="vendor\yaml-cpp\src\token.h">
       <Filter>vendor\yaml-cpp\src</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Utilities\StringUtils.h">
+      <Filter>src\Key\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Editor\AssetEditorPanel.h">
+      <Filter>src\Key\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Editor\DefaultAssetEditors.h">
+      <Filter>src\Key\Editor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Key\Asset\AssetManager.cpp">
+      <Filter>src\Key\Asset</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Asset\AssetSerializer.cpp">
+      <Filter>src\Key\Asset</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\Core\Application.cpp">
       <Filter>src\Key\Core</Filter>
     </ClCompile>
@@ -551,6 +581,9 @@
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLVertexBuffer.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Windows\WindowsFileSystem.cpp">
+      <Filter>src\Key\PlatForm\Windows</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\PlatForm\Windows\WindowsInput.cpp">
       <Filter>src\Key\PlatForm\Windows</Filter>
     </ClCompile>
@@ -573,6 +606,9 @@
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\Mesh.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Renderer\MeshFactory.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\OrthographicCamera.cpp">
@@ -628,9 +664,6 @@
     </ClCompile>
     <ClCompile Include="src\Key\Script\ScriptWrappers.cpp">
       <Filter>src\Key\Script</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Key\Utilities\AssetManager.cpp">
-      <Filter>src\Key\Utilities</Filter>
     </ClCompile>
     <ClCompile Include="src\Kpch.cpp">
       <Filter>src</Filter>
@@ -730,6 +763,15 @@
     </ClCompile>
     <ClCompile Include="vendor\yaml-cpp\src\tag.cpp">
       <Filter>vendor\yaml-cpp\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Utilities\StringUtils.cpp">
+      <Filter>src\Key\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Editor\AssetEditorPanel.cpp">
+      <Filter>src\Key\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Editor\DefaultAssetEditors.cpp">
+      <Filter>src\Key\Editor</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

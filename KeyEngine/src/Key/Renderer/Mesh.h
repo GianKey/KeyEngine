@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 
 #include "Key/Core/TimeStep.h"
-
+#include "Key/Asset/Assets.h"
 #include "Key/Renderer/Pipeline.h"
 #include "Key/Renderer/IndexBuffer.h"
 #include "Key/Renderer/VertexBuffer.h"
@@ -129,7 +129,7 @@ namespace Key {
 		std::string NodeName, MeshName;
 	};
 
-	class Mesh : public RefCounted
+	class Mesh : public Asset
 	{
 	public:
 		Mesh(const std::string& filename);
