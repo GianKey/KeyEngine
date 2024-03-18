@@ -1,12 +1,64 @@
 #pragma once
 
-#include "Key/Utilities/AssetManager.h"
+#include "Key/Asset/AssetManager.h"
 #include "Key/Renderer/Texture.h"
 #include "Key/ImGui/ImGui.h"
 
 #include <map>
-
+#define MAX_INPUT_BUFFER_LENGTH 128
 namespace Key {
+
+	template<typename T>
+	struct SelectionStack
+	{
+	public:
+		void Select(T item)
+		{
+			m_Selections.push_back(item);
+		}
+
+		void Deselect(T item)
+		{
+			for (auto it = m_Selections.begin(); it != m_Selections.end(); it++)
+			{
+				if (*it == item)
+				{
+					m_Selections.erase(it);
+					break;
+				}
+			}
+		}
+
+		bool IsSelected(T item) const
+		{
+			for (auto selection : m_Selections)
+			{
+				if (selection == item)
+					return true;
+			}
+
+			return false;
+		}
+
+		void Clear()
+		{
+			m_Selections.clear();
+		}
+
+		size_t SelectionCount() const
+		{
+			return m_Selections.size();
+		}
+
+		T* GetSelectionData()
+		{
+			return m_Selections.data();
+		}
+
+	private:
+		std::vector<T> m_Selections;
+	};
+
 
 	class AssetManagerPanel
 	{
@@ -15,60 +67,51 @@ namespace Key {
 		void OnImGuiRender();
 
 	private:
-		void RenderFileListView(int dirIndex);
-		void RenderFileGridView(int dirIndex);
-		void HandleDragDrop(RendererID icon, int dirIndex);
-		void RenderDirectoriesListView(int dirIndex);
-		void RenderDirectoriesGridView(int dirIndex);
-		void RenderBreadCrumbs();
-		void RenderSearch();
-		void RenderBottom();
+		void DrawDirectoryInfo(AssetHandle directory);
 
-		ImGuiInputTextCallback SearchCallback(ImGuiInputTextCallbackData* data);
+		void RenderAsset(Ref<Asset>& assetHandle);
+		void RenderFileGridView(Ref<Asset>& asset);
+		void HandleDragDrop(RendererID icon, Ref<Asset>& asset);
+		
+		void RenderBreadCrumbs();
+	
+		void HandleRenaming(Ref<Asset>& asset);
+
+		void UpdateCurrentDirectory(AssetHandle directoryHandle);
 
 	private:
 		Ref<Texture2D> m_FolderTex;
-		Ref<Texture2D> m_FavoritesTex;
-		Ref<Texture2D> m_FileTex;
-		Ref<Texture2D> m_GoBackTex;
-		Ref<Texture2D> m_ScriptTex;
-		Ref<Texture2D> m_ResourceTex;
-		Ref<Texture2D> m_SceneTex;
 
 		Ref<Texture2D> m_BackbtnTex;
 		Ref<Texture2D> m_FwrdbtnTex;
 		Ref<Texture2D> m_FolderRightTex;
-		Ref<Texture2D> m_TagsTex;
 		Ref<Texture2D> m_SearchTex;
-		Ref<Texture2D> m_GridView;
-		Ref<Texture2D> m_ListView;
 
-		std::string m_CurrentDirPath;
-		std::string m_BaseDirPath;
-		std::string m_PrevDirPath;
 		std::string m_MovePath;
 
-		std::string m_ForwardPath;
-		std::string m_BackPath;
-
-		int m_BasePathLen;
-		int m_DirDataLen;
-
 		bool m_IsDragging = false;
-		bool m_DisplayListView = false;
 		bool m_UpdateBreadCrumbs = true;
-		bool m_ShowSearchBar = false;
-		bool m_IsPathChanged = false;
+		bool m_IsAnyItemHovered = false;
+		bool m_UpdateDirectoryNextFrame = false;
+		char m_InputBuffer[MAX_INPUT_BUFFER_LENGTH];
 
-		char m_InputBuffer[1024];
+		AssetHandle m_CurrentDirHandle;
+		AssetHandle m_BaseDirectoryHandle;
+		AssetHandle m_PrevDirHandle;
+		AssetHandle m_NextDirHandle;
+		Ref<Directory> m_CurrentDirectory;
+		Ref<Directory> m_BaseDirectory;
+		std::vector<Ref<Asset>> m_CurrentDirAssets;
 
-		std::vector<DirectoryInfo> m_CurrentDir;
-		std::vector<DirectoryInfo> m_BaseProjectDir;
+		std::vector<Ref<Directory>> m_BreadCrumbData;
 
-		ImGuiInputTextCallbackData m_Data;
+		AssetHandle m_DraggedAssetId = 0;
+		
+		SelectionStack<AssetHandle> m_SelectedAssets;
+
+		bool m_RenamingSelected = false;
+
 		std::map<size_t, Ref<Texture2D>> m_AssetIconMap;
-		//NotificationManager nManager;
-		AssetManager m_AssetManager;
 	};
 
 }

@@ -4,6 +4,8 @@
 #include "Entity.h"
 #include "Components.h"
 #include "Key/Script/ScriptEngine.h"
+#include "Key/Renderer/MeshFactory.h"
+#include "Key/Asset/AssetManager.h"
 
 #include "yaml-cpp/yaml.h"
 
@@ -169,19 +171,15 @@ namespace Key {
 		out << YAML::Key << "Entity";
 		out << YAML::Value << uuid;
 
-		if (entity.HasComponent<ParentComponent>())
+		if (entity.HasComponent<RelationshipComponent>())
 		{
-			auto& parent = entity.GetComponent<ParentComponent>();
-			out << YAML::Key << "Parent" << YAML::Value << parent.ParentHandle;
-		}
+			auto& relationshipComponent = entity.GetComponent<RelationshipComponent>();
+			out << YAML::Key << "Parent" << YAML::Value << relationshipComponent.ParentHandle;
 
-		if (entity.HasComponent<ChildrenComponent>())
-		{
-			auto& childrenComponent = entity.GetComponent<ChildrenComponent>();
 			out << YAML::Key << "Children";
 			out << YAML::Value << YAML::BeginSeq;
 
-			for (auto child : childrenComponent.Children)
+			for (auto child : relationshipComponent.Children)
 			{
 				out << YAML::BeginMap;
 				out << YAML::Key << "Handle" << YAML::Value << child;
@@ -271,7 +269,10 @@ namespace Key {
 			out << YAML::BeginMap; // MeshComponent
 
 			auto mesh = entity.GetComponent<MeshComponent>().Mesh;
-			out << YAML::Key << "AssetPath" << YAML::Value << mesh->GetFilePath();
+			if (mesh)
+				out << YAML::Key << "AssetID" << YAML::Value << mesh->Handle;
+			else
+				out << YAML::Key << "AssetID" << YAML::Value << 0;
 
 			out << YAML::EndMap; // MeshComponent
 		}
@@ -315,7 +316,7 @@ namespace Key {
 			out << YAML::BeginMap; // SkyLightComponent
 
 			auto& skyLightComponent = entity.GetComponent<SkyLightComponent>();
-			out << YAML::Key << "EnvironmentAssetPath" << YAML::Value << skyLightComponent.SceneEnvironment.FilePath;
+			out << YAML::Key << "EnvironmentMap" << YAML::Value << skyLightComponent.SceneEnvironment->Handle;
 			out << YAML::Key << "Intensity" << YAML::Value << skyLightComponent.Intensity;
 			out << YAML::Key << "Angle" << YAML::Value << skyLightComponent.Angle;
 
@@ -384,7 +385,7 @@ namespace Key {
 		out << YAML::Key << "Environment";
 		out << YAML::Value;
 		out << YAML::BeginMap; // Environment
-		out << YAML::Key << "AssetPath" << YAML::Value << scene->GetEnvironment().FilePath;
+		out << YAML::Key << "AssetHandle" << YAML::Value << scene->GetEnvironment()->Handle;
 		const auto& light = scene->GetLight();
 		out << YAML::Key << "Light" << YAML::Value;
 		out << YAML::BeginMap; // Light
@@ -449,10 +450,19 @@ namespace Key {
 		std::string sceneName = data["Scene"].as<std::string>();
 		KEY_CORE_INFO("Deserializing scene '{0}'", sceneName);
 
-		auto environment = data["Environment"];
+		/*auto environment = data["Environment"];
 		if (environment)
 		{
-			std::string envPath = environment["AssetPath"].as<std::string>();
+			AssetHandle assetHandle;
+			if (environment["AssetPath"])
+			{
+				std::string envPath = environment["AssetPath"].as<std::string>();
+				assetHandle = AssetManager::GetAssetIDForFile(envPath);
+			}
+			else
+			{
+				assetHandle = environment["AssetHandle"].as<uint64_t>();
+			}
 			//m_Scene->SetEnvironment(Environment::Load(envPath));
 
 			auto lightNode = environment["Light"];
@@ -463,7 +473,7 @@ namespace Key {
 				light.Radiance = lightNode["Radiance"].as<glm::vec3>();
 				light.Multiplier = lightNode["Multiplier"].as<float>();
 			}
-		}
+		}*/
 
 		std::vector<std::string> missingPaths;
 
@@ -483,8 +493,9 @@ namespace Key {
 
 				Entity deserializedEntity = m_Scene->CreateEntityWithID(uuid, name);
 
+				auto& relationshipComponent = deserializedEntity.GetComponent<RelationshipComponent>();
 				uint64_t parentHandle = entity["Parent"] ? entity["Parent"].as<uint64_t>() : 0;
-				deserializedEntity.GetComponent<ParentComponent>().ParentHandle = parentHandle;
+				relationshipComponent.ParentHandle = parentHandle;
 
 				auto children = entity["Children"];
 				if (children)
@@ -492,7 +503,7 @@ namespace Key {
 					for (auto child : children)
 					{
 						uint64_t childHandle = child["Handle"].as<uint64_t>();
-						deserializedEntity.GetComponent<ChildrenComponent>().Children.push_back(childHandle);
+						relationshipComponent.Children.push_back(childHandle);
 					}
 				}
 
@@ -537,14 +548,14 @@ namespace Key {
 						{
 							for (auto field : storedFields)
 							{
-								std::string name = field["Name"].as<std::string>();
+								std::string typeName = field["TypeName"] ? field["TypeName"].as<std::string>() : "";
 								FieldType type = (FieldType)field["Type"].as<uint32_t>();
 								EntityInstanceData& data = ScriptEngine::GetEntityInstanceData(m_Scene->GetUUID(), uuid);
 								auto& moduleFieldMap = data.ModuleFieldMap;
 								auto& publicFields = moduleFieldMap[moduleName];
 								if (publicFields.find(name) == publicFields.end())
 								{
-									PublicField pf = { name, type };
+									PublicField pf = { name, typeName, type };
 									publicFields.emplace(name, std::move(pf));
 								}
 								auto dataNode = field["Data"];
@@ -594,20 +605,22 @@ namespace Key {
 				auto meshComponent = entity["MeshComponent"];
 				if (meshComponent)
 				{
-					std::string meshPath = meshComponent["AssetPath"].as<std::string>();
-
-					// TEMP (because script creates mesh component...)
-					if (!deserializedEntity.HasComponent<MeshComponent>())
+					UUID assetID;
+					if (meshComponent["AssetPath"])
 					{
-						Ref<Mesh> mesh;
-						if (!CheckPath(meshPath))
-							missingPaths.emplace_back(meshPath);
-						else
-							mesh = Ref<Mesh>::Create(meshPath);
-
-						deserializedEntity.AddComponent<MeshComponent>(mesh);
+						std::string filepath = meshComponent["AssetPath"].as<std::string>();
+						assetID = AssetManager::GetAssetHandleFromFilePath(filepath);
 					}
-					KEY_CORE_INFO("  Mesh Asset Path: {0}", meshPath);
+					else
+					{
+						assetID = meshComponent["AssetID"].as<uint64_t>();
+					}
+					
+					if (AssetManager::IsAssetHandleValid(assetID) && !deserializedEntity.HasComponent<MeshComponent>())
+					{
+						deserializedEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>(assetID));
+					}
+					
 				}
 
 				auto cameraComponent = entity["CameraComponent"];
@@ -651,18 +664,23 @@ namespace Key {
 				if (skyLightComponent)
 				{
 					auto& component = deserializedEntity.AddComponent<SkyLightComponent>();
-					std::string env = skyLightComponent["EnvironmentAssetPath"].as<std::string>();
-					if (!env.empty())
+
+					AssetHandle assetHandle;
+					if (skyLightComponent["EnvironmentAssetPath"])
 					{
-						if (!CheckPath(env))
-						{
-							missingPaths.emplace_back(env);
-						}
-						else
-						{
-							component.SceneEnvironment = Environment::Load(env);
-						}
+						std::string filepath = skyLightComponent["EnvironmentAssetPath"].as<std::string>();
+						assetHandle = AssetManager::GetAssetHandleFromFilePath(filepath);
 					}
+					else
+					{
+						assetHandle = skyLightComponent["EnvironmentMap"].as<uint64_t>();
+					}
+
+					if (AssetManager::IsAssetHandleValid(assetHandle))
+					{
+						component.SceneEnvironment = AssetManager::GetAsset<Environment>(assetHandle);
+					}
+
 					component.Intensity = skyLightComponent["Intensity"].as<float>();
 					component.Angle = skyLightComponent["Angle"].as<float>();
 				}

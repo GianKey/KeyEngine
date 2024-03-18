@@ -3,7 +3,7 @@
 #include "Key/ImGui/ImGuizmo.h"
 #include "Key/Renderer/Renderer2D.h"
 #include "Key/Script/ScriptEngine.h"
-
+#include "Key/Editor/AssetEditorPanel.h"
 #include <filesystem>
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -14,7 +14,8 @@
 #include <imgui/imgui_internal.h>
 
 #include "Key/Math/Math.h"
-#include "Key/Utilities/DragDropData.h"
+
+#include "Key/Utilities/FileSystem.h"
 
 namespace Key {
 
@@ -67,10 +68,14 @@ namespace Key {
 
 		//OpenScene("assets/scenes/AnimationTest.hsc");
 		NewScene();
+
+		AssetEditorPanel::RegisterDefaultEditors();
+		FileSystem::StartWatching();
 	}
 
 	void EditorLayer::OnDetach()
 	{
+		FileSystem::StopWatching();
 	}
 
 	void EditorLayer::OnScenePlay()
@@ -493,6 +498,7 @@ namespace Key {
 
 		m_AssetManagerPanel->OnImGuiRender();
 		m_ObjectsPanel->OnImGuiRender();
+		AssetEditorPanel::OnImGuiRender();
 
 		char* label = m_SelectionMode == SelectionMode::Entity ? "Entity" : "Mesh";
 		if (ImGui::Button(label))
@@ -621,7 +627,7 @@ namespace Key {
 			bool snap = Input::IsKeyPressed(KEY_KEY_LEFT_CONTROL);
 
 			TransformComponent& entityTransform = selection.Entity.Transform();
-			glm::mat4 transform = entityTransform.GetTransform();// m_CurrentScene->GetTransformRelativeToParent(selection.Entity);
+			glm::mat4 transform = m_CurrentScene->GetTransformRelativeToParent(selection.Entity);
 			float snapValue = GetSnapValue();
 			float snapValues[3] = { snapValue, snapValue, snapValue };
 
@@ -640,10 +646,24 @@ namespace Key {
 					glm::vec3 translation, rotation, scale;
 					Math::DecomposeTransform(transform, translation, rotation, scale);
 
-					glm::vec3 deltaRotation = rotation - entityTransform.Rotation;
-					entityTransform.Translation = translation;
-					entityTransform.Rotation += deltaRotation;
-					entityTransform.Scale = scale;
+					Entity parent = m_CurrentScene->FindEntityByUUID(selection.Entity.GetParentUUID());
+					if (parent)
+					{
+						glm::vec3 parentTranslation, parentRotation, parentScale;
+						Math::DecomposeTransform(m_CurrentScene->GetTransformRelativeToParent(parent), parentTranslation, parentRotation, parentScale);
+
+						glm::vec3 deltaRotation = (rotation - parentRotation) - entityTransform.Rotation;
+						entityTransform.Translation = translation - parentTranslation;
+						entityTransform.Rotation += deltaRotation;
+						entityTransform.Scale = scale;
+					}
+					else
+					{
+						glm::vec3 deltaRotation = rotation - entityTransform.Rotation;
+						entityTransform.Translation = translation;
+						entityTransform.Rotation += deltaRotation;
+						entityTransform.Scale = scale;
+					}
 				}
 			}
 			else
@@ -661,39 +681,31 @@ namespace Key {
 			}
 		}
 
+		
 		if (ImGui::BeginDragDropTarget())
 		{
-			auto data = ImGui::AcceptDragDropPayload("scene_entity_objectP");
+			auto data = ImGui::AcceptDragDropPayload("asset_payload");
 			if (data)
 			{
-				auto d = (DragDropData*)data->Data;
-				if (d->Type == "Mesh")
-				{
-					auto entity = m_EditorScene->CreateEntity(d->Name);
-					entity.AddComponent<MeshComponent>(Ref<Mesh>::Create(d->SourcePath));
-				}
-			}
-			ImGui::EndDragDropTarget();
-		}
+				int count = data->DataSize / sizeof(AssetHandle);
 
-		/* Payload Implementation For Getting Assets In The Viewport From Asset Manager */
-		if (ImGui::BeginDragDropTarget())
-		{
-			auto data = ImGui::AcceptDragDropPayload("scene_entity_assetsP");
-			if (data)
-			{
-				auto d = (DragDropData*)data->Data;
-
-				if (d->Type == "KeyScene")
+				for (int i = 0; i < count; i++)
 				{
-					auto sceneName = d->SourcePath;
-					OpenScene(sceneName);
-				}
+					AssetHandle assetHandle = *(((AssetHandle*)data->Data) + i);
+					Ref<Asset> asset = AssetManager::GetAsset<Asset>(assetHandle);
 
-				if (d->Type == "Mesh")
-				{
-					auto entity = m_EditorScene->CreateEntity(d->Name);
-					entity.AddComponent<MeshComponent>(Ref<Mesh>::Create(d->SourcePath));
+					// We can't really support dragging and dropping scenes when we're dropping multiple assets
+					if (count == 1 && asset->Type == AssetType::Scene)
+					{
+						OpenScene(asset->FilePath);
+					}
+
+					if (asset->Type == AssetType::Mesh)
+					{
+						Entity entity = m_EditorScene->CreateEntity(asset->FileName);
+						entity.AddComponent<MeshComponent>(Ref<Mesh>(asset));
+						SelectEntity(entity);
+					}
 				}
 			}
 			ImGui::EndDragDropTarget();
@@ -1139,7 +1151,7 @@ namespace Key {
 
 	void EditorLayer::OnEntityDeleted(Entity e)
 	{
-		if (m_SelectionContext[0].Entity == e)
+		if (m_SelectionContext.size() > 0 && m_SelectionContext[0].Entity == e)
 		{
 			m_SelectionContext.clear();
 			m_EditorScene->SetSelectedEntity({});

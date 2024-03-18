@@ -1,11 +1,12 @@
 #include "Kpch.h"
 #include "SceneHierarchyPanel.h"
 
-
 #include "Key/Core/Application.h"
 #include "Key/Renderer/Mesh.h"
 #include "Key/Script/ScriptEngine.h"
+#include "Key/Renderer/MeshFactory.h"
 
+#include "Key/Asset/AssetManager.h"
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -160,6 +161,10 @@ namespace Key {
 
 		ImGuiTreeNodeFlags flags = (entity == m_SelectionContext ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+
+		if (entity.Children().empty())
+			flags |= ImGuiTreeNodeFlags_Leaf;
+
 		bool opened = ImGui::TreeNodeEx((void*)(uint32_t)entity, flags, name);
 		if (ImGui::IsItemClicked())
 		{
@@ -194,17 +199,22 @@ namespace Key {
 				UUID droppedHandle = *((UUID*)payload->Data);
 				Entity e = m_Context->FindEntityByUUID(droppedHandle);
 
-				// Remove from previous parent
-				Entity previousParent = m_Context->FindEntityByUUID(e.GetParentUUID());
-				if (previousParent)
+				
+				if (!entity.IsDescendantOf(e))
 				{
-					auto& parentChildren = previousParent.Children();
-					parentChildren.erase(std::remove(parentChildren.begin(), parentChildren.end(), droppedHandle), parentChildren.end());
-				}
+					// Remove from previous parent
+					Entity previousParent = m_Context->FindEntityByUUID(e.GetParentUUID());
+					if (previousParent)
+					{
+						auto& parentChildren = previousParent.Children();
+						parentChildren.erase(std::remove(parentChildren.begin(), parentChildren.end(), droppedHandle), parentChildren.end());
+					}
 
-				e.SetParentUUID(entity.GetUUID());
-				auto& children = entity.Children();
-				children.push_back(droppedHandle);
+					e.SetParentUUID(entity.GetUUID());
+					entity.Children().push_back(droppedHandle);
+
+					KEY_CORE_INFO("Dropping Entity {0} on {1}", droppedHandle, entity.GetUUID());
+				}
 
 				KEY_CORE_INFO("Dropping Entity {0} on {1}", droppedHandle, entity.GetUUID());
 			}
@@ -533,26 +543,9 @@ namespace Key {
 
 		DrawComponent<MeshComponent>("Mesh", entity, [](MeshComponent& mc)
 			{
-				ImGui::Columns(3);
-				ImGui::SetColumnWidth(0, 100);
-				ImGui::SetColumnWidth(1, 300);
-				ImGui::SetColumnWidth(2, 40);
-				ImGui::Text("File Path");
-				ImGui::NextColumn();
-				ImGui::PushItemWidth(-1);
-				if (mc.Mesh)
-					ImGui::InputText("##meshfilepath", (char*)mc.Mesh->GetFilePath().c_str(), 256, ImGuiInputTextFlags_ReadOnly);
-				else
-					ImGui::InputText("##meshfilepath", (char*)"Null", 256, ImGuiInputTextFlags_ReadOnly);
-				ImGui::PopItemWidth();
-				ImGui::NextColumn();
-				if (ImGui::Button("...##openmesh"))
-				{
-					std::string file = Application::Get().OpenFile();
-					if (!file.empty())
-						mc.Mesh = Ref<Mesh>::Create(file);
-				}
-				ImGui::Columns(1);
+				UI::BeginPropertyGrid();
+				UI::PropertyAssetReference("Mesh", mc.Mesh, AssetType::Mesh);
+				UI::EndPropertyGrid();
 			});
 
 		DrawComponent<CameraComponent>("Camera", entity, [](CameraComponent& cc)
@@ -629,28 +622,8 @@ namespace Key {
 
 		DrawComponent<SkyLightComponent>("Sky Light", entity, [](SkyLightComponent& slc)
 			{
-				ImGui::Columns(3);
-				ImGui::SetColumnWidth(0, 100);
-				ImGui::SetColumnWidth(1, 300);
-				ImGui::SetColumnWidth(2, 40);
-				ImGui::Text("File Path");
-				ImGui::NextColumn();
-				ImGui::PushItemWidth(-1);
-				if (!slc.SceneEnvironment.FilePath.empty())
-					ImGui::InputText("##envfilepath", (char*)slc.SceneEnvironment.FilePath.c_str(), 256, ImGuiInputTextFlags_ReadOnly);
-				else
-					ImGui::InputText("##envfilepath", (char*)"Empty", 256, ImGuiInputTextFlags_ReadOnly);
-				ImGui::PopItemWidth();
-				ImGui::NextColumn();
-				if (ImGui::Button("...##openenv"))
-				{
-					std::string file = Application::Get().OpenFile("*.hdr");
-					if (!file.empty())
-						slc.SceneEnvironment = Environment::Load(file);
-				}
-				ImGui::Columns(1);
-
 				UI::BeginPropertyGrid();
+				UI::PropertyAssetReference("Environment Map", slc.SceneEnvironment, AssetType::EnvMap);
 				UI::Property("Intensity", slc.Intensity, 0.01f, 0.0f, 5.0f);
 				UI::EndPropertyGrid();
 			});
@@ -682,66 +655,80 @@ namespace Key {
 							bool isRuntime = m_Context->m_IsPlaying && field.IsRuntimeAvailable();
 							switch (field.Type)
 							{
-							case FieldType::Int:
-							{
-								int value = isRuntime ? field.GetRuntimeValue<int>() : field.GetStoredValue<int>();
-								if (UI::Property(field.Name.c_str(), value))
+								case FieldType::Int:
 								{
-									if (isRuntime)
-										field.SetRuntimeValue(value);
-									else
-										field.SetStoredValue(value);
+									int value = isRuntime ? field.GetRuntimeValue<int>() : field.GetStoredValue<int>();
+									if (UI::Property(field.Name.c_str(), value))
+									{
+										if (isRuntime)
+											field.SetRuntimeValue(value);
+										else
+											field.SetStoredValue(value);
+									}
+									break;
 								}
-								break;
-							}
-							case FieldType::Float:
-							{
-								float value = isRuntime ? field.GetRuntimeValue<float>() : field.GetStoredValue<float>();
-								if (UI::Property(field.Name.c_str(), value, 0.2f))
+								case FieldType::Float:
 								{
-									if (isRuntime)
-										field.SetRuntimeValue(value);
-									else
-										field.SetStoredValue(value);
+									float value = isRuntime ? field.GetRuntimeValue<float>() : field.GetStoredValue<float>();
+									if (UI::Property(field.Name.c_str(), value, 0.2f))
+									{
+										if (isRuntime)
+											field.SetRuntimeValue(value);
+										else
+											field.SetStoredValue(value);
+									}
+									break;
 								}
-								break;
-							}
-							case FieldType::Vec2:
-							{
-								glm::vec2 value = isRuntime ? field.GetRuntimeValue<glm::vec2>() : field.GetStoredValue<glm::vec2>();
-								if (UI::Property(field.Name.c_str(), value, 0.2f))
+								case FieldType::Vec2:
 								{
-									if (isRuntime)
-										field.SetRuntimeValue(value);
-									else
-										field.SetStoredValue(value);
+									glm::vec2 value = isRuntime ? field.GetRuntimeValue<glm::vec2>() : field.GetStoredValue<glm::vec2>();
+									if (UI::Property(field.Name.c_str(), value, 0.2f))
+									{
+										if (isRuntime)
+											field.SetRuntimeValue(value);
+										else
+											field.SetStoredValue(value);
+									}
+									break;
 								}
-								break;
-							}
-							case FieldType::Vec3:
-							{
-								glm::vec3 value = isRuntime ? field.GetRuntimeValue<glm::vec3>() : field.GetStoredValue<glm::vec3>();
-								if (UI::Property(field.Name.c_str(), value, 0.2f))
+								case FieldType::Vec3:
 								{
-									if (isRuntime)
-										field.SetRuntimeValue(value);
-									else
-										field.SetStoredValue(value);
+									glm::vec3 value = isRuntime ? field.GetRuntimeValue<glm::vec3>() : field.GetStoredValue<glm::vec3>();
+									if (UI::Property(field.Name.c_str(), value, 0.2f))
+									{
+										if (isRuntime)
+											field.SetRuntimeValue(value);
+										else
+											field.SetStoredValue(value);
+									}
+									break;
 								}
-								break;
-							}
-							case FieldType::Vec4:
-							{
-								glm::vec4 value = isRuntime ? field.GetRuntimeValue<glm::vec4>() : field.GetStoredValue<glm::vec4>();
-								if (UI::Property(field.Name.c_str(), value, 0.2f))
+								case FieldType::Vec4:
 								{
-									if (isRuntime)
-										field.SetRuntimeValue(value);
-									else
-										field.SetStoredValue(value);
+									glm::vec4 value = isRuntime ? field.GetRuntimeValue<glm::vec4>() : field.GetStoredValue<glm::vec4>();
+									if (UI::Property(field.Name.c_str(), value, 0.2f))
+									{
+										if (isRuntime)
+											field.SetRuntimeValue(value);
+										else
+											field.SetStoredValue(value);
+									}
+									break;
 								}
-								break;
-							}
+
+								case FieldType::ClassReference:
+								{
+									Ref<Asset>* asset = (Ref<Asset>*)(isRuntime ? field.GetRuntimeValueRaw() : field.GetStoredValueRaw());
+									std::string label = field.Name + "(" + field.TypeName + ")";
+									if (UI::PropertyAssetReference(label.c_str(), *asset))
+									{
+										if (isRuntime)
+											field.SetRuntimeValueRaw(asset);
+										else
+											field.SetStoredValueRaw(asset);
+									}
+									break;
+								}
 							}
 						}
 					}

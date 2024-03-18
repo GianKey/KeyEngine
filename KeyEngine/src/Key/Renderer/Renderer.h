@@ -41,7 +41,7 @@ namespace Key {
 				// NOTE: Instead of destroying we could try and enforce all items to be trivally destructible
 				// however some items like uniforms which contain std::strings still exist for now
 				// static_assert(std::is_trivially_destructible_v<FuncT>, "FuncT must be trivially destructible");
-				pFunc->~FuncT();
+				//pFunc->~FuncT();
 			};
 			auto storageBuffer = GetRenderCommandQueue().Allocate(renderCmd, sizeof(func));
 			///将 FuncT 类型的对象构造在 storageBuffer 指向的内存位置上。

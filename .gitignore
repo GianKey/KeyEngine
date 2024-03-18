@@ -11,6 +11,9 @@ KeyEngine/src/Key/Doxyfile
 *.user
 *.sln
 *.vcxproj
+
+# Meta Files
+**.meta
 # User-specific files
 *.rsuser
 *.suo
