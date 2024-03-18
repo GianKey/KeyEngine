@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 
 #include "Key/Core/TimeStep.h"
-
+#include "Key/Asset/Assets.h"
 #include "Key/Renderer/Pipeline.h"
 #include "Key/Renderer/IndexBuffer.h"
 #include "Key/Renderer/VertexBuffer.h"
@@ -120,17 +120,20 @@ namespace Key {
 		uint32_t BaseIndex;
 		uint32_t MaterialIndex;
 		uint32_t IndexCount;
+		uint32_t VertexCount;
 
 		glm::mat4 Transform;
+		glm::mat4 LocalTransform;
 		AABB BoundingBox;
 
 		std::string NodeName, MeshName;
 	};
 
-	class Mesh : public RefCounted
+	class Mesh : public Asset
 	{
 	public:
 		Mesh(const std::string& filename);
+		Mesh(const std::vector<Vertex>& vertices, const std::vector<Index>& indices, const glm::mat4& transform);
 		~Mesh();
 
 		void OnUpdate(TimeStep ts);
@@ -138,6 +141,9 @@ namespace Key {
 
 		std::vector<Submesh>& GetSubmeshes() { return m_Submeshes; }
 		const std::vector<Submesh>& GetSubmeshes() const { return m_Submeshes; }
+
+		const std::vector<Vertex>& GetStaticVertices() const { return m_StaticVertices; }
+		const std::vector<Index>& GetIndices() const { return m_Indices; }
 
 		Ref<Shader> GetMeshShader() { return m_MeshShader; }
 		Ref<Material> GetMaterial() { return m_BaseMaterial; }

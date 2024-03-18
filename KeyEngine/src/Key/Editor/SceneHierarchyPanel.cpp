@@ -1,11 +1,12 @@
 #include "Kpch.h"
 #include "SceneHierarchyPanel.h"
 
-
 #include "Key/Core/Application.h"
 #include "Key/Renderer/Mesh.h"
 #include "Key/Script/ScriptEngine.h"
+#include "Key/Renderer/MeshFactory.h"
 
+#include "Key/Asset/AssetManager.h"
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -52,15 +53,42 @@ namespace Key {
 	void SceneHierarchyPanel::OnImGuiRender()
 	{
 		ImGui::Begin("Scene Hierarchy");
+		ImRect windowRect = { ImGui::GetWindowContentRegionMin(), ImGui::GetWindowContentRegionMax() };
+
 		if (m_Context)
 		{
 			uint32_t entityCount = 0, meshCount = 0;
 			m_Context->m_Registry.each([&](auto entity)
-				{
+			{
 					Entity e(entity, m_Context.Raw());
-					if (e.HasComponent<IDComponent>())
+					if (e.HasComponent<IDComponent>() && e.GetParentUUID() == 0)
 						DrawEntityNode(e);
-				});
+			});
+
+			if (ImGui::BeginDragDropTargetCustom(windowRect, ImGui::GetCurrentWindow()->ID))
+			{
+				const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("scene_entity_hierarchy", ImGuiDragDropFlags_AcceptNoDrawDefaultRect);
+
+				if (payload)
+				{
+					UUID droppedHandle = *((UUID*)payload->Data);
+					Entity e = m_Context->FindEntityByUUID(droppedHandle);
+					Entity previousParent = m_Context->FindEntityByUUID(e.GetParentUUID());
+
+					if (previousParent)
+					{
+						auto& children = previousParent.Children();
+						children.erase(std::remove(children.begin(), children.end(), droppedHandle), children.end());
+					}
+
+					e.SetParentUUID(0);
+
+					KEY_CORE_INFO("Unparented Entity!");
+				}
+
+				ImGui::EndDragDropTarget();
+			}
+
 
 			if (ImGui::BeginPopupContextWindow(0, 1, false))
 			{
@@ -82,7 +110,7 @@ namespace Key {
 					{
 						auto newEntity = m_Context->CreateEntity("Directional Light");
 						newEntity.AddComponent<DirectionalLightComponent>();
-						newEntity.GetComponent<TransformComponent>().Transform = glm::toMat4(glm::quat(glm::radians(glm::vec3{80.0f, 10.0f, 0.0f})));
+						newEntity.GetComponent<TransformComponent>().Rotation = glm::radians(glm::vec3{ 80.0f, 10.0f, 0.0f });
 						SetSelected(newEntity);
 					}
 					if (ImGui::MenuItem("Sky Light"))
@@ -133,6 +161,10 @@ namespace Key {
 
 		ImGuiTreeNodeFlags flags = (entity == m_SelectionContext ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+
+		if (entity.Children().empty())
+			flags |= ImGuiTreeNodeFlags_Leaf;
+
 		bool opened = ImGui::TreeNodeEx((void*)(uint32_t)entity, flags, name);
 		if (ImGui::IsItemClicked())
 		{
@@ -149,9 +181,56 @@ namespace Key {
 
 			ImGui::EndPopup();
 		}
+
+		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+		{
+			UUID entityId = entity.GetUUID();
+			ImGui::Text(entity.GetComponent<TagComponent>().Tag.c_str());
+			ImGui::SetDragDropPayload("scene_entity_hierarchy", &entityId, sizeof(UUID));
+			ImGui::EndDragDropSource();
+		}
+
+		if (ImGui::BeginDragDropTarget())
+		{
+			const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("scene_entity_hierarchy", ImGuiDragDropFlags_AcceptNoDrawDefaultRect);
+
+			if (payload)
+			{
+				UUID droppedHandle = *((UUID*)payload->Data);
+				Entity e = m_Context->FindEntityByUUID(droppedHandle);
+
+				
+				if (!entity.IsDescendantOf(e))
+				{
+					// Remove from previous parent
+					Entity previousParent = m_Context->FindEntityByUUID(e.GetParentUUID());
+					if (previousParent)
+					{
+						auto& parentChildren = previousParent.Children();
+						parentChildren.erase(std::remove(parentChildren.begin(), parentChildren.end(), droppedHandle), parentChildren.end());
+					}
+
+					e.SetParentUUID(entity.GetUUID());
+					entity.Children().push_back(droppedHandle);
+
+					KEY_CORE_INFO("Dropping Entity {0} on {1}", droppedHandle, entity.GetUUID());
+				}
+
+				KEY_CORE_INFO("Dropping Entity {0} on {1}", droppedHandle, entity.GetUUID());
+			}
+
+			ImGui::EndDragDropTarget();
+		}
+
 		if (opened)
 		{
-			// TODO: Children
+			for (auto child : entity.Children())
+			{
+				Entity e = m_Context->FindEntityByUUID(child);
+				if (e)
+					DrawEntityNode(e);
+			}
+
 			ImGui::TreePop();
 		}
 
@@ -225,13 +304,14 @@ namespace Key {
 		const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
 		if (entity.HasComponent<T>())
 		{
+			ImGui::PushID((void*)typeid(T).hash_code());
 			auto& component = entity.GetComponent<T>();
 			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
 			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
 			ImGui::Separator();
-			bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, name.c_str());
+			bool open = ImGui::TreeNodeEx("##dummy_id", treeNodeFlags, name.c_str());
 			ImGui::PopStyleVar();
 			ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
 			if (ImGui::Button("+", ImVec2{ lineHeight, lineHeight }))
@@ -256,6 +336,9 @@ namespace Key {
 
 			if (removeComponent)
 				entity.RemoveComponent<T>();
+
+			
+			ImGui::PopID();
 		}
 	}
 
@@ -386,7 +469,7 @@ namespace Key {
 			{
 				if (ImGui::Button("Mesh"))
 				{
-					m_SelectionContext.AddComponent<MeshComponent>();
+					MeshComponent& component = m_SelectionContext.AddComponent<MeshComponent>();
 					ImGui::CloseCurrentPopup();
 				}
 			}
@@ -449,46 +532,20 @@ namespace Key {
 			ImGui::EndPopup();
 		}
 
-		DrawComponent<TransformComponent>("Transform", entity, [](auto& component)
-			{
-				auto [translation, rotationQuat, scale] = GetTransformDecomposition(component);
-
-				bool updateTransform = false;
-				updateTransform |= DrawVec3Control("Translation", translation);
-				glm::vec3 rotation = glm::degrees(glm::eulerAngles(rotationQuat));
-				updateTransform |= DrawVec3Control("Rotation", rotation);
-				updateTransform |= DrawVec3Control("Scale", scale, 1.0f);
-
-				if (updateTransform)
-				{
-					component.Transform = glm::translate(glm::mat4(1.0f), translation) *
-						glm::toMat4(glm::quat(glm::radians(rotation))) *
-						glm::scale(glm::mat4(1.0f), scale);
-				}
-			});
+		DrawComponent<TransformComponent>("Transform", entity, [](TransformComponent& component)
+		{
+				DrawVec3Control("Translation", component.Translation);
+				glm::vec3 rotation = glm::degrees(component.Rotation);
+				DrawVec3Control("Rotation", rotation);
+				component.Rotation = glm::radians(rotation);
+				DrawVec3Control("Scale", component.Scale, 1.0f);
+		});
 
 		DrawComponent<MeshComponent>("Mesh", entity, [](MeshComponent& mc)
 			{
-				ImGui::Columns(3);
-				ImGui::SetColumnWidth(0, 100);
-				ImGui::SetColumnWidth(1, 300);
-				ImGui::SetColumnWidth(2, 40);
-				ImGui::Text("File Path");
-				ImGui::NextColumn();
-				ImGui::PushItemWidth(-1);
-				if (mc.Mesh)
-					ImGui::InputText("##meshfilepath", (char*)mc.Mesh->GetFilePath().c_str(), 256, ImGuiInputTextFlags_ReadOnly);
-				else
-					ImGui::InputText("##meshfilepath", (char*)"Null", 256, ImGuiInputTextFlags_ReadOnly);
-				ImGui::PopItemWidth();
-				ImGui::NextColumn();
-				if (ImGui::Button("...##openmesh"))
-				{
-					std::string file = Application::Get().OpenFile();
-					if (!file.empty())
-						mc.Mesh = Ref<Mesh>::Create(file);
-				}
-				ImGui::Columns(1);
+				UI::BeginPropertyGrid();
+				UI::PropertyAssetReference("Mesh", mc.Mesh, AssetType::Mesh);
+				UI::EndPropertyGrid();
 			});
 
 		DrawComponent<CameraComponent>("Camera", entity, [](CameraComponent& cc)
@@ -565,28 +622,8 @@ namespace Key {
 
 		DrawComponent<SkyLightComponent>("Sky Light", entity, [](SkyLightComponent& slc)
 			{
-				ImGui::Columns(3);
-				ImGui::SetColumnWidth(0, 100);
-				ImGui::SetColumnWidth(1, 300);
-				ImGui::SetColumnWidth(2, 40);
-				ImGui::Text("File Path");
-				ImGui::NextColumn();
-				ImGui::PushItemWidth(-1);
-				if (!slc.SceneEnvironment.FilePath.empty())
-					ImGui::InputText("##envfilepath", (char*)slc.SceneEnvironment.FilePath.c_str(), 256, ImGuiInputTextFlags_ReadOnly);
-				else
-					ImGui::InputText("##envfilepath", (char*)"Empty", 256, ImGuiInputTextFlags_ReadOnly);
-				ImGui::PopItemWidth();
-				ImGui::NextColumn();
-				if (ImGui::Button("...##openenv"))
-				{
-					std::string file = Application::Get().OpenFile("*.hdr");
-					if (!file.empty())
-						slc.SceneEnvironment = Environment::Load(file);
-				}
-				ImGui::Columns(1);
-
 				UI::BeginPropertyGrid();
+				UI::PropertyAssetReference("Environment Map", slc.SceneEnvironment, AssetType::EnvMap);
 				UI::Property("Intensity", slc.Intensity, 0.01f, 0.0f, 5.0f);
 				UI::EndPropertyGrid();
 			});
@@ -618,66 +655,80 @@ namespace Key {
 							bool isRuntime = m_Context->m_IsPlaying && field.IsRuntimeAvailable();
 							switch (field.Type)
 							{
-							case FieldType::Int:
-							{
-								int value = isRuntime ? field.GetRuntimeValue<int>() : field.GetStoredValue<int>();
-								if (UI::Property(field.Name.c_str(), value))
+								case FieldType::Int:
 								{
-									if (isRuntime)
-										field.SetRuntimeValue(value);
-									else
-										field.SetStoredValue(value);
+									int value = isRuntime ? field.GetRuntimeValue<int>() : field.GetStoredValue<int>();
+									if (UI::Property(field.Name.c_str(), value))
+									{
+										if (isRuntime)
+											field.SetRuntimeValue(value);
+										else
+											field.SetStoredValue(value);
+									}
+									break;
 								}
-								break;
-							}
-							case FieldType::Float:
-							{
-								float value = isRuntime ? field.GetRuntimeValue<float>() : field.GetStoredValue<float>();
-								if (UI::Property(field.Name.c_str(), value, 0.2f))
+								case FieldType::Float:
 								{
-									if (isRuntime)
-										field.SetRuntimeValue(value);
-									else
-										field.SetStoredValue(value);
+									float value = isRuntime ? field.GetRuntimeValue<float>() : field.GetStoredValue<float>();
+									if (UI::Property(field.Name.c_str(), value, 0.2f))
+									{
+										if (isRuntime)
+											field.SetRuntimeValue(value);
+										else
+											field.SetStoredValue(value);
+									}
+									break;
 								}
-								break;
-							}
-							case FieldType::Vec2:
-							{
-								glm::vec2 value = isRuntime ? field.GetRuntimeValue<glm::vec2>() : field.GetStoredValue<glm::vec2>();
-								if (UI::Property(field.Name.c_str(), value, 0.2f))
+								case FieldType::Vec2:
 								{
-									if (isRuntime)
-										field.SetRuntimeValue(value);
-									else
-										field.SetStoredValue(value);
+									glm::vec2 value = isRuntime ? field.GetRuntimeValue<glm::vec2>() : field.GetStoredValue<glm::vec2>();
+									if (UI::Property(field.Name.c_str(), value, 0.2f))
+									{
+										if (isRuntime)
+											field.SetRuntimeValue(value);
+										else
+											field.SetStoredValue(value);
+									}
+									break;
 								}
-								break;
-							}
-							case FieldType::Vec3:
-							{
-								glm::vec3 value = isRuntime ? field.GetRuntimeValue<glm::vec3>() : field.GetStoredValue<glm::vec3>();
-								if (UI::Property(field.Name.c_str(), value, 0.2f))
+								case FieldType::Vec3:
 								{
-									if (isRuntime)
-										field.SetRuntimeValue(value);
-									else
-										field.SetStoredValue(value);
+									glm::vec3 value = isRuntime ? field.GetRuntimeValue<glm::vec3>() : field.GetStoredValue<glm::vec3>();
+									if (UI::Property(field.Name.c_str(), value, 0.2f))
+									{
+										if (isRuntime)
+											field.SetRuntimeValue(value);
+										else
+											field.SetStoredValue(value);
+									}
+									break;
 								}
-								break;
-							}
-							case FieldType::Vec4:
-							{
-								glm::vec4 value = isRuntime ? field.GetRuntimeValue<glm::vec4>() : field.GetStoredValue<glm::vec4>();
-								if (UI::Property(field.Name.c_str(), value, 0.2f))
+								case FieldType::Vec4:
 								{
-									if (isRuntime)
-										field.SetRuntimeValue(value);
-									else
-										field.SetStoredValue(value);
+									glm::vec4 value = isRuntime ? field.GetRuntimeValue<glm::vec4>() : field.GetStoredValue<glm::vec4>();
+									if (UI::Property(field.Name.c_str(), value, 0.2f))
+									{
+										if (isRuntime)
+											field.SetRuntimeValue(value);
+										else
+											field.SetStoredValue(value);
+									}
+									break;
 								}
-								break;
-							}
+
+								case FieldType::ClassReference:
+								{
+									Ref<Asset>* asset = (Ref<Asset>*)(isRuntime ? field.GetRuntimeValueRaw() : field.GetStoredValueRaw());
+									std::string label = field.Name + "(" + field.TypeName + ")";
+									if (UI::PropertyAssetReference(label.c_str(), *asset))
+									{
+										if (isRuntime)
+											field.SetRuntimeValueRaw(asset);
+										else
+											field.SetStoredValueRaw(asset);
+									}
+									break;
+								}
 							}
 						}
 					}

@@ -11,13 +11,14 @@
 extern "C" {
 	typedef struct _MonoObject MonoObject;
 	typedef struct _MonoClassField MonoClassField;
+	typedef struct _MonoClass MonoClass;
 }
 
 namespace Key {
 
 	enum class FieldType
 	{
-		None = 0, Float, Int, UnsignedInt, String, Vec2, Vec3, Vec4
+		None = 0, Float, Int, UnsignedInt, String, Vec2, Vec3, Vec4, ClassReference
 	};
 
 	const char* FieldTypeToString(FieldType type);
@@ -37,9 +38,10 @@ namespace Key {
 	struct PublicField
 	{
 		std::string Name;
+		std::string TypeName;
 		FieldType Type;
 
-		PublicField(const std::string& name, FieldType type);
+		PublicField(const std::string& name, const std::string& typeName, FieldType type);
 		PublicField(const PublicField&) = delete;
 		PublicField(PublicField&& other);
 		~PublicField();
@@ -76,6 +78,10 @@ namespace Key {
 		}
 
 		void SetStoredValueRaw(void* src);
+		void* GetStoredValueRaw() { return m_StoredValueBuffer; }
+
+		void SetRuntimeValueRaw(void* src);
+		void* GetRuntimeValueRaw();
 	private:
 		EntityInstance* m_EntityInstance;
 		MonoClassField* m_MonoClassField;
@@ -117,13 +123,16 @@ namespace Key {
 		static void CopyEntityScriptData(UUID dst, UUID src);
 
 		static void OnCreateEntity(Entity entity);
-		static void OnCreateEntity(UUID sceneID, UUID entityID);
-		static void OnUpdateEntity(UUID sceneID, UUID entityID, TimeStep ts);
+		static void OnUpdateEntity(Entity entity, TimeStep ts);
+
 
 		static void OnCollision2DBegin(Entity entity);
-		static void OnCollision2DBegin(UUID sceneID, UUID entityID);
 		static void OnCollision2DEnd(Entity entity);
-		static void OnCollision2DEnd(UUID sceneID, UUID entityID);
+	
+		static MonoObject* Construct(const std::string& fullName, bool callConstructor = true, void** parameters = nullptr);
+		static MonoClass* GetCoreClass(const std::string& fullName);
+
+		static bool IsEntityModuleValid(Entity entity);
 		static void OnScriptComponentDestroyed(UUID sceneID, UUID entityID);
 
 		static bool ModuleExists(const std::string& moduleName);

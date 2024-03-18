@@ -148,6 +148,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Key.h" />
+    <ClInclude Include="src\Key\Asset\Assets.h" />
+    <ClInclude Include="src\Key\Asset\AssetManager.h" />
+    <ClInclude Include="src\Key\Asset\AssetSerializer.h" />
     <ClInclude Include="src\Key\Core\Application.h" />
     <ClInclude Include="src\Key\Core\Assert.h" />
     <ClInclude Include="src\Key\Core\Base.h" />
@@ -171,12 +174,17 @@
     <ClInclude Include="src\Key\Core\UUID.h" />
     <ClInclude Include="src\Key\Core\Window.h" />
     <ClInclude Include="src\Key\Core\input.h" />
+    <ClInclude Include="src\Key\Editor\AssetEditorPanel.h" />
+    <ClInclude Include="src\Key\Editor\AssetManagerPanel.h" />
+    <ClInclude Include="src\Key\Editor\DefaultAssetEditors.h" />
     <ClInclude Include="src\Key\Editor\EditorCamera.h" />
+    <ClInclude Include="src\Key\Editor\ObjectsPanel.h" />
     <ClInclude Include="src\Key\Editor\SceneHierarchyPanel.h" />
     <ClInclude Include="src\Key\EntryPoint.h" />
     <ClInclude Include="src\Key\ImGui\ImGui.h" />
     <ClInclude Include="src\Key\ImGui\ImGuiLayer.h" />
     <ClInclude Include="src\Key\ImGui\ImGuizmo.h" />
+    <ClInclude Include="src\Key\Math\Math.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLFramebuffer.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLIndexBuffer.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLPipeline.h" />
@@ -192,6 +200,7 @@
     <ClInclude Include="src\Key\Renderer\IndexBuffer.h" />
     <ClInclude Include="src\Key\Renderer\Material.h" />
     <ClInclude Include="src\Key\Renderer\Mesh.h" />
+    <ClInclude Include="src\Key\Renderer\MeshFactory.h" />
     <ClInclude Include="src\Key\Renderer\OrthographicCamera.h" />
     <ClInclude Include="src\Key\Renderer\Pipeline.h" />
     <ClInclude Include="src\Key\Renderer\RenderCommandQueue.h" />
@@ -213,6 +222,9 @@
     <ClInclude Include="src\Key\Script\ScriptEngine.h" />
     <ClInclude Include="src\Key\Script\ScriptEngineRegistry.h" />
     <ClInclude Include="src\Key\Script\ScriptWrappers.h" />
+    <ClInclude Include="src\Key\Utilities\DragDropData.h" />
+    <ClInclude Include="src\Key\Utilities\FileSystem.h" />
+    <ClInclude Include="src\Key\Utilities\StringUtils.h" />
     <ClInclude Include="src\Kpch.h" />
     <ClInclude Include="vendor\yaml-cpp\include\yaml-cpp\anchor.h" />
     <ClInclude Include="vendor\yaml-cpp\include\yaml-cpp\binary.h" />
@@ -275,6 +287,8 @@
     <ClInclude Include="vendor\yaml-cpp\src\token.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Key\Asset\AssetManager.cpp" />
+    <ClCompile Include="src\Key\Asset\AssetSerializer.cpp" />
     <ClCompile Include="src\Key\Core\Application.cpp" />
     <ClCompile Include="src\Key\Core\Base.cpp" />
     <ClCompile Include="src\Key\Core\Layer.cpp" />
@@ -284,11 +298,16 @@
     <ClCompile Include="src\Key\Core\Math\Noise.cpp" />
     <ClCompile Include="src\Key\Core\UUID.cpp" />
     <ClCompile Include="src\Key\Core\Window.cpp" />
+    <ClCompile Include="src\Key\Editor\AssetEditorPanel.cpp" />
+    <ClCompile Include="src\Key\Editor\AssetManagerPanel.cpp" />
+    <ClCompile Include="src\Key\Editor\DefaultAssetEditors.cpp" />
     <ClCompile Include="src\Key\Editor\EditorCamera.cpp" />
+    <ClCompile Include="src\Key\Editor\ObjectsPanel.cpp" />
     <ClCompile Include="src\Key\Editor\SceneHierarchyPanel.cpp" />
     <ClCompile Include="src\Key\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="src\Key\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="src\Key\ImGui\ImGuizmo.cpp" />
+    <ClCompile Include="src\Key\Math\Math.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLFrameBbuffer.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLIndexBuffer.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLPipeline.cpp" />
@@ -298,6 +317,7 @@
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLShaderUniform.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLTexture.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLVertexBuffer.cpp" />
+    <ClCompile Include="src\Key\PlatForm\Windows\WindowsFileSystem.cpp" />
     <ClCompile Include="src\Key\PlatForm\Windows\WindowsInput.cpp" />
     <ClCompile Include="src\Key\PlatForm\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Key\Renderer\Camera.cpp" />
@@ -306,6 +326,7 @@
     <ClCompile Include="src\Key\Renderer\IndexBuffer.cpp" />
     <ClCompile Include="src\Key\Renderer\Material.cpp" />
     <ClCompile Include="src\Key\Renderer\Mesh.cpp" />
+    <ClCompile Include="src\Key\Renderer\MeshFactory.cpp" />
     <ClCompile Include="src\Key\Renderer\OrthographicCamera.cpp" />
     <ClCompile Include="src\Key\Renderer\Pipeline.cpp" />
     <ClCompile Include="src\Key\Renderer\RenderCommandQueue.cpp" />
@@ -324,6 +345,7 @@
     <ClCompile Include="src\Key\Script\ScriptEngine.cpp" />
     <ClCompile Include="src\Key\Script\ScriptEngineRegistry.cpp" />
     <ClCompile Include="src\Key\Script\ScriptWrappers.cpp" />
+    <ClCompile Include="src\Key\Utilities\StringUtils.cpp" />
     <ClCompile Include="src\Kpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

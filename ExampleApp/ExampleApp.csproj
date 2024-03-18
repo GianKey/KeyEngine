@@ -21,7 +21,8 @@
     <OutputPath>..\Keya\assets\scripts\</OutputPath>
     <BaseIntermediateOutputPath>..\bin-int\Debug-windows-x86_64\ExampleApp\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -33,7 +34,8 @@
     <OutputPath>..\Keya\assets\scripts\</OutputPath>
     <BaseIntermediateOutputPath>..\bin-int\Release-windows-x86_64\ExampleApp\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -45,7 +47,8 @@
     <OutputPath>..\Keya\assets\scripts\</OutputPath>
     <BaseIntermediateOutputPath>..\bin-int\Dist-windows-x86_64\ExampleApp\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -57,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src\BasicController.cs" />
+    <Compile Include="src\RuntimeMesh.cs" />
     <Compile Include="src\MapGenerator.cs" />
     <Compile Include="src\Noise.cs" />
     <Compile Include="src\PlayerCube.cs" />
