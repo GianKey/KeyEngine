@@ -6,18 +6,20 @@
 namespace Key {
 
 
-	class TextureEditor : public AssetEditor
+	class TextureViewer : public AssetEditor
 	{
 	public:
-		TextureEditor();
+		TextureViewer();
 
 		virtual void SetAsset(const Ref<Asset>& asset) override { m_Asset = (Ref<Texture>)asset; }
 
 	private:
+		virtual void OnClose() override;
 		virtual void Render() override;
 
 	private:
 		Ref<Texture> m_Asset;
 	};
+
 
 }

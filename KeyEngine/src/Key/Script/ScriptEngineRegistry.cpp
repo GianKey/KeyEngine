@@ -30,7 +30,6 @@ namespace Key {
 		}\
 	}
 
-
 	static void InitComponentTypes()
 	{
 		Component_RegisterType(TagComponent);

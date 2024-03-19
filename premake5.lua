@@ -33,8 +33,8 @@ IncludeDir["mono"] = "KeyEngine/vendor/mono/include"
 IncludeDir["Box2D"] = "KeyEngine/vendor/Box2D/include"
 IncludeDir["shaderc"] = "KeyEngine/vendor/VulkanSDK/1.3.261.1/include/shaderc"
 IncludeDir["SPIRV_Cross"] = "KeyEngine/vendor/VulkanSDK/1.3.261.1/Include/spirv_cross"
-IncludeDir["Vulkan"] = "KeyEngine/vendor/VulkanSDK/1.3.261.1/Include/vulkan"
-IncludeDir["VulkanSDK"] = "KeyEngine/vendor/VulkanSDK/1.3.261.1/Include"
+IncludeDir["VulkanSDK"] = "KeyEngine/vendor/VulkanSDK/1.3.261.1/Include/vulkan"
+IncludeDir["Vulkan"] = "KeyEngine/vendor/VulkanSDK/1.3.261.1/Include"
 
 LibraryDir = {}
 LibraryDir["mono"] = "vendor/mono/lib/Debug/mono-2.0-sgen.lib"

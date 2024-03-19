@@ -55,17 +55,16 @@ namespace Key {
 		void Key_Material_SetFloat(Ref<Material>* _this, MonoString* uniform, float value);
 		void Key_Material_SetTexture(Ref<Material>* _this, MonoString* uniform, Ref<Texture2D>* texture);
 
-		void Key_MaterialInstance_Destructor(Ref<MaterialInstance>* _this);
-		void Key_MaterialInstance_SetFloat(Ref<MaterialInstance>* _this, MonoString* uniform, float value);
-		void Key_MaterialInstance_SetVector3(Ref<MaterialInstance>* _this, MonoString* uniform, glm::vec3* value);
-		void Key_MaterialInstance_SetVector4(Ref<MaterialInstance>* _this, MonoString* uniform, glm::vec4* value);
-		void Key_MaterialInstance_SetTexture(Ref<MaterialInstance>* _this, MonoString* uniform, Ref<Texture2D>* texture);
-
+		void Key_MaterialInstance_Destructor(Ref<Material>* _this);
+		void Key_MaterialInstance_SetFloat(Ref<Material>* _this, MonoString* uniform, float value);
+		void Key_MaterialInstance_SetVector3(Ref<Material>* _this, MonoString* uniform, glm::vec3* value);
+		void Key_MaterialInstance_SetVector4(Ref<Material>* _this, MonoString* uniform, glm::vec4* value);
+		void Key_MaterialInstance_SetTexture(Ref<Material>* _this, MonoString* uniform, Ref<Texture2D>* texture);
 		// Mesh
 		Ref<Mesh>* Key_Mesh_Constructor(MonoString* filepath);
 		void Key_Mesh_Destructor(Ref<Mesh>* _this);
 		Ref<Material>* Key_Mesh_GetMaterial(Ref<Mesh>* inMesh);
-		Ref<MaterialInstance>* Key_Mesh_GetMaterialByIndex(Ref<Mesh>* inMesh, int index);
+		Ref<Material>* Key_Mesh_GetMaterialByIndex(Ref<Mesh>* inMesh, int index);
 		int Key_Mesh_GetMaterialCount(Ref<Mesh>* inMesh);
 
 		void* Key_MeshFactory_CreatePlane(float width, float height);

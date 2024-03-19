@@ -4,7 +4,7 @@
 #include <entt/entt.hpp>
 namespace Key {
 
-	enum class AssetType
+	enum class AssetType : int8_t
 	{
 		Scene,
 		Mesh,
@@ -15,7 +15,8 @@ namespace Key {
 		PhysicsMat,
 		Directory,
 		Other,
-		Any
+		None,
+		Missing
 	};
 
 	using AssetHandle = UUID;
@@ -24,7 +25,7 @@ namespace Key {
 	{
 	public:
 		AssetHandle Handle;
-		AssetType Type;
+		AssetType Type = AssetType::None;
 
 		std::string FilePath;
 		std::string FileName;
@@ -32,6 +33,15 @@ namespace Key {
 		AssetHandle ParentDirectory;
 		bool IsDataLoaded = false;
 
+		virtual bool operator==(const Asset& other) const
+		{
+			return Handle == other.Handle;
+		}
+
+		virtual bool operator!=(const Asset& other) const
+		{
+			return !(*this == other);
+		}
 		virtual ~Asset() {}
 	};
 	// Treating directories as assets simplifies the asset manager window rendering by a lot

@@ -34,15 +34,15 @@ namespace Key {
 		virtual ~Application();
 
 		void Run();
-
-		//3D
+		void Close();
+	
 		virtual void OnInit() {}
 		virtual void OnShutdown() {}
 		virtual void OnUpdate() {}
 		void RenderImGui();
 		std::string OpenFile(const char* filter = "All\0*.*\0") const;
 		std::string SaveFile(const char* filter = "All\0*.*\0") const;
-		//3D---end
+
 		void OnEvent(Event& e);
 		
 		void PushLayer(Layer* layer);
@@ -73,7 +73,7 @@ namespace Key {
 	};
 
 	//Implemented by CLIENT
-	Application* CreateApplication();
+	Application* CreateApplication(int argc, char** argv);
 }
 
 

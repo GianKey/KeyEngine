@@ -1,65 +1,60 @@
 #include "Kpch.h"
-#include "AssetManagerPanel.h"
+#include "ContentBrowserPanel.h"
 #include "Key/Core/Application.h"
 #include "AssetEditorPanel.h"
 #include "Key/Core/Input.h"
 
+#include <imgui_internal.h>
+
 namespace Key {
 
-	AssetManagerPanel::AssetManagerPanel()
+	ContentBrowserPanel::ContentBrowserPanel()
 	{
 		AssetManager::SetAssetChangeCallback([&]()
-			{
-				UpdateCurrentDirectory(m_CurrentDirHandle);
-			});
+		{
+			UpdateCurrentDirectory(m_CurrentDirHandle);
+		});
 
-		m_FolderTex = Texture2D::Create("assets/editor/folder.png");
-		
-		m_AssetIconMap[-1] = Texture2D::Create("assets/editor/file.png");
-		m_AssetIconMap[0] = m_FolderTex;
-		m_AssetIconMap[AssetTypes::GetAssetTypeID("hdr")] = Texture2D::Create("assets/editor/file.png");
-		m_AssetIconMap[AssetTypes::GetAssetTypeID("fbx")] = Texture2D::Create("assets/editor/fbx.png");
-		m_AssetIconMap[AssetTypes::GetAssetTypeID("obj")] = Texture2D::Create("assets/editor/obj.png");
-		m_AssetIconMap[AssetTypes::GetAssetTypeID("wav")] = Texture2D::Create("assets/editor/wav.png");
-		m_AssetIconMap[AssetTypes::GetAssetTypeID("cs")] = Texture2D::Create("assets/editor/csc.png");
-		m_AssetIconMap[AssetTypes::GetAssetTypeID("png")] = Texture2D::Create("assets/editor/png.png");
-		m_AssetIconMap[AssetTypes::GetAssetTypeID("blend")] = Texture2D::Create("assets/editor/blend.png");
-		m_AssetIconMap[AssetTypes::GetAssetTypeID("hsc")] = Texture2D::Create("assets/editor/Key.png");
+		m_FileTex = AssetManager::GetAsset<Texture2D>("assets/editor/file.png");
+		m_AssetIconMap[""] = AssetManager::GetAsset<Texture2D>("assets/editor/folder.png");
+		m_AssetIconMap["fbx"] = AssetManager::GetAsset<Texture2D>("assets/editor/fbx.png");
+		m_AssetIconMap["obj"] = AssetManager::GetAsset<Texture2D>("assets/editor/obj.png");
+		m_AssetIconMap["wav"] = AssetManager::GetAsset<Texture2D>("assets/editor/wav.png");
+		m_AssetIconMap["cs"] = AssetManager::GetAsset<Texture2D>("assets/editor/csc.png");
+		m_AssetIconMap["png"] = AssetManager::GetAsset<Texture2D>("assets/editor/png.png");
+		m_AssetIconMap["hsc"] = AssetManager::GetAsset<Texture2D>("assets/editor/Key.png");
 
-		m_BackbtnTex = Texture2D::Create("assets/editor/btn_back.png");
-		m_FwrdbtnTex = Texture2D::Create("assets/editor/btn_fwrd.png");
-		m_FolderRightTex = Texture2D::Create("assets/editor/folder_hierarchy.png");
-		m_SearchTex = Texture2D::Create("assets/editor/search.png");
+		m_BackbtnTex = AssetManager::GetAsset<Texture2D>("assets/editor/btn_back.png");
+		m_FwrdbtnTex = AssetManager::GetAsset<Texture2D>("assets/editor/btn_fwrd.png");
 
 		m_BaseDirectoryHandle = AssetManager::GetAssetHandleFromFilePath("assets");
 		m_BaseDirectory = AssetManager::GetAsset<Directory>(m_BaseDirectoryHandle);
 		UpdateCurrentDirectory(m_BaseDirectoryHandle);
 
-		memset(m_InputBuffer, 0, MAX_INPUT_BUFFER_LENGTH);
+		memset(m_RenameBuffer, 0, MAX_INPUT_BUFFER_LENGTH);
+		memset(m_SearchBuffer, 0, MAX_INPUT_BUFFER_LENGTH);
 	}
 
-	void AssetManagerPanel::DrawDirectoryInfo(AssetHandle directory)
+	void ContentBrowserPanel::DrawDirectoryInfo(AssetHandle directory)
 	{
 		const Ref<Directory>& dir = AssetManager::GetAsset<Directory>(directory);
 
 		if (ImGui::TreeNode(dir->FileName.c_str()))
 		{
-			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-				UpdateCurrentDirectory(directory);
-
 			for (AssetHandle child : dir->ChildDirectories)
-			{
 				DrawDirectoryInfo(child);
-			}
-
 			ImGui::TreePop();
 		}
+
+		// Only works when TreeNode is open and doesn't have any child TreeNodes. Most likely a bug with ImGui
+		if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+			UpdateCurrentDirectory(directory);
 	}
 
 	static int s_ColumnCount = 10;
-	void AssetManagerPanel::OnImGuiRender()
+	void ContentBrowserPanel::OnImGuiRender()
 	{
-		ImGui::Begin("Project", NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
+		ImGui::Begin("Content Browser", NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
 		{
 			UI::BeginPropertyGrid();
 			ImGui::SetColumnOffset(1, 240);
@@ -76,146 +71,150 @@ namespace Key {
 			}
 			ImGui::EndChild();
 
-
 			ImGui::NextColumn();
 
-			ImGui::BeginChild("##directory_structure", ImVec2(ImGui::GetColumnWidth() - 12, ImGui::GetWindowHeight() - 60));
+			ImGui::BeginChild("##directory_structure", ImVec2(0, ImGui::GetWindowHeight() - 60));
 			{
-				ImGui::BeginChild("##directory_breadcrumbs", ImVec2(ImGui::GetColumnWidth() - 100, 30));
-				RenderBreadCrumbs();
+				ImGui::BeginChild("##top_bar", ImVec2(0, 30));
+				{
+					RenderBreadCrumbs();
+				}
 				ImGui::EndChild();
 
+				ImGui::Separator();
+
 				ImGui::BeginChild("Scrolling");
-
-
-
-				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0F, 0.0F, 0.0F, 0.0F));
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2F, 0.205F, 0.21F, 0.25F));
-
-				if (Input::IsKeyPressed(KeyCode::Escape) || (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsAnyItemHovered)) 
 				{
-					m_SelectedAssets.Clear();
+					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 0.35f));
 
-					m_RenamingSelected = false;
-					memset(m_InputBuffer, 0, MAX_INPUT_BUFFER_LENGTH);
-				}
-
-				m_IsAnyItemHovered = false;
-
-				if (ImGui::BeginPopupContextWindow(0, 1, false))
-				{
-					if (ImGui::BeginMenu("Create"))
+					if (Input::IsKeyPressed(KeyCode::Escape) || (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !m_IsAnyItemHovered))
 					{
-						if (ImGui::MenuItem("Folder"))
+						m_SelectedAssets.Clear();
+						m_RenamingSelected = false;
+						memset(m_RenameBuffer, 0, MAX_INPUT_BUFFER_LENGTH);
+						memset(m_SearchBuffer, 0, MAX_INPUT_BUFFER_LENGTH);
+					}
+
+					m_IsAnyItemHovered = false;
+
+					if (ImGui::BeginPopupContextWindow(0, 1, false))
+					{
+						if (ImGui::BeginMenu("Create"))
 						{
-							bool created = FileSystem::CreateFolder(m_CurrentDirectory->FilePath + "/New Folder");
-							if (created)
+							if (ImGui::MenuItem("Folder"))
 							{
-								UpdateCurrentDirectory(m_CurrentDirHandle);
-								auto& createdDirectory = AssetManager::GetAsset<Directory>(AssetManager::GetAssetHandleFromFilePath(m_CurrentDirectory->FilePath + "/New Folder"));
-								m_SelectedAssets.Select(createdDirectory->Handle);
-								memset(m_InputBuffer, 0, MAX_INPUT_BUFFER_LENGTH);
-								memcpy(m_InputBuffer, createdDirectory->FileName.c_str(), createdDirectory->FileName.size()); 
-								m_RenamingSelected = true;
+								bool created = FileSystem::CreateFolder(m_CurrentDirectory->FilePath + "/New Folder");
+
+								if (created)
+								{
+									UpdateCurrentDirectory(m_CurrentDirHandle);
+									auto& createdDirectory = AssetManager::GetAsset<Directory>(AssetManager::GetAssetHandleFromFilePath(m_CurrentDirectory->FilePath + "/New Folder"));
+									m_SelectedAssets.Select(createdDirectory->Handle);
+									memset(m_RenameBuffer, 0, MAX_INPUT_BUFFER_LENGTH);
+									memcpy(m_RenameBuffer, createdDirectory->FileName.c_str(), createdDirectory->FileName.size());
+									m_RenamingSelected = true;
+								}
 							}
+
+							if (ImGui::MenuItem("Scene"))
+							{
+								KEY_CORE_INFO("Creating Scene...");
+							}
+
+							if (ImGui::MenuItem("Script"))
+							{
+								KEY_CORE_INFO("Creating Script...");
+							}
+
+							if (ImGui::MenuItem("Prefab"))
+							{
+								KEY_CORE_INFO("Creating Prefab...");
+							}
+
+							ImGui::EndMenu();
 						}
 
-						if (ImGui::MenuItem("Scene"))
+						if (ImGui::MenuItem("Import"))
 						{
-							KEY_CORE_INFO("Creating Scene...");
 						}
 
-						if (ImGui::MenuItem("Script"))
+						if (ImGui::MenuItem("Refresh"))
 						{
-							KEY_CORE_INFO("Creating Script...");
+							UpdateCurrentDirectory(m_CurrentDirHandle);
 						}
 
-						if (ImGui::MenuItem("Prefab"))
-						{
-							KEY_CORE_INFO("Creating Prefab...");
-						}
-
-						ImGui::EndMenu();
+						ImGui::EndPopup();
 					}
-					if (ImGui::MenuItem("Import"))
+
+					ImGui::Columns(s_ColumnCount, nullptr, false);
+
+					for (Ref<Asset>& asset : m_CurrentDirFolders)
 					{
-						//std::string filename = Application::Get().OpenFile("");
+						RenderAsset(asset);
+						ImGui::NextColumn();
 					}
 
-					if (ImGui::MenuItem("Refresh"))
+					for (Ref<Asset>& asset : m_CurrentDirFiles)
+					{
+						RenderAsset(asset);
+						ImGui::NextColumn();
+					}
+
+					if (m_UpdateDirectoryNextFrame)
 					{
 						UpdateCurrentDirectory(m_CurrentDirHandle);
+						m_UpdateDirectoryNextFrame = false;
 					}
 
+					if (m_IsDragging && !ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.1f))
+					{
+						m_IsDragging = false;
+					}
 
-					ImGui::EndPopup();
+					ImGui::PopStyleColor(2);
 				}
-
-				ImGui::Columns(s_ColumnCount, nullptr, false);
-
-				for (Ref<Asset>& asset : m_CurrentDirAssets)
-				{
-					RenderAsset(asset);
-					ImGui::NextColumn();
-				}
-
-				if (m_UpdateDirectoryNextFrame)
-				{
-					UpdateCurrentDirectory(m_CurrentDirHandle);
-					m_UpdateDirectoryNextFrame = false;
-				}
-
-				if (m_IsDragging && !ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.1F))
-				{
-					m_IsDragging = false;
-					m_DraggedAssetId = 0;
-				}
-
-				ImGui::PopStyleColor(2);
-
 				ImGui::EndChild();
 			}
 			ImGui::EndChild();
 
 			ImGui::BeginChild("##panel_controls", ImVec2(ImGui::GetColumnWidth() - 12, 20), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-			ImGui::Columns(4, 0, false);
-			ImGui::NextColumn();
-			ImGui::NextColumn();
-			ImGui::NextColumn();
-			ImGui::SetNextItemWidth(ImGui::GetColumnWidth());
-			ImGui::SliderInt("##column_count", &s_ColumnCount, 2, 15);
+			{
+				ImGui::Columns(4, 0, false);
+				ImGui::NextColumn();
+				ImGui::NextColumn();
+				ImGui::NextColumn();
+				ImGui::SetNextItemWidth(ImGui::GetColumnWidth());
+				ImGui::SliderInt("##column_count", &s_ColumnCount, 2, 15);
+			}
 			ImGui::EndChild();
+
 			UI::EndPropertyGrid();
 		}
-		
 		ImGui::End();
 	}
 
-	void AssetManagerPanel::RenderAsset(Ref<Asset>& asset)
+	void ContentBrowserPanel::RenderAsset(Ref<Asset>& asset)
 	{
 		// These caches are currently required for when we change directories
 		AssetHandle assetHandle = asset->Handle;
 		std::string filename = asset->FileName;
 
-
 		ImGui::PushID(&asset->Handle);
 		ImGui::BeginGroup();
 
-		size_t fileID = AssetTypes::GetAssetTypeID(asset->Extension);
-		fileID = m_AssetIconMap.find(fileID) != m_AssetIconMap.end() ? fileID : -1;
-		RendererID iconRef = m_AssetIconMap[fileID]->GetRendererID();
-	
+		Ref<Image2D> iconRef = m_AssetIconMap.find(asset->Extension) != m_AssetIconMap.end() ? m_AssetIconMap[asset->Extension]->GetImage() : m_FileTex->GetImage();
 
 		if (m_SelectedAssets.IsSelected(assetHandle))
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.25F, 0.25F, 0.25F, 0.75F));
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.25f, 0.25f, 0.25f, 0.75f));
 
-		float buttonWidth = ImGui::GetColumnWidth() - 15.0F;
-		ImGui::ImageButton((ImTextureID)iconRef, { buttonWidth, buttonWidth });
+		float buttonWidth = ImGui::GetColumnWidth() - 15.0f;
+		UI::ImageButton(iconRef, { buttonWidth, buttonWidth });
 
 		if (m_SelectedAssets.IsSelected(assetHandle))
 			ImGui::PopStyleColor();
 
-		HandleDragDrop(iconRef, asset);
+		HandleDragDrop((iconRef), asset);
 
 		if (ImGui::IsItemHovered())
 		{
@@ -228,6 +227,10 @@ namespace Key {
 					m_PrevDirHandle = m_CurrentDirHandle;
 					m_CurrentDirHandle = assetHandle;
 					m_UpdateDirectoryNextFrame = true;
+				}
+				else if (asset->Type == AssetType::Scene)
+				{
+					// SceneManager::OpenScene(asset);
 				}
 				else
 				{
@@ -247,28 +250,27 @@ namespace Key {
 			}
 		}
 
-		bool shouldOpenDeleteModal = false;
-
-		if (ImGui::BeginPopupContextItem())
+		bool openDeleteModal = false;
+		if (ImGui::BeginPopupContextItem("ContextMenu"))
 		{
 			if (ImGui::MenuItem("Rename"))
 			{
 				m_SelectedAssets.Select(assetHandle);
-				memset(m_InputBuffer, 0, MAX_INPUT_BUFFER_LENGTH);
-				memcpy(m_InputBuffer, filename.c_str(), filename.size());
+				memset(m_RenameBuffer, 0, MAX_INPUT_BUFFER_LENGTH);
+				memcpy(m_RenameBuffer, filename.c_str(), filename.size());
 				m_RenamingSelected = true;
 			}
 
 			if (ImGui::MenuItem("Delete"))
-				shouldOpenDeleteModal = true;
+				openDeleteModal = true;
 
 			ImGui::EndPopup();
 		}
 
-		if (shouldOpenDeleteModal)
+		if (openDeleteModal)
 		{
 			ImGui::OpenPopup("Delete Asset");
-			shouldOpenDeleteModal = false;
+			openDeleteModal = false;
 		}
 
 		bool deleted = false;
@@ -298,8 +300,10 @@ namespace Key {
 					AssetManager::RemoveAsset(assetHandle);
 					m_UpdateDirectoryNextFrame = true;
 				}
+
 				ImGui::CloseCurrentPopup();
 			}
+
 			ImGui::NextColumn();
 			ImGui::SetItemDefaultFocus();
 			if (ImGui::Button("No", ImVec2(columnWidth, 0)))
@@ -319,11 +323,12 @@ namespace Key {
 			if (m_SelectedAssets.IsSelected(assetHandle))
 				HandleRenaming(asset);
 		}
+
 		ImGui::EndGroup();
 		ImGui::PopID();
 	}
 
-	void AssetManagerPanel::HandleDragDrop(RendererID icon, Ref<Asset>& asset)
+	void ContentBrowserPanel::HandleDragDrop(Ref<Image2D> icon, Ref<Asset>& asset)
 	{
 		if (asset->Type == AssetType::Directory && m_IsDragging)
 		{
@@ -338,7 +343,7 @@ namespace Key {
 					{
 						AssetHandle handle = *(((AssetHandle*)payload->Data) + i);
 						Ref<Asset> droppedAsset = AssetManager::GetAsset<Asset>(handle, false);
-
+						
 						bool result = FileSystem::MoveFile(droppedAsset->FilePath, asset->FilePath);
 						if (result)
 							droppedAsset->ParentDirectory = asset->Handle;
@@ -348,28 +353,27 @@ namespace Key {
 				}
 			}
 		}
+
 		if (!m_SelectedAssets.IsSelected(asset->Handle) || m_IsDragging)
 			return;
 
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlapped) && ImGui::IsItemClicked(ImGuiMouseButton_Left))
 			m_IsDragging = true;
-		
+
 		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
 		{
-			ImGui::Image((ImTextureID)icon, ImVec2(20, 20));
+			UI::Image(icon, ImVec2(20, 20));
 			ImGui::SameLine();
 			ImGui::Text(asset->FileName.c_str());
 			ImGui::SetDragDropPayload("asset_payload", m_SelectedAssets.GetSelectionData(), m_SelectedAssets.SelectionCount() * sizeof(AssetHandle));
 			m_IsDragging = true;
-
 			ImGui::EndDragDropSource();
 		}
 	}
 
-	void AssetManagerPanel::RenderBreadCrumbs()
+	void ContentBrowserPanel::RenderBreadCrumbs()
 	{
-		
-		if (ImGui::ImageButton((ImTextureID)m_BackbtnTex->GetRendererID(), ImVec2(20, 18)))
+		if (UI::ImageButton(m_BackbtnTex->GetImage(), ImVec2(20, 18)))
 		{
 			if (m_CurrentDirHandle == m_BaseDirectoryHandle) return;
 			m_NextDirHandle = m_CurrentDirHandle;
@@ -379,29 +383,23 @@ namespace Key {
 
 		ImGui::SameLine();
 
-		if (ImGui::ImageButton((ImTextureID)m_FwrdbtnTex->GetRendererID(), ImVec2(20, 18)))
-		{
+		if (UI::ImageButton(m_FwrdbtnTex->GetImage(), ImVec2(20, 18)))
 			UpdateCurrentDirectory(m_NextDirHandle);
-		}
 
 		ImGui::SameLine();
 
 		{
 			ImGui::PushItemWidth(200);
-			char* buf = m_InputBuffer;
-			if (m_RenamingSelected)
-				buf = "\0";
-
-			if (ImGui::InputTextWithHint("", "Search...", buf, MAX_INPUT_BUFFER_LENGTH))
+			if (ImGui::InputTextWithHint("", "Search...", m_SearchBuffer, MAX_INPUT_BUFFER_LENGTH))
 			{
-				
-				if (strlen(m_InputBuffer) == 0)
+				if (strlen(m_SearchBuffer) == 0)
 				{
 					UpdateCurrentDirectory(m_CurrentDirHandle);
 				}
 				else
 				{
-					m_CurrentDirAssets = AssetManager::SearchFiles(m_InputBuffer, m_CurrentDirectory->FilePath);
+					m_CurrentDirFolders = AssetManager::SearchAssets(m_SearchBuffer, m_CurrentDirectory->FilePath, AssetType::Directory);
+					m_CurrentDirFiles = AssetManager::SearchAssets(m_SearchBuffer, m_CurrentDirectory->FilePath);
 				}
 			}
 
@@ -450,25 +448,25 @@ namespace Key {
 		ImGui::SameLine();
 	}
 
-	void AssetManagerPanel::HandleRenaming(Ref<Asset>& asset)
+	void ContentBrowserPanel::HandleRenaming(Ref<Asset>& asset)
 	{
 		if (m_SelectedAssets.SelectionCount() > 1)
 			return;
 
 		if (!m_RenamingSelected && Input::IsKeyPressed(KeyCode::F2))
 		{
-			memset(m_InputBuffer, 0, MAX_INPUT_BUFFER_LENGTH);
-			memcpy(m_InputBuffer, asset->FileName.c_str(), asset->FileName.size());
+			memset(m_RenameBuffer, 0, MAX_INPUT_BUFFER_LENGTH);
+			memcpy(m_RenameBuffer, asset->FileName.c_str(), asset->FileName.size());
 			m_RenamingSelected = true;
 		}
 
 		if (m_RenamingSelected)
 		{
 			ImGui::SetKeyboardFocusHere();
-			if (ImGui::InputText("##rename_dummy", m_InputBuffer, MAX_INPUT_BUFFER_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue))
+			if (ImGui::InputText("##rename_dummy", m_RenameBuffer, MAX_INPUT_BUFFER_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue))
 			{
-				KEY_CORE_INFO("Renaming to {0}", m_InputBuffer);
-				AssetManager::Rename(asset, m_InputBuffer);
+				KEY_CORE_INFO("Renaming to {0}", m_RenameBuffer);
+				AssetManager::Rename(asset->Handle, m_RenameBuffer);
 				m_RenamingSelected = false;
 				m_SelectedAssets.Clear();
 				m_UpdateDirectoryNextFrame = true;
@@ -476,17 +474,22 @@ namespace Key {
 		}
 	}
 
-
-	void AssetManagerPanel::UpdateCurrentDirectory(AssetHandle directoryHandle)
+	void ContentBrowserPanel::UpdateCurrentDirectory(AssetHandle directoryHandle)
 	{
 		m_UpdateBreadCrumbs = true;
-
-		
-		m_CurrentDirAssets.clear();
-
+		m_CurrentDirFiles.clear();
+		m_CurrentDirFolders.clear();
 		m_CurrentDirHandle = directoryHandle;
 		m_CurrentDirectory = AssetManager::GetAsset<Directory>(m_CurrentDirHandle);
-		m_CurrentDirAssets = AssetManager::GetAssetsInDirectory(m_CurrentDirHandle);
+		
+		std::vector<Ref<Asset>> assets = AssetManager::GetAssetsInDirectory(m_CurrentDirHandle);
+		for (auto& asset : assets)
+		{
+			if (asset->Type == AssetType::Directory)
+				m_CurrentDirFolders.push_back(asset);
+			else
+				m_CurrentDirFiles.push_back(asset);
+		}
 	}
 
 }

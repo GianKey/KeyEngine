@@ -11,7 +11,7 @@
 #include "Key/Renderer/Renderer2D.h"
 
 #include "Key/Math/Math.h"
-
+#include "Key/Renderer/Renderer.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -153,8 +153,8 @@ namespace Key {
 
 	void Scene::Init()
 	{
-		auto skyboxShader = Shader::Create("assets/shaders/Skybox.glsl");
-		m_SkyboxMaterial = MaterialInstance::Create(Material::Create(skyboxShader));
+		auto skyboxShader = Renderer::GetShaderLibrary()->Get("Skybox");
+		m_SkyboxMaterial = Material::Create(skyboxShader);
 		m_SkyboxMaterial->SetFlag(MaterialFlag::DepthTest, false);
 	}
 
@@ -208,9 +208,9 @@ namespace Key {
 				Math::DecomposeTransform(transform, translation, rotation, scale);
 
 				glm::quat rotationQuat = glm::quat(rotation);
-				transformComponent.Up = glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0F, 1.0F, 0.0F)));
-				transformComponent.Right = glm::normalize(glm::rotate(rotationQuat, glm::vec3(1.0F, 0.0F, 0.0F)));
-				transformComponent.Forward = glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0F, 0.0F, -1.0F)));
+				transformComponent.Up = glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0f, 1.0f, 0.0f)));
+				transformComponent.Right = glm::normalize(glm::rotate(rotationQuat, glm::vec3(1.0f, 0.0f, 0.0f)));
+				transformComponent.Forward = glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0f, 0.0f, -1.0f)));
 			}
 		}
 	}
@@ -251,25 +251,26 @@ namespace Key {
 
 		// TODO: only one sky light at the moment!
 		{
-			m_Environment = Ref<Environment>::Create();
+			//m_Environment = Ref<Environment>::Create();
 			auto lights = m_Registry.group<SkyLightComponent>(entt::get<TransformComponent>);
 			for (auto entity : lights)
 			{
 				auto [transformComponent, skyLightComponent] = lights.get<TransformComponent, SkyLightComponent>(entity);
 				m_Environment = skyLightComponent.SceneEnvironment;
 				m_EnvironmentIntensity = skyLightComponent.Intensity;
-				SetSkybox(m_Environment->RadianceMap);
+				if (m_Environment)
+					SetSkybox(m_Environment->RadianceMap);
 			}
 		}
 
-		m_SkyboxMaterial->Set("u_TextureLod", m_SkyboxLod);
+		m_SkyboxMaterial->Set("u_Uniforms.TextureLod", m_SkyboxLod);
 
 		auto group = m_Registry.group<MeshComponent>(entt::get<TransformComponent>);
 		SceneRenderer::BeginScene(this, { camera, cameraViewMatrix });
 		for (auto entity : group)
 		{
 			auto [transformComponent, meshComponent] = group.get<TransformComponent, MeshComponent>(entity);
-			if (meshComponent.Mesh)
+			if (meshComponent.Mesh && meshComponent.Mesh->Type == AssetType::Mesh)
 			{
 				meshComponent.Mesh->OnUpdate(ts);
 				glm::mat4 transform = GetTransformRelativeToParent(Entity(entity, this));
@@ -326,25 +327,26 @@ namespace Key {
 		}
 
 		{
-			m_Environment = Ref<Environment>::Create();
+			//m_Environment = Ref<Environment>::Create();
 			auto lights = m_Registry.group<SkyLightComponent>(entt::get<TransformComponent>);
 			for (auto entity : lights)
 			{
 				auto [transformComponent, skyLightComponent] = lights.get<TransformComponent, SkyLightComponent>(entity);
 				m_Environment = skyLightComponent.SceneEnvironment;
 				m_EnvironmentIntensity = skyLightComponent.Intensity;
-				SetSkybox(m_Environment->RadianceMap);
+				if (m_Environment)
+					SetSkybox(m_Environment->RadianceMap);
 			}
 		}
 
-		m_SkyboxMaterial->Set("u_TextureLod", m_SkyboxLod);
+		m_SkyboxMaterial->Set("u_Uniforms.TextureLod", m_SkyboxLod);
 
 		auto group = m_Registry.group<MeshComponent>(entt::get<TransformComponent>);
 		SceneRenderer::BeginScene(this, { editorCamera, editorCamera.GetViewMatrix(), 0.1f, 1000.0f, 45.0f }); // TODO: real values
 		for (auto entity : group)
 		{
-			auto& [meshComponent, transformComponent] = group.get<MeshComponent, TransformComponent>(entity);
-			if (meshComponent.Mesh)
+			auto [meshComponent, transformComponent] = group.get<MeshComponent, TransformComponent>(entity);
+			if (meshComponent.Mesh && meshComponent.Mesh->Type == AssetType::Mesh)
 			{
 				meshComponent.Mesh->OnUpdate(ts);
 

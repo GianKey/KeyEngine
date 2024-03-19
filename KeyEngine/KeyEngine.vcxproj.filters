@@ -34,6 +34,9 @@
     <Filter Include="src\Key\PlatForm\OpenGL">
       <UniqueIdentifier>{ED8C3B43-59C4-83DA-62CE-E7FDCE84AAD3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Key\PlatForm\Vulkan">
+      <UniqueIdentifier>{39F1ED53-A528-36EB-AE32-9A0E1AE95CE4}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Key\PlatForm\Windows">
       <UniqueIdentifier>{1305C902-FF29-1883-2875-FD1214F916A1}</UniqueIdentifier>
     </Filter>
@@ -83,6 +86,9 @@
   <ItemGroup>
     <ClInclude Include="src\Key.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Asset\AssetImporter.h">
+      <Filter>src\Key\Asset</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Asset\AssetManager.h">
       <Filter>src\Key\Asset</Filter>
@@ -165,7 +171,7 @@
     <ClInclude Include="src\Key\Editor\AssetEditorPanel.h">
       <Filter>src\Key\Editor</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\Editor\AssetManagerPanel.h">
+    <ClInclude Include="src\Key\Editor\ContentBrowserPanel.h">
       <Filter>src\Key\Editor</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Editor\DefaultAssetEditors.h">
@@ -195,10 +201,22 @@
     <ClInclude Include="src\Key\Math\Math.h">
       <Filter>src\Key\Math</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLContext.h">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLFramebuffer.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLImGuiLayer.h">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLImage.h">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLIndexBuffer.h">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLMaterial.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLPipeline.h">
@@ -207,10 +225,10 @@
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLRenderPass.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLShader.h">
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLRenderer.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLShaderUniform.h">
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLShader.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLTexture.h">
@@ -218,6 +236,60 @@
     </ClInclude>
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLVertexBuffer.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\Vulkan.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanAllocator.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanComputePipeline.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanContext.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanDevice.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanDiagnostics.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanFramebuffer.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanImGuiLayer.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanImage.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanIndexBuffer.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanMaterial.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanPipeline.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanRenderPass.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanRenderer.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanShader.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanSwapChain.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanTexture.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanVertexBuffer.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\PlatForm\Windows\WindowsWindow.h">
       <Filter>src\Key\PlatForm\Windows</Filter>
@@ -229,6 +301,9 @@
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\Framebuffer.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Renderer\Image.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\IndexBuffer.h">
@@ -262,6 +337,15 @@
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\RendererAPI.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Renderer\RendererCapabilities.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Renderer\RendererContext.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Renderer\RendererTypes.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\SceneEnvironment.h">
@@ -497,6 +581,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Key\Asset\AssetImporter.cpp">
+      <Filter>src\Key\Asset</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\Asset\AssetManager.cpp">
       <Filter>src\Key\Asset</Filter>
     </ClCompile>
@@ -533,7 +620,7 @@
     <ClCompile Include="src\Key\Editor\AssetEditorPanel.cpp">
       <Filter>src\Key\Editor</Filter>
     </ClCompile>
-    <ClCompile Include="src\Key\Editor\AssetManagerPanel.cpp">
+    <ClCompile Include="src\Key\Editor\ContentBrowserPanel.cpp">
       <Filter>src\Key\Editor</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Editor\DefaultAssetEditors.cpp">
@@ -557,13 +644,28 @@
     <ClCompile Include="src\Key\ImGui\ImGuizmo.cpp">
       <Filter>src\Key\ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="src\Key\ImGui\VulkanImGui.cpp">
+      <Filter>src\Key\ImGui</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\Math\Math.cpp">
       <Filter>src\Key\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLContext.cpp">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLFrameBbuffer.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLImGuiLayer.cpp">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLImage.cpp">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLIndexBuffer.cpp">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLMaterial.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLPipeline.cpp">
@@ -572,13 +674,10 @@
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLRenderPass.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLRendererAPI.cpp">
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLRenderer.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLShader.cpp">
-      <Filter>src\Key\PlatForm\OpenGL</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLShaderUniform.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLTexture.cpp">
@@ -586,6 +685,60 @@
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLVertexBuffer.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\Vulkan.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanAllocator.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanComputePipeline.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanContext.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanDevice.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanDiagnostics.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanFramebuffer.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanImGuiLayer.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanImage.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanIndexBuffer.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanMaterial.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanPipeline.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanRenderPass.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanRenderer.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanShader.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanSwapChain.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanTexture.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanVertexBuffer.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\Windows\WindowsFileSystem.cpp">
       <Filter>src\Key\PlatForm\Windows</Filter>
@@ -603,6 +756,9 @@
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\Framebuffer.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Renderer\Image.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\IndexBuffer.cpp">
@@ -633,6 +789,9 @@
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\Renderer2D.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Renderer\RendererContext.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\SceneEnvironment.cpp">

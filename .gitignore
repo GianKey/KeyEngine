@@ -6,12 +6,15 @@
 #Directories
 /bin/
 bin-int/
+obj/
+cache/
 KeyEngine/src/Key/Doxyfile
 # Files
 *.user
 *.sln
 *.vcxproj
 
+**.nsight-gfxproj
 # Meta Files
 **.meta
 # User-specific files

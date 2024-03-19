@@ -5,7 +5,7 @@
 #include "Key/Renderer/Mesh.h"
 #include "Key/Script/ScriptEngine.h"
 #include "Key/Renderer/MeshFactory.h"
-
+#include "Key/Math/Math.h"
 #include "Key/Asset/AssetManager.h"
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
@@ -48,6 +48,10 @@ namespace Key {
 	void SceneHierarchyPanel::SetSelected(Entity entity)
 	{
 		m_SelectionContext = entity;
+
+
+		if (m_SelectionChangedCallback)
+			m_SelectionChangedCallback(m_SelectionContext);
 	}
 
 	void SceneHierarchyPanel::OnImGuiRender()
@@ -79,11 +83,16 @@ namespace Key {
 					{
 						auto& children = previousParent.Children();
 						children.erase(std::remove(children.begin(), children.end(), droppedHandle), children.end());
+						
+						glm::mat4 parentTransform = m_Context->GetTransformRelativeToParent(previousParent);
+						glm::vec3 parentTranslation, parentRotation, parentScale;
+						Math::DecomposeTransform(parentTransform, parentTranslation, parentRotation, parentScale);
+
+						e.Transform().Translation = e.Transform().Translation + parentTranslation;
 					}
 
 					e.SetParentUUID(0);
 
-					KEY_CORE_INFO("Unparented Entity!");
 				}
 
 				ImGui::EndDragDropTarget();
@@ -99,11 +108,45 @@ namespace Key {
 						auto newEntity = m_Context->CreateEntity("Empty Entity");
 						SetSelected(newEntity);
 					}
-					if (ImGui::MenuItem("Mesh"))
+					if (ImGui::MenuItem("Camera"))
 					{
-						auto newEntity = m_Context->CreateEntity("Mesh");
-						newEntity.AddComponent<MeshComponent>();
+						auto newEntity = m_Context->CreateEntity("Camera");
+						newEntity.AddComponent<CameraComponent>();
 						SetSelected(newEntity);
+					}
+					if (ImGui::BeginMenu("Mesh"))
+					{
+						if (ImGui::MenuItem("Empty Mesh"))
+						{
+							auto newEntity = m_Context->CreateEntity("Empty Mesh");
+							newEntity.AddComponent<MeshComponent>();
+							SetSelected(newEntity);
+						}
+						if (ImGui::MenuItem("Cube"))
+						{
+							auto newEntity = m_Context->CreateEntity("Cube");
+							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("assets/meshes/Default/Cube.fbx"));
+							SetSelected(newEntity);
+						}
+						if (ImGui::MenuItem("Sphere"))
+						{
+							auto newEntity = m_Context->CreateEntity("Sphere");
+							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("assets/meshes/Default/Sphere.fbx"));
+							SetSelected(newEntity);
+						}
+						if (ImGui::MenuItem("Capsule"))
+						{
+							auto newEntity = m_Context->CreateEntity("Capsule");
+							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("assets/meshes/Default/Capsule.fbx"));
+							SetSelected(newEntity);
+						}
+						if (ImGui::MenuItem("Plane"))
+						{
+							auto newEntity = m_Context->CreateEntity("Plane");
+							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("assets/meshes/Default/Plane.fbx"));
+							SetSelected(newEntity);
+						}
+						ImGui::EndMenu();
 					}
 					ImGui::Separator();
 					if (ImGui::MenuItem("Directional Light"))
@@ -165,6 +208,11 @@ namespace Key {
 		if (entity.Children().empty())
 			flags |= ImGuiTreeNodeFlags_Leaf;
 
+		// TODO: This should probably be a function that checks that the entities components are valid
+		bool missingMesh = entity.HasComponent<MeshComponent>() && (entity.GetComponent<MeshComponent>().Mesh && entity.GetComponent<MeshComponent>().Mesh->Type == AssetType::Missing);
+		if (missingMesh)
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.4f, 0.3f, 1.0f));
+		
 		bool opened = ImGui::TreeNodeEx((void*)(uint32_t)entity, flags, name);
 		if (ImGui::IsItemClicked())
 		{
@@ -172,6 +220,9 @@ namespace Key {
 			if (m_SelectionChangedCallback)
 				m_SelectionChangedCallback(m_SelectionContext);
 		}
+
+		if (missingMesh)
+			ImGui::PopStyleColor();
 
 		bool entityDeleted = false;
 		if (ImGui::BeginPopupContextItem())
@@ -210,13 +261,15 @@ namespace Key {
 						parentChildren.erase(std::remove(parentChildren.begin(), parentChildren.end(), droppedHandle), parentChildren.end());
 					}
 
+					glm::mat4 parentTransform = m_Context->GetTransformRelativeToParent(entity);
+					glm::vec3 parentTranslation, parentRotation, parentScale;
+					Math::DecomposeTransform(parentTransform, parentTranslation, parentRotation, parentScale);
+
+					e.Transform().Translation = e.Transform().Translation - parentTranslation;
 					e.SetParentUUID(entity.GetUUID());
 					entity.Children().push_back(droppedHandle);
 
-					KEY_CORE_INFO("Dropping Entity {0} on {1}", droppedHandle, entity.GetUUID());
 				}
-
-				KEY_CORE_INFO("Dropping Entity {0} on {1}", droppedHandle, entity.GetUUID());
 			}
 
 			ImGui::EndDragDropTarget();
@@ -299,7 +352,7 @@ namespace Key {
 	}
 
 	template<typename T, typename UIFunction>
-	static void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction)
+	static void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction, bool canBeRemoved = true)
 	{
 		const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
 		if (entity.HasComponent<T>())
@@ -312,18 +365,29 @@ namespace Key {
 			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
 			ImGui::Separator();
 			bool open = ImGui::TreeNodeEx("##dummy_id", treeNodeFlags, name.c_str());
+			bool right_clicked = ImGui::IsItemClicked(ImGuiMouseButton_Right);
 			ImGui::PopStyleVar();
+
+			bool resetValues = false;
+			bool removeComponent = false;
+
 			ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
-			if (ImGui::Button("+", ImVec2{ lineHeight, lineHeight }))
+			if (ImGui::Button("+", ImVec2{ lineHeight, lineHeight }) || right_clicked)
 			{
 				ImGui::OpenPopup("ComponentSettings");
 			}
 
-			bool removeComponent = false;
+
 			if (ImGui::BeginPopup("ComponentSettings"))
 			{
-				if (ImGui::MenuItem("Remove component"))
-					removeComponent = true;
+				if (ImGui::MenuItem("Reset"))
+					resetValues = true;
+
+				if (canBeRemoved)
+				{
+					if (ImGui::MenuItem("Remove component"))
+						removeComponent = true;
+				}
 
 				ImGui::EndPopup();
 			}
@@ -334,10 +398,12 @@ namespace Key {
 				ImGui::TreePop();
 			}
 
-			if (removeComponent)
+			if (removeComponent || resetValues)
 				entity.RemoveComponent<T>();
 
-			
+			if (resetValues)
+				entity.AddComponent<T>();
+
 			ImGui::PopID();
 		}
 	}
@@ -346,7 +412,7 @@ namespace Key {
 	{
 		bool modified = false;
 
-		ImGuiIO& io = ImGui::GetIO();
+		const ImGuiIO& io = ImGui::GetIO();
 		auto boldFont = io.Fonts->Fonts[0];
 
 		ImGui::PushID(label.c_str());
@@ -539,37 +605,26 @@ namespace Key {
 				DrawVec3Control("Rotation", rotation);
 				component.Rotation = glm::radians(rotation);
 				DrawVec3Control("Scale", component.Scale, 1.0f);
-		});
+		}, false);
 
-		DrawComponent<MeshComponent>("Mesh", entity, [](MeshComponent& mc)
-			{
+		DrawComponent<MeshComponent>("Mesh", entity, [&](MeshComponent& mc)
+		{
 				UI::BeginPropertyGrid();
 				UI::PropertyAssetReference("Mesh", mc.Mesh, AssetType::Mesh);
 				UI::EndPropertyGrid();
-			});
+		});
 
 		DrawComponent<CameraComponent>("Camera", entity, [](CameraComponent& cc)
-			{
+		{
+				UI::BeginPropertyGrid();
 				// Projection Type
 				const char* projTypeStrings[] = { "Perspective", "Orthographic" };
-				const char* currentProj = projTypeStrings[(int)cc.Camera.GetProjectionType()];
-				if (ImGui::BeginCombo("Projection", currentProj))
+				int currentProj = (int)cc.Camera.GetProjectionType();
+				if (UI::PropertyDropdown("Projection", projTypeStrings, 2, &currentProj))
 				{
-					for (int type = 0; type < 2; type++)
-					{
-						bool is_selected = (currentProj == projTypeStrings[type]);
-						if (ImGui::Selectable(projTypeStrings[type], is_selected))
-						{
-							currentProj = projTypeStrings[type];
-							cc.Camera.SetProjectionType((SceneCamera::ProjectionType)type);
-						}
-						if (is_selected)
-							ImGui::SetItemDefaultFocus();
-					}
-					ImGui::EndCombo();
+					cc.Camera.SetProjectionType((SceneCamera::ProjectionType)currentProj);
 				}
 
-				UI::BeginPropertyGrid();
 				// Perspective parameters
 				if (cc.Camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
 				{
@@ -716,10 +771,14 @@ namespace Key {
 									break;
 								}
 
-								case FieldType::ClassReference:
+								/*case FieldType::ClassReference:
 								{
 									Ref<Asset>* asset = (Ref<Asset>*)(isRuntime ? field.GetRuntimeValueRaw() : field.GetStoredValueRaw());
 									std::string label = field.Name + "(" + field.TypeName + ")";
+									
+									if (!AssetManager::IsAssetHandleValid((*asset)->Handle))
+										break;
+
 									if (UI::PropertyAssetReference(label.c_str(), *asset))
 									{
 										if (isRuntime)
@@ -728,7 +787,7 @@ namespace Key {
 											field.SetStoredValueRaw(asset);
 									}
 									break;
-								}
+								}*/
 							}
 						}
 					}
@@ -745,24 +804,10 @@ namespace Key {
 
 		DrawComponent<RigidBody2DComponent>("Rigidbody 2D", entity, [](RigidBody2DComponent& rb2dc)
 			{
+				UI::BeginPropertyGrid();
 				// Rigidbody2D Type
 				const char* rb2dTypeStrings[] = { "Static", "Dynamic", "Kinematic" };
-				const char* currentType = rb2dTypeStrings[(int)rb2dc.BodyType];
-				if (ImGui::BeginCombo("Type", currentType))
-				{
-					for (int type = 0; type < 3; type++)
-					{
-						bool is_selected = (currentType == rb2dTypeStrings[type]);
-						if (ImGui::Selectable(rb2dTypeStrings[type], is_selected))
-						{
-							currentType = rb2dTypeStrings[type];
-							rb2dc.BodyType = (RigidBody2DComponent::Type)type;
-						}
-						if (is_selected)
-							ImGui::SetItemDefaultFocus();
-					}
-					ImGui::EndCombo();
-				}
+				UI::PropertyDropdown("Type", rb2dTypeStrings, 3, (int*)&rb2dc.BodyType);
 
 				if (rb2dc.BodyType == RigidBody2DComponent::Type::Dynamic)
 				{
@@ -770,6 +815,7 @@ namespace Key {
 					UI::Property("Fixed Rotation", rb2dc.FixedRotation);
 					UI::EndPropertyGrid();
 				}
+				UI::EndPropertyGrid();
 			});
 
 		DrawComponent<BoxCollider2DComponent>("Box Collider 2D", entity, [](BoxCollider2DComponent& bc2dc)

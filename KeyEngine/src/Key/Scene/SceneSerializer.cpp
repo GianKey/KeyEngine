@@ -396,15 +396,6 @@ namespace Key {
 		out << YAML::EndMap; // Environment
 	}
 
-	static bool CheckPath(const std::string & path)
-	{
-		FILE * f = fopen(path.c_str(), "rb");
-		if (f)
-			fclose(f);
-		return f != nullptr;
-	}
-	
-
 
 	void SceneSerializer::Serialize(const std::string& filepath)
 	{
@@ -412,7 +403,10 @@ namespace Key {
 		out << YAML::BeginMap;
 		out << YAML::Key << "Scene";
 		out << YAML::Value << "Scene Name";
-		SerializeEnvironment(out, m_Scene);
+
+		if (m_Scene->GetEnvironment())
+			SerializeEnvironment(out, m_Scene);
+
 		out << YAML::Key << "Entities";
 		out << YAML::Value << YAML::BeginSeq;
 		m_Scene->m_Registry.each([&](auto entityID)
@@ -440,6 +434,7 @@ namespace Key {
 	bool SceneSerializer::Deserialize(const std::string& filepath)
 	{
 		std::ifstream stream(filepath);
+		KEY_CORE_ASSERT(stream);
 		std::stringstream strStream;
 		strStream << stream.rdbuf();
 
@@ -449,33 +444,6 @@ namespace Key {
 
 		std::string sceneName = data["Scene"].as<std::string>();
 		KEY_CORE_INFO("Deserializing scene '{0}'", sceneName);
-
-		/*auto environment = data["Environment"];
-		if (environment)
-		{
-			AssetHandle assetHandle;
-			if (environment["AssetPath"])
-			{
-				std::string envPath = environment["AssetPath"].as<std::string>();
-				assetHandle = AssetManager::GetAssetIDForFile(envPath);
-			}
-			else
-			{
-				assetHandle = environment["AssetHandle"].as<uint64_t>();
-			}
-			//m_Scene->SetEnvironment(Environment::Load(envPath));
-
-			auto lightNode = environment["Light"];
-			if (lightNode)
-			{
-				auto& light = m_Scene->GetLight();
-				light.Direction = lightNode["Direction"].as<glm::vec3>();
-				light.Radiance = lightNode["Radiance"].as<glm::vec3>();
-				light.Multiplier = lightNode["Multiplier"].as<float>();
-			}
-		}*/
-
-		std::vector<std::string> missingPaths;
 
 		auto entities = data["Entities"];
 		if (entities)
@@ -605,20 +573,28 @@ namespace Key {
 				auto meshComponent = entity["MeshComponent"];
 				if (meshComponent)
 				{
-					UUID assetID;
+					auto& component = deserializedEntity.AddComponent<MeshComponent>();
+
+					AssetHandle assetHandle = 0;
 					if (meshComponent["AssetPath"])
+						assetHandle = AssetManager::GetAssetHandleFromFilePath(meshComponent["AssetPath"].as<std::string>());
+					else
+						assetHandle = meshComponent["AssetID"].as<uint64_t>();
+
+					if (AssetManager::IsAssetHandleValid(assetHandle))
 					{
-						std::string filepath = meshComponent["AssetPath"].as<std::string>();
-						assetID = AssetManager::GetAssetHandleFromFilePath(filepath);
+						component.Mesh = AssetManager::GetAsset<Mesh>(assetHandle);
 					}
 					else
 					{
-						assetID = meshComponent["AssetID"].as<uint64_t>();
-					}
+						component.Mesh = Ref<Asset>::Create().As<Mesh>();
+						component.Mesh->Type = AssetType::Missing;
 					
-					if (AssetManager::IsAssetHandleValid(assetID) && !deserializedEntity.HasComponent<MeshComponent>())
-					{
-						deserializedEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>(assetID));
+						std::string filepath = meshComponent["AssetPath"] ? meshComponent["AssetPath"].as<std::string>() : "";
+						if (filepath.empty())
+							KEY_CORE_ERROR("Tried to load non-existent mesh in Entity: {0}", deserializedEntity.GetUUID());
+						else
+							KEY_CORE_ERROR("Tried to load invalid mesh '{0}' in Entity {1}", filepath, deserializedEntity.GetUUID());
 					}
 					
 				}
@@ -665,22 +641,24 @@ namespace Key {
 				{
 					auto& component = deserializedEntity.AddComponent<SkyLightComponent>();
 
-					AssetHandle assetHandle;
+					AssetHandle assetHandle = 0;
 					if (skyLightComponent["EnvironmentAssetPath"])
-					{
-						std::string filepath = skyLightComponent["EnvironmentAssetPath"].as<std::string>();
-						assetHandle = AssetManager::GetAssetHandleFromFilePath(filepath);
-					}
+						assetHandle = AssetManager::GetAssetHandleFromFilePath(skyLightComponent["EnvironmentAssetPath"].as<std::string>());
 					else
-					{
 						assetHandle = skyLightComponent["EnvironmentMap"].as<uint64_t>();
-					}
 
 					if (AssetManager::IsAssetHandleValid(assetHandle))
 					{
 						component.SceneEnvironment = AssetManager::GetAsset<Environment>(assetHandle);
 					}
-
+					else
+					{
+						std::string filepath = meshComponent["EnvironmentAssetPath"] ? meshComponent["EnvironmentAssetPath"].as<std::string>() : "";
+						if (filepath.empty())
+							KEY_CORE_ERROR("Tried to load non-existent environment map in Entity: {0}", deserializedEntity.GetUUID());
+						else
+							KEY_CORE_ERROR("Tried to load invalid environment map '{0}' in Entity {1}", filepath, deserializedEntity.GetUUID());
+					}
 					component.Intensity = skyLightComponent["Intensity"].as<float>();
 					component.Angle = skyLightComponent["Angle"].as<float>();
 				}
@@ -723,18 +701,6 @@ namespace Key {
 
 			}
 		}
-
-		if (missingPaths.size())
-		{
-			KEY_CORE_ERROR("The following files could not be loaded:");
-			for (auto& path : missingPaths)
-			{
-				KEY_CORE_ERROR("  {0}", path);
-			}
-
-			return false;
-		}
-
 
 		return true;
 	}

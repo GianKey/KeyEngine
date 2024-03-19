@@ -289,16 +289,17 @@ namespace Key {
 		Ref<Material>* Key_Mesh_GetMaterial(Ref<Mesh>* inMesh)
 		{
 			Ref<Mesh>& mesh = *(Ref<Mesh>*)inMesh;
-			return new Ref<Material>(mesh->GetMaterial());
+			const auto& materials = mesh->GetMaterials();
+			return new Ref<Material>(materials[0]);
 		}
 
-		Ref<MaterialInstance>* Key_Mesh_GetMaterialByIndex(Ref<Mesh>* inMesh, int index)
+		Ref<Material>* Key_Mesh_GetMaterialByIndex(Ref<Mesh>* inMesh, int index)
 		{
 			Ref<Mesh>& mesh = *(Ref<Mesh>*)inMesh;
 			const auto& materials = mesh->GetMaterials();
 
 			KEY_CORE_ASSERT(index < materials.size());
-			return new Ref<MaterialInstance>(materials[index]);
+			return new Ref<Material>(materials[index]);
 		}
 
 		int Key_Mesh_GetMaterialCount(Ref<Mesh>* inMesh)
@@ -310,7 +311,7 @@ namespace Key {
 
 		void* Key_Texture2D_Constructor(uint32_t width, uint32_t height)
 		{
-			auto result = Texture2D::Create(TextureFormat::RGBA, width, height);
+			auto result = Texture2D::Create(ImageFormat::RGBA, width, height);
 			return new Ref<Texture2D>(result);
 		}
 
@@ -360,32 +361,32 @@ namespace Key {
 			instance->Set(mono_string_to_utf8(uniform), *texture);
 		}
 
-		void Key_MaterialInstance_Destructor(Ref<MaterialInstance>* _this)
+		void Key_MaterialInstance_Destructor(Ref<Material>* _this)
 		{
 			delete _this;
 		}
 
-		void Key_MaterialInstance_SetFloat(Ref<MaterialInstance>* _this, MonoString* uniform, float value)
+		void Key_MaterialInstance_SetFloat(Ref<Material>* _this, MonoString* uniform, float value)
 		{
-			Ref<MaterialInstance>& instance = *(Ref<MaterialInstance>*)_this;
+			Ref<Material>& instance = *(Ref<Material>*)_this;
 			instance->Set(mono_string_to_utf8(uniform), value);
 		}
 
-		void Key_MaterialInstance_SetVector3(Ref<MaterialInstance>* _this, MonoString* uniform, glm::vec3* value)
+		void Key_MaterialInstance_SetVector3(Ref<Material>* _this, MonoString* uniform, glm::vec3* value)
 		{
-			Ref<MaterialInstance>& instance = *(Ref<MaterialInstance>*)_this;
+			Ref<Material>& instance = *(Ref<Material>*)_this;
 			instance->Set(mono_string_to_utf8(uniform), *value);
 		}
 
-		void Key_MaterialInstance_SetVector4(Ref<MaterialInstance>* _this, MonoString* uniform, glm::vec4* value)
+		void Key_MaterialInstance_SetVector4(Ref<Material>* _this, MonoString* uniform, glm::vec4* value)
 		{
-			Ref<MaterialInstance>& instance = *(Ref<MaterialInstance>*)_this;
+			Ref<Material>& instance = *(Ref<Material>*)_this;
 			instance->Set(mono_string_to_utf8(uniform), *value);
 		}
 
-		void Key_MaterialInstance_SetTexture(Ref<MaterialInstance>* _this, MonoString* uniform, Ref<Texture2D>* texture)
+		void Key_MaterialInstance_SetTexture(Ref<Material>* _this, MonoString* uniform, Ref<Texture2D>* texture)
 		{
-			Ref<MaterialInstance>& instance = *(Ref<MaterialInstance>*)_this;
+			Ref<Material>& instance = *(Ref<Material>*)_this;
 			instance->Set(mono_string_to_utf8(uniform), *texture);
 		}
 

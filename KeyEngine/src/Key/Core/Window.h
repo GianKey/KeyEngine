@@ -2,6 +2,7 @@
 #include "Kpch.h"
 #include "Key/Core/Base.h"
 #include "Key/Core/Events/Event.h"
+#include "Key/Renderer/RendererContext.h"
 
 namespace Key {
 
@@ -27,14 +28,15 @@ namespace Key {
 
 		virtual ~Window() = default;
 
-		virtual void OnUpdate() = 0;
+		virtual void ProcessEvents() = 0;
+		virtual void SwapBuffers() = 0;
 
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
 		virtual std::pair<uint32_t, uint32_t> GetSize() const = 0;
-		//3D
+		
 		virtual std::pair<float, float> GetWindowPos() const = 0;
-		//
+		
 
 		virtual void Maximize() = 0;
 
@@ -47,7 +49,7 @@ namespace Key {
 		virtual void SetTitle(const std::string& title) = 0;
 
 		virtual void* GetNativeWindow() const = 0;
-
+		virtual Ref<RendererContext> GetRenderContext() = 0;
 		static Window* Create(const WindowProps& props = WindowProps());
 	};
 

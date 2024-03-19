@@ -15,11 +15,23 @@ namespace Key {
 		if (!m_IsOpen)
 			return;
 
+		bool was_open = m_IsOpen;
 		// NOTE(Peter): SetNextWindowSizeConstraints requires a max constraint that's above 0. For now we're just setting it to a large value
 		ImGui::SetNextWindowSizeConstraints(m_MinSize, m_MaxSize);
 		ImGui::Begin(m_Title, &m_IsOpen, m_Flags);
 		Render();
 		ImGui::End();
+
+
+		if (was_open && !m_IsOpen)
+			OnClose();
+	}
+
+	void AssetEditor::SetOpen(bool isOpen)
+	{
+		m_IsOpen = isOpen;
+		if (!m_IsOpen)
+			OnClose();
 	}
 
 	void AssetEditor::SetMinSize(uint32_t width, uint32_t height)
@@ -42,7 +54,12 @@ namespace Key {
 
 	void AssetEditorPanel::RegisterDefaultEditors()
 	{
-		RegisterEditor<TextureEditor>(AssetType::Texture);
+		RegisterEditor<TextureViewer>(AssetType::Texture);
+	}
+
+	void AssetEditorPanel::UnregisterAllEditors()
+	{
+		s_Editors.clear();
 	}
 
 	void AssetEditorPanel::OnImGuiRender()

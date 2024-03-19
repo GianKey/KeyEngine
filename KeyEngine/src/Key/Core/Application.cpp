@@ -8,6 +8,9 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 #include <Windows.h>
+#include "Key/Platform/Vulkan/VulkanRenderer.h"
+
+extern bool g_ApplicationRunning;
 
 #include "Key/Script/ScriptEngine.h"
 #include "Key/Asset/AssetManager.h"
@@ -40,26 +43,33 @@ namespace Key {
 		m_Window = std::unique_ptr<Window>(Window::Create(WindowProps(props.Name, props.WindowWidth, props.WindowHeight)));
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 		m_Window->Maximize();
-		m_Window->SetVSync(true);
+		m_Window->SetVSync(false);
 
-		m_ImGuiLayer = new ImGuiLayer("ImGui");
+		// Init renderer and execute command queue to compile all shaders
+		Renderer::Init();
+		Renderer::WaitAndRender();
+
+		m_ImGuiLayer = ImGuiLayer::Create();
 		PushOverlay(m_ImGuiLayer);
 
 		ScriptEngine::Init("assets/scripts/ExampleApp.dll");
 
-		Renderer::Init();
-		Renderer::WaitAndRender();
-
-		AssetTypes::Init();
 		AssetManager::Init();
 	}
 	Application::~Application() 
 	{
 		for (Layer* layer : m_LayerStack)
+		{
 			layer->OnDetach();
+			delete layer;
+		}
+
+		FramebufferPool::GetGlobal()->GetAll().clear();
 		ScriptEngine::Shutdown();
 
 		AssetManager::Shutdown();
+		Renderer::WaitAndRender();
+		Renderer::Shutdown();
 	}
 
 	/**
@@ -106,9 +116,9 @@ namespace Key {
 		}
 
 		m_Minimized = false;
-		//Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
-		//
-		Renderer::Submit([=]() { glViewport(0, 0, width, height); });
+
+		m_Window->GetRenderContext()->OnResize(width, height);
+
 		auto& fbs = FramebufferPool::GetGlobal()->GetAll();
 		for (auto& fb : fbs)
 		{
@@ -121,6 +131,7 @@ namespace Key {
 	bool Application::OnWindowClose(WindowCloseEvent& e)
 	{
 		m_Running = false;
+		g_ApplicationRunning = false; // Request close
 		return true;
 	}
 
@@ -129,7 +140,7 @@ namespace Key {
 		m_ImGuiLayer->Begin();
 
 		ImGui::Begin("Renderer");
-		auto& caps = RendererAPI::GetCapabilities();
+		auto& caps = Renderer::GetCapabilities();
 		ImGui::Text("Vendor: %s", caps.Vendor.c_str());
 		ImGui::Text("Renderer: %s", caps.Renderer.c_str());
 		ImGui::Text("Version: %s", caps.Version.c_str());
@@ -139,7 +150,6 @@ namespace Key {
 		for (Layer* layer : m_LayerStack)
 			layer->OnImGuiRender();
 
-		m_ImGuiLayer->End();
 	}
 
 	/**
@@ -245,34 +255,46 @@ namespace Key {
 		OnInit();
 		while (m_Running)
 		{
+			static uint64_t frameCounter = 0;
+			//KEY_CORE_INFO("-- BEGIN FRAME {0}", frameCounter);
+			m_Window->ProcessEvents();
+
 			if (!m_Minimized)
 			{
+				Renderer::BeginFrame();
+				//VulkanRenderer::BeginFrame();
+
 				for (Layer* layer : m_LayerStack)
 					layer->OnUpdate(m_TimeStep);
-
-				// Render ImGui on render thread
-				/*m_ImGuiLayer->Begin();
-				for (Layer* layer : m_LayerStack)
-					layer->OnImGuiRender();*/
-				/*m_ImGuiLayer->End();*/
-				///End imgui
 
 					// Render ImGui on render threads
 				Application* app = this;
 				Renderer::Submit([app]() { app->RenderImGui(); });
+				Renderer::Submit([=]() {m_ImGuiLayer->End(); });
+				Renderer::EndFrame();
 
+				// On Render thread
+				m_Window->GetRenderContext()->BeginFrame();
 				//Update render command address
 				Renderer::WaitAndRender();
+				m_Window->SwapBuffers();
 			}
 
-			m_Window->OnUpdate();
 			float time = GetTime(); //Platform GetTime()
 			m_TimeStep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
+
+
+			//KEY_CORE_INFO("-- END FRAME {0}", frameCounter);
+			frameCounter++;
 		}
 		OnShutdown();
 	}
 
+	void Application::Close()
+	{
+		m_Running = false;
+	}
 
 
 }

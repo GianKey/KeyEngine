@@ -119,17 +119,23 @@ namespace Key {
 
 	static void InitMono()
 	{
-		mono_set_assemblies_path("mono/lib");
-		// mono_jit_set_trace_options("--verbose");
-		auto domain = mono_jit_init("Key");
+		if (!s_MonoDomain)
+		{
+			mono_set_assemblies_path("mono/lib");
+			// mono_jit_set_trace_options("--verbose");
+			auto domain = mono_jit_init("Key");
 
-		char* name = (char*)"KeyRuntime";
-		s_MonoDomain = mono_domain_create_appdomain(name, nullptr);
+			char* name = (char*)"KeyRuntime";
+			s_MonoDomain = mono_domain_create_appdomain(name, nullptr);
+		}
 	}
 
 	static void ShutdownMono()
 	{
-		mono_jit_cleanup(s_MonoDomain);
+		// Apparently according to https://www.mono-project.com/docs/advanced/embedding/
+		// we can't do mono_jit_init in the same process after mono_jit_cleanup...
+		// so don't do this
+		// mono_jit_cleanup(s_MonoDomain);
 	}
 
 	static MonoAssembly* LoadAssembly(const std::string& path)
@@ -292,7 +298,7 @@ namespace Key {
 
 	void ScriptEngine::Shutdown()
 	{
-		// shutdown mono
+		ShutdownMono();
 		s_SceneContext = nullptr;
 		s_EntityInstanceMap.clear();
 	}
@@ -562,6 +568,9 @@ namespace Key {
 				MonoType* fieldType = mono_field_get_type(iter);
 				FieldType KeyFieldType = GetKeyFieldType(fieldType);
 
+				if (KeyFieldType == FieldType::ClassReference)
+					continue;
+
 				// TODO: Attributes
 				MonoCustomAttrInfo* attr = mono_custom_attrs_from_field(scriptClass.Class, iter);
 
@@ -577,11 +586,11 @@ namespace Key {
 					field.m_EntityInstance = &entityInstance;
 					field.m_MonoClassField = iter;
 
-					if (field.Type == FieldType::ClassReference)
+					/*if (field.Type == FieldType::ClassReference)
 					{
 						Ref<Asset>* asset = new Ref<Asset>();
 						field.SetStoredValueRaw(asset);
-					}
+					}*/
 					fieldMap.emplace(name, std::move(field));
 				}
 			}

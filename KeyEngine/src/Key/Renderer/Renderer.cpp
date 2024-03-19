@@ -100,7 +100,7 @@ namespace Key {
 		//Renderer::GetShaderLibrary()->Load("assets/shaders/KeyPBR_Anim.glsl");
 		//Renderer::GetShaderLibrary()->Load("assets/shaders/Outline.glsl");
 		Renderer::GetShaderLibrary()->Load("assets/shaders/Skybox.glsl");
-		Renderer::GetShaderLibrary()->Load("assets/shaders/Texture.glsl");
+		//Renderer::GetShaderLibrary()->Load("assets/shaders/Texture.glsl");
 		Renderer::GetShaderLibrary()->Load("assets/shaders/ShadowMap.glsl");
 
 		// Compile shaders
