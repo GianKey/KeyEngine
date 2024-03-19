@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Key/Core/Window.h"
+#include "Key/Renderer/RendererContext.h"
 #include <GLFW/glfw3.h>
 #include "Key/Core/input.h"
 
@@ -12,7 +13,8 @@ namespace Key {
 		WindowsWindow(const WindowProps& props);
 		virtual ~WindowsWindow();
 
-		void OnUpdate() override;
+		virtual void ProcessEvents() override;
+		virtual void SwapBuffers() override;
 
 		unsigned int GetWidth() const override { return m_Data.Width; }
 		unsigned int GetHeight() const override { return m_Data.Height; }
@@ -28,6 +30,7 @@ namespace Key {
 		virtual void SetTitle(const std::string& title) override;
 
 		inline virtual void* GetNativeWindow() const { return m_Window; }
+		virtual Ref<RendererContext> GetRenderContext() override { return m_RendererContext; }
 
 		virtual std::pair<uint32_t, uint32_t> GetSize() const override { return { m_Data.Width, m_Data.Height }; }
 		virtual std::pair<float, float> GetWindowPos() const override;
@@ -49,10 +52,11 @@ namespace Key {
 
 		WindowData m_Data;
 
-		//3D
+		
 		GLFWcursor* m_ImGuiMouseCursors[9] = { 0 };
 		float m_LastFrameTime = 0.0f;
-		//3D---end
+
+		Ref<RendererContext> m_RendererContext;
 	};
 
 }

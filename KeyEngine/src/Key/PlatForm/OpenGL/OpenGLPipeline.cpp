@@ -31,6 +31,8 @@ namespace Key {
 	OpenGLPipeline::OpenGLPipeline(const PipelineSpecification& spec)
 		: m_Specification(spec)
 	{
+		KEY_CORE_ASSERT(spec.Shader);
+		KEY_CORE_ASSERT(spec.RenderPass);
 		Invalidate();
 	}
 

@@ -2,6 +2,9 @@
 #include "Framebuffer.h"
 
 #include "Key/Platform/OpenGL/OpenGLFramebuffer.h"
+#include "Key/Platform/Vulkan/VulkanFramebuffer.h"
+
+#include "Key/Renderer/RendererAPI.h"
 
 namespace Key {
 
@@ -12,7 +15,8 @@ namespace Key {
 		switch (RendererAPI::Current())
 		{
 			case RendererAPIType::None:		return nullptr;
-			case RendererAPIType::OpenGL:    result = Ref<OpenGLFramebuffer>::Create(spec);
+			case RendererAPIType::OpenGL:    result = Ref<OpenGLFramebuffer>::Create(spec); break;
+			case RendererAPIType::Vulkan:    result = Ref<VulkanFramebuffer>::Create(spec); break;
 		}
 		FramebufferPool::GetGlobal()->Add(result);
 		return result;

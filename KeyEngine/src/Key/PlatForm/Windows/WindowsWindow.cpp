@@ -6,7 +6,7 @@
 #include "Key/Core/Events/KeyBoardEvent.h"
 #include "Key/Core/Events/MouseEvent.h"
 #include "Key/Core/Events/ApplicationEvent.h"
-
+#include "Key/Renderer/RendererAPI.h"
 #include <imgui.h>
 
 namespace Key {
@@ -47,12 +47,16 @@ namespace Key {
 			glfwSetErrorCallback(GLFWErrorCallback);
 			s_GLFWInitialized = true;
 		}
-
+		if (RendererAPI::Current() == RendererAPIType::Vulkan)
+			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-		glfwMakeContextCurrent(m_Window);
-		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-		KEY_CORE_ASSERT(status, "Failed to initialize Glad!");
+
+		// Create Renderer Context
+		m_RendererContext = RendererContext::Create(m_Window);
+		m_RendererContext->Create();
+
+		//glfwMaximizeWindow(m_Window);
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 
 		// Set GLFW callbacks
@@ -164,42 +168,44 @@ namespace Key {
 		}
 	}
 
-	//3D
 	inline std::pair<float, float> WindowsWindow::GetWindowPos() const
 	{
 		int x, y;
 		glfwGetWindowPos(m_Window, &x, &y);
 		return { x, y };
 	}
-	//3D---end
+
 
 	void WindowsWindow::Shutdown()
 	{
-		glfwDestroyWindow(m_Window);
+		glfwTerminate();
+		s_GLFWInitialized = false;
 	}
 
-	void WindowsWindow::OnUpdate()
+	void WindowsWindow::ProcessEvents()
 	{
 		glfwPollEvents();
-		//m_Context->SwapBuffers();
 
-		glfwSwapBuffers(m_Window);
+		//ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
+		//glfwSetCursor(m_Window, m_ImGuiMouseCursors[imgui_cursor] ? m_ImGuiMouseCursors[imgui_cursor] : m_ImGuiMouseCursors[ImGuiMouseCursor_Arrow]);
+		glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
 
-		ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
-		glfwSetCursor(m_Window, m_ImGuiMouseCursors[imgui_cursor] ? m_ImGuiMouseCursors[imgui_cursor] : m_ImGuiMouseCursors[ImGuiMouseCursor_Arrow]);
-
-		float time = glfwGetTime();
-		float delta = time - m_LastFrameTime;
-		m_LastFrameTime = time;
+	void WindowsWindow::SwapBuffers()
+	{
+		m_RendererContext->SwapBuffers();
 	}
 
 	void WindowsWindow::SetVSync(bool enabled)
 	{
 
-		if (enabled)
-			glfwSwapInterval(1);
-		else
-			glfwSwapInterval(0);
+		if (RendererAPI::Current() == RendererAPIType::OpenGL)
+		{
+			if (enabled)
+				glfwSwapInterval(1);
+			else
+				glfwSwapInterval(0);
+		}
 
 		m_Data.VSync = enabled;
 	}

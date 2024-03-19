@@ -9,7 +9,7 @@ namespace Key {
 
 	void InitializeCore()
 	{
-		Key::Log::Init();
+		Log::Init();
 
 		KEY_CORE_TRACE("Key Engine {}", KEY_BUILD_ID);
 		KEY_CORE_TRACE("Initializing...");
@@ -18,6 +18,8 @@ namespace Key {
 	void ShutdownCore()
 	{
 		KEY_CORE_TRACE("Shutting down...");
+
+		Log::Shutdown();
 	}
 
 }

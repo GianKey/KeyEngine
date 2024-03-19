@@ -4,13 +4,17 @@
 
 #include "Key/Renderer/VertexBuffer.h"
 #include "Key/Renderer/Shader.h"
+#include "Key/Renderer/RenderPass.h"
 
 namespace Key {
 
 	struct PipelineSpecification
 	{
-		Ref<Key::Shader> Shader;
+		Ref<Shader> Shader;
 		VertexBufferLayout Layout;
+		Ref<RenderPass> RenderPass;
+
+		std::string DebugName;
 	};
 
 	class Pipeline : public RefCounted
