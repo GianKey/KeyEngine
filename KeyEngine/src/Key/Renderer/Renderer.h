@@ -16,6 +16,12 @@ namespace Key {
 
 	class ShaderLibrary;
 
+	struct RendererConfig
+	{
+		// "Experimental" features
+		bool ComputeEnvironmentMaps = false;
+	};
+
 	class Renderer
 	{
 	public:
@@ -83,8 +89,23 @@ namespace Key {
 		static void RegisterShaderDependency(Ref<Shader> shader, Ref<Pipeline> pipeline);
 		static void RegisterShaderDependency(Ref<Shader> shader, Ref<Material> material);
 		static void OnShaderReloaded(size_t hash);
+
+		static RendererConfig& GetConfig();
 	private:
 		static RenderCommandQueue& GetRenderCommandQueue();
 	};
+
+	namespace Utils {
+
+		inline void DumpGPUInfo()
+		{
+			auto& caps = Renderer::GetCapabilities();
+			KEY_CORE_TRACE("GPU Info:");
+			KEY_CORE_TRACE("  Vendor: {0}", caps.Vendor);
+			KEY_CORE_TRACE("  Device: {0}", caps.Device);
+			KEY_CORE_TRACE("  Version: {0}", caps.Version);
+		}
+
+	}
 
 }

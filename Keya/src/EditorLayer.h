@@ -144,6 +144,8 @@ namespace Key {
 		bool m_ViewportPanelMouseOver = false;
 		bool m_ViewportPanelFocused = false;
 
+		bool m_ShowWelcomePopup = true;
+
 		enum class SceneState
 		{
 			Edit = 0, Play = 1, Pause = 2

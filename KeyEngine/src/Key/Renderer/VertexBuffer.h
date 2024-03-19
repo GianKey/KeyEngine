@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RendererTypes.h"
+#include "Key/Core/Log.h"
 
 namespace Key {
 

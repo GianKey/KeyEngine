@@ -42,10 +42,33 @@ namespace Key {
 
 	static VulkanRendererData* s_Data = nullptr;
 
+	namespace Utils {
+
+		static const char* VulkanVendorIDToString(uint32_t vendorID)
+		{
+			switch (vendorID)
+			{
+			case 0x10DE: return "NVIDIA";
+			case 0x1002: return "AMD";
+			case 0x8086: return "INTEL";
+			case 0x13B5: return "ARM";
+			}
+			return "Unknown";
+		}
+
+	}
+
 	void VulkanRenderer::Init()
 	{
 		s_Data = new VulkanRendererData();
 		
+		auto& caps = s_Data->RenderCaps;
+		auto& properties = VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->GetProperties();
+		caps.Vendor = Utils::VulkanVendorIDToString(properties.vendorID);
+		caps.Device = properties.deviceName;
+		caps.Version = std::to_string(properties.driverVersion);
+
+		Utils::DumpGPUInfo();
 		// Create fullscreen quad
 		float x = -1;
 		float y = -1;
@@ -377,6 +400,9 @@ namespace Key {
 
 	std::pair<Ref<TextureCube>, Ref<TextureCube>> VulkanRenderer::CreateEnvironmentMap(const std::string& filepath)
 	{
+		if (!Renderer::GetConfig().ComputeEnvironmentMaps)
+			return { Renderer::GetBlackCubeTexture(), Renderer::GetBlackCubeTexture() };
+
 		const uint32_t cubemapSize = 2048;
 		const uint32_t irradianceMapSize = 32;
 

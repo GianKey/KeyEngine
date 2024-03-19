@@ -952,6 +952,30 @@ namespace Key {
 		SceneRenderer::OnImGuiRender();
 
 		ImGui::End();
+
+		if (m_ShowWelcomePopup)
+		{
+			ImGui::OpenPopup("Welcome");
+			m_ShowWelcomePopup = false;
+		}
+
+		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+		ImGui::SetNextWindowSize(ImVec2{ 400,0 });
+		if (ImGui::BeginPopupModal("Welcome", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			ImGui::Text("Welcome to KeyEngine!");
+			ImGui::Separator();
+			ImGui::TextWrapped("Environment maps are currently disabled because they're a little unstable on certain GPU drivers.");
+
+			UI::BeginPropertyGrid();
+			UI::Property("Enable environment maps?", Renderer::GetConfig().ComputeEnvironmentMaps);
+			UI::EndPropertyGrid();
+
+			if (ImGui::Button("OK"))
+				ImGui::CloseCurrentPopup();
+			ImGui::EndPopup();
+		}
 	}
 
 	void EditorLayer::OnEvent(Event& e)

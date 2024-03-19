@@ -19,15 +19,6 @@ namespace Key {
 
 	static VkCommandBuffer s_ImGuiCommandBuffer;
 
-	static void check_vk_result(VkResult err)
-	{
-		if (err == 0)
-			return;
-		fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
-		if (err < 0)
-			abort();
-	}
-
 	VulkanImGuiLayer::VulkanImGuiLayer()
 	{
 	}
@@ -103,8 +94,7 @@ namespace Key {
 			pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
 			pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 			pool_info.pPoolSizes = pool_sizes;
-			auto err = vkCreateDescriptorPool(device, &pool_info, nullptr, &descriptorPool);
-			check_vk_result(err);
+			VK_CHECK_RESULT(vkCreateDescriptorPool(device, &pool_info, nullptr, &descriptorPool));
 
 			// Setup Platform/Renderer bindings
 			ImGui_ImplGlfw_InitForVulkan(window, true);
@@ -119,7 +109,7 @@ namespace Key {
 			init_info.Allocator = nullptr;
 			init_info.MinImageCount = 2;
 			init_info.ImageCount = vulkanContext->GetSwapChain().GetImageCount();
-			init_info.CheckVkResultFn = check_vk_result;
+			init_info.CheckVkResultFn = Utils::VulkanCheckResult;
 			ImGui_ImplVulkan_Init(&init_info, vulkanContext->GetSwapChain().GetRenderPass());
 
 			// Load Fonts
@@ -145,8 +135,7 @@ namespace Key {
 				ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
 				vulkanContext->GetCurrentDevice()->FlushCommandBuffer(commandBuffer);
 
-				err = vkDeviceWaitIdle(device);
-				check_vk_result(err);
+				VK_CHECK_RESULT(vkDeviceWaitIdle(device));
 				ImGui_ImplVulkan_DestroyFontUploadObjects();
 			}
 
@@ -160,8 +149,7 @@ namespace Key {
 		{
 			auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
-			auto err = vkDeviceWaitIdle(device);
-			check_vk_result(err);
+			VK_CHECK_RESULT(vkDeviceWaitIdle(device));
 			ImGui_ImplVulkan_Shutdown();
 			ImGui_ImplGlfw_Shutdown();
 			ImGui::DestroyContext();

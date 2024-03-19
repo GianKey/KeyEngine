@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Key/Core/Base.h"
+#include "Key/Core/Log.h"
 
 namespace Key {
 	struct Buffer {

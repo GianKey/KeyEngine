@@ -59,6 +59,8 @@ namespace Key {
 
 	struct RendererData
 	{
+		RendererConfig Config;
+
 		Ref<ShaderLibrary> m_ShaderLibrary;
 
 		Ref<Pipeline> m_FullscreenQuadPipeline;
@@ -100,7 +102,6 @@ namespace Key {
 		//Renderer::GetShaderLibrary()->Load("assets/shaders/KeyPBR_Anim.glsl");
 		//Renderer::GetShaderLibrary()->Load("assets/shaders/Outline.glsl");
 		Renderer::GetShaderLibrary()->Load("assets/shaders/Skybox.glsl");
-		//Renderer::GetShaderLibrary()->Load("assets/shaders/Texture.glsl");
 		Renderer::GetShaderLibrary()->Load("assets/shaders/ShadowMap.glsl");
 
 		// Compile shaders
@@ -304,6 +305,11 @@ namespace Key {
 	RenderCommandQueue& Renderer::GetRenderCommandQueue()
 	{
 		return *s_CommandQueue;
+	}
+
+	RendererConfig& Renderer::GetConfig()
+	{
+		return s_Data->Config;
 	}
 
 }

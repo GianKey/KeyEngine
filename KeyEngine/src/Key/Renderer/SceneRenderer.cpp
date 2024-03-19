@@ -12,6 +12,7 @@
 
 #include "Key/Platform/Vulkan/VulkanRenderer.h"
 #include "Key/Platform/Vulkan/VulkanFramebuffer.h"
+#include "Key/Platform/Vulkan/VulkanShader.h"
 
 #include "Key/Platform/OpenGL/OpenGLFramebuffer.h"
 #include "Key/Platform/OpenGL/OpenGLShader.h"

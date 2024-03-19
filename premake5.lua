@@ -19,28 +19,7 @@ workspace "KeyEngine"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
--- Include directories relative to root folder
-IncludeDir = {}
-IncludeDir["GLFW"] = "KeyEngine/vendor/GLFW/include"
-IncludeDir["Glad"] = "KeyEngine/vendor/Glad/include"
-IncludeDir["Imgui"] = "KeyEngine/vendor/Imgui"
-IncludeDir["glm"] = "KeyEngine/vendor/glm"
-IncludeDir["stb_image"] = "KeyEngine/vendor/stb/include"
-IncludeDir["assimp"] = "KeyEngine/vendor/assimp/include"
-IncludeDir["entt"] = "KeyEngine/vendor/entt/include"
-IncludeDir["FastNoise"] = "KeyEngine/vendor/FastNoise"
-IncludeDir["mono"] = "KeyEngine/vendor/mono/include"
-IncludeDir["Box2D"] = "KeyEngine/vendor/Box2D/include"
-IncludeDir["shaderc"] = "KeyEngine/vendor/VulkanSDK/1.3.261.1/include/shaderc"
-IncludeDir["SPIRV_Cross"] = "KeyEngine/vendor/VulkanSDK/1.3.261.1/Include/spirv_cross"
-IncludeDir["VulkanSDK"] = "KeyEngine/vendor/VulkanSDK/1.3.261.1/Include/vulkan"
-IncludeDir["Vulkan"] = "KeyEngine/vendor/VulkanSDK/1.3.261.1/Include"
-
-LibraryDir = {}
-LibraryDir["mono"] = "vendor/mono/lib/Debug/mono-2.0-sgen.lib"
-LibraryDir["VulkanSDK"] = "vendor/VulkanSDK/1.3.261.1/Lib"
-LibraryDir["Vulkan"] = "vendor/VulkanSDK/1.3.261.1/Lib/vulkan-1.lib"
-
+include "Dependencies.lua"
 
 group "Dependencies"
 include "KeyEngine/vendor/GLFW"
@@ -81,6 +60,9 @@ project "KeyEngine"
 	{
 		"%{prj.name}/src",
 		"%{prj.name}/vendor",
+		"%{IncludeDir.assimp}",
+        "%{IncludeDir.stb}",
+        "%{IncludeDir.yaml_cpp}",
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.Glad}",
 		"%{IncludeDir.glm}",
@@ -88,11 +70,9 @@ project "KeyEngine"
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.mono}",
 		"%{IncludeDir.FastNoise}",
-		"%{IncludeDir.Vulkan}",
 		"%{IncludeDir.VulkanSDK}",
-		"%{prj.name}/vendor/assimp/include",
 		"%{IncludeDir.stb_image}",	
-		"%{prj.name}/vendor/yaml-cpp/include",
+		"%{IncludeDir.yaml_cpp}",
 		"%{IncludeDir.Box2D}",
 	}
 
@@ -102,12 +82,9 @@ project "KeyEngine"
 		"Imgui",
 		"Box2D",
 		"opengl32.lib",
-		"%{LibraryDir.Vulkan}",
+		"%{Library.Vulkan}",
 
-        "%{LibraryDir.VulkanSDK}/shaderc_sharedd.lib",
-        "%{LibraryDir.VulkanSDK}/spirv-cross-cored.lib",
-        "%{LibraryDir.VulkanSDK}/spirv-cross-glsld.lib",
-		"%{LibraryDir.mono}"
+		"%{Library.mono}"
 	}
 
 	filter "files:KeyEngine/vendor/FastNoise/**.cpp or files:KeyEngine/vendor/yaml-cpp/src/**.cpp"
@@ -128,10 +105,27 @@ project "KeyEngine"
 		runtime "Debug"
 		symbols "on"
 
+		links
+        {
+            "%{Library.ShaderC_Debug}",
+            "%{Library.SPIRV_Cross_Debug}",
+            "%{Library.SPIRV_Cross_GLSL_Debug}",
+			"%{Library.SPIRV_Tools_Debug}",
+        }
+
+
 	filter "configurations:Release"
 		defines "KEY_RELEASE"
 		runtime "Release"
 		optimize "on"
+
+		links
+        {
+            "%{Library.ShaderC_Release}",
+            "%{Library.SPIRV_Cross_Release}",
+            "%{Library.SPIRV_Cross_GLSL_Release}",
+        }
+
 
 	filter "configurations:Dist"
 		defines "KEY_DIST"

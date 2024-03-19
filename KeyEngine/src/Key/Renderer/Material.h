@@ -6,9 +6,6 @@
 #include "Key/Renderer/Texture.h"
 
 #include <unordered_set>
-#include "vulkan/vulkan_core.h"
-
-#include "Key/Platform/Vulkan/VulkanShader.h"
 
 namespace Key {
 

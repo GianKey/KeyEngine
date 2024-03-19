@@ -9,7 +9,6 @@
 
 namespace Key {
 
-
 	class AssetManager
 	{
 	public:

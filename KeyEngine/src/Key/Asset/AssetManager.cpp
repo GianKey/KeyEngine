@@ -9,6 +9,7 @@
 
 namespace Key {
 
+
 	void AssetManager::Init()
 	{
 		AssetImporter::Init();

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
-
+#include "Key/Renderer/Renderer.h"
 namespace Key::Utils {
 
 	inline const char* VKResultToString(VkResult result)
@@ -53,16 +53,23 @@ namespace Key::Utils {
 
 	void RetrieveDiagnosticCheckpoints();
 
+	inline void VulkanCheckResult(VkResult result)
+	{
+		if (result != VK_SUCCESS)
+		{
+			KEY_CORE_ERROR("VkResult is '{0}' in {1}:{2}", ::Key::Utils::VKResultToString(result), __FILE__, __LINE__);
+			if (result == VK_ERROR_DEVICE_LOST)
+			{
+				::Key::Utils::RetrieveDiagnosticCheckpoints();
+				::Key::Utils::DumpGPUInfo();
+			}
+			KEY_CORE_ASSERT(result == VK_SUCCESS);
+		}
+	}
 }
 
-#define VK_CHECK_RESULT(f)											             \
-{																	             \
-	VkResult res = (f);												             \
-	if (res != VK_SUCCESS)											             \
-	{																             \
-		KEY_CORE_ERROR("VkResult is '{0}' in {1}:{2}", ::Key::Utils::VKResultToString(res), __FILE__ , __LINE__); \
-		if (res == VK_ERROR_DEVICE_LOST)                                         \
-			::Key::Utils::RetrieveDiagnosticCheckpoints();                     \
-		KEY_CORE_ASSERT(res == VK_SUCCESS);										 \
-	}																			 \
+#define VK_CHECK_RESULT(f)\
+{\
+    VkResult res = (f);\
+    ::Key::Utils::VulkanCheckResult(res);\
 }

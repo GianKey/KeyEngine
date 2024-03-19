@@ -18,7 +18,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Key/ImGui/ImGui.h"
-
+#include "Key/Renderer/Renderer.h"
 // TODO:
 // - Eventually change imgui node IDs to be entity/asset GUID
 
