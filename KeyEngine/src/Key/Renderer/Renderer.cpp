@@ -4,6 +4,7 @@
 #include "Shader.h"
 
 #include <glad/glad.h>
+#include <map>
 
 #include "RendererAPI.h"
 #include "SceneRenderer.h"
@@ -67,6 +68,7 @@ namespace Key {
 		Ref<Texture2D> WhiteTexture;
 		Ref<TextureCube> BlackCubeTexture;
 		Ref<Environment> EmptyEnvironment;
+		std::map<uint32_t, std::map<uint32_t, Ref<UniformBuffer>>> UniformBuffers;
 	};
 
 	static RendererData* s_Data = nullptr;
@@ -99,7 +101,7 @@ namespace Key {
 
 		Renderer::GetShaderLibrary()->Load("assets/shaders/Grid.glsl");
 		Renderer::GetShaderLibrary()->Load("assets/shaders/SceneComposite.glsl");
-		Renderer::GetShaderLibrary()->Load("assets/shaders/KeyPBR_Static.glsl");
+		Renderer::GetShaderLibrary()->Load("assets/shaders/KeyPBR_Static.glsl", true);
 		//Renderer::GetShaderLibrary()->Load("assets/shaders/KeyPBR_Anim.glsl");
 		//Renderer::GetShaderLibrary()->Load("assets/shaders/Outline.glsl");
 		Renderer::GetShaderLibrary()->Load("assets/shaders/Skybox.glsl");
@@ -187,9 +189,9 @@ namespace Key {
 		s_RendererAPI->RenderMesh(pipeline, mesh, transform);
 	}
 		
-	void Renderer::RenderMeshWithoutMaterial(Ref<Pipeline> pipeline, Ref<Mesh> mesh, const glm::mat4& transform)
+	void Renderer::RenderMeshWithMaterial(Ref<Pipeline> pipeline, Ref<Mesh> mesh, Ref<Material> material, const glm::mat4& transform, Buffer additionalUniforms)
 	{
-		s_RendererAPI->RenderMeshWithoutMaterial(pipeline, mesh, transform);
+		s_RendererAPI->RenderMeshWithMaterial(pipeline, mesh, material, transform, additionalUniforms);
 	}
 
 	void Renderer::RenderQuad(Ref<Pipeline> pipeline, Ref<Material> material, const glm::mat4& transform)
@@ -307,6 +309,18 @@ namespace Key {
 		return s_Data->EmptyEnvironment;
 	}
 
+	void Renderer::SetUniformBuffer(Ref<UniformBuffer> uniformBuffer, uint32_t set)
+	{
+		s_Data->UniformBuffers[set][uniformBuffer->GetBinding()] = uniformBuffer;
+	}
+
+	Ref<UniformBuffer> Renderer::GetUniformBuffer(uint32_t binding, uint32_t set)
+	{
+		KEY_CORE_ASSERT(s_Data->UniformBuffers.find(set) != s_Data->UniformBuffers.end());
+		KEY_CORE_ASSERT(s_Data->UniformBuffers.at(set).find(binding) != s_Data->UniformBuffers.at(set).end());
+
+		return s_Data->UniformBuffers.at(set).at(binding);
+	}
 
 	RenderCommandQueue& Renderer::GetRenderCommandQueue()
 	{

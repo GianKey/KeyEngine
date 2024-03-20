@@ -192,6 +192,19 @@ namespace Key {
 					Renderer2D::EndScene();
 					Renderer::EndRenderPass();
 				}
+
+				if (selection.Entity.HasComponent<CircleCollider2DComponent>() && false)
+				{
+					const auto& size = selection.Entity.GetComponent<CircleCollider2DComponent>().Radius;
+					const TransformComponent& transform = selection.Entity.GetComponent<TransformComponent>();
+
+					Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
+					auto viewProj = m_EditorCamera.GetViewProjection();
+					Renderer2D::BeginScene(viewProj, false);
+					Renderer2D::DrawCircle({ transform.Translation.x, transform.Translation.y }, size, { 0.0f, 1.0f, 1.0f, 1.0f });
+					Renderer2D::EndScene();
+					Renderer::EndRenderPass();
+				}
 			}
 
 			break;

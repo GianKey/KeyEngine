@@ -197,6 +197,7 @@
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLRenderer.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLShader.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLTexture.h" />
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLUniformBuffer.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLVertexBuffer.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\Debug\NsightAftermathGpuCrashTracker.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\Debug\NsightAftermathHelpers.h" />
@@ -218,6 +219,7 @@
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanShader.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanSwapChain.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanTexture.h" />
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanUniformBuffer.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanVertexBuffer.h" />
     <ClInclude Include="src\Key\PlatForm\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Key\Renderer\Camera.h" />
@@ -243,6 +245,7 @@
     <ClInclude Include="src\Key\Renderer\Shader.h" />
     <ClInclude Include="src\Key\Renderer\ShaderUniform.h" />
     <ClInclude Include="src\Key\Renderer\Texture.h" />
+    <ClInclude Include="src\Key\Renderer\UniformBuffer.h" />
     <ClInclude Include="src\Key\Renderer\VertexBuffer.h" />
     <ClInclude Include="src\Key\Scene\Components.h" />
     <ClInclude Include="src\Key\Scene\Entity.h" />
@@ -342,7 +345,7 @@
     <ClCompile Include="src\Key\ImGui\VulkanImGui.cpp" />
     <ClCompile Include="src\Key\Math\Math.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLContext.cpp" />
-    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLFrameBbuffer.cpp" />
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLFramebuffer.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLImGuiLayer.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLImage.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLIndexBuffer.cpp" />
@@ -352,6 +355,7 @@
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLRenderer.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLShader.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLTexture.cpp" />
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLUniformBuffer.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLVertexBuffer.cpp" />
     <ClCompile Include="src\Key\PlatForm\Vulkan\Debug\NsightAftermathGpuCrashTracker.cpp" />
     <ClCompile Include="src\Key\PlatForm\Vulkan\Debug\NsightAftermathShaderDatabase.cpp" />
@@ -372,6 +376,7 @@
     <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanShader.cpp" />
     <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanSwapChain.cpp" />
     <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanTexture.cpp" />
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanUniformBuffer.cpp" />
     <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanVertexBuffer.cpp" />
     <ClCompile Include="src\Key\PlatForm\Windows\WindowsFileSystem.cpp" />
     <ClCompile Include="src\Key\PlatForm\Windows\WindowsInput.cpp" />
@@ -395,6 +400,7 @@
     <ClCompile Include="src\Key\Renderer\SceneRenderer.cpp" />
     <ClCompile Include="src\Key\Renderer\Shader.cpp" />
     <ClCompile Include="src\Key\Renderer\Texture.cpp" />
+    <ClCompile Include="src\Key\Renderer\UniformBuffer.cpp" />
     <ClCompile Include="src\Key\Renderer\VertexBuffer.cpp" />
     <ClCompile Include="src\Key\Scene\Entity.cpp" />
     <ClCompile Include="src\Key\Scene\Scene.cpp" />

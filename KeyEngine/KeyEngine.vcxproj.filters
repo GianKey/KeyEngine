@@ -240,6 +240,9 @@
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLTexture.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLUniformBuffer.h">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLVertexBuffer.h">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClInclude>
@@ -301,6 +304,9 @@
       <Filter>src\Key\PlatForm\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanTexture.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanUniformBuffer.h">
       <Filter>src\Key\PlatForm\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanVertexBuffer.h">
@@ -376,6 +382,9 @@
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\Texture.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Renderer\UniformBuffer.h">
       <Filter>src\Key\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Key\Renderer\VertexBuffer.h">
@@ -671,7 +680,7 @@
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLContext.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLFrameBbuffer.cpp">
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLFramebuffer.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLImGuiLayer.cpp">
@@ -699,6 +708,9 @@
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLTexture.cpp">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLUniformBuffer.cpp">
       <Filter>src\Key\PlatForm\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLVertexBuffer.cpp">
@@ -759,6 +771,9 @@
       <Filter>src\Key\PlatForm\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanTexture.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanUniformBuffer.cpp">
       <Filter>src\Key\PlatForm\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanVertexBuffer.cpp">
@@ -828,6 +843,9 @@
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\Texture.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Renderer\UniformBuffer.cpp">
       <Filter>src\Key\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Key\Renderer\VertexBuffer.cpp">

@@ -9,7 +9,7 @@ namespace Key {
 #ifdef KEY_DEBUG
 	static bool s_Validation = true;
 #else
-	static bool s_Validation = false;
+	static bool s_Validation = false; 
 #endif
 
 	static VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugReportCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object, size_t location, int32_t messageCode, const char* pLayerPrefix, const char* pMessage, void* pUserData)
@@ -129,7 +129,7 @@ namespace Key {
 		m_SwapChain.InitSurface(m_WindowHandle);
 
 		uint32_t width = 1280, height = 720;
-		m_SwapChain.Create(&width, &height);
+		m_SwapChain.Create(&width, &height, true);
 
 		// Pipeline Cache
 		VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};

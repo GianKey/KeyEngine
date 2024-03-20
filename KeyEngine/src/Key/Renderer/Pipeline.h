@@ -5,6 +5,7 @@
 #include "Key/Renderer/VertexBuffer.h"
 #include "Key/Renderer/Shader.h"
 #include "Key/Renderer/RenderPass.h"
+#include "Key/Renderer/UniformBuffer.h"
 
 namespace Key {
 
@@ -26,6 +27,7 @@ namespace Key {
 		virtual const PipelineSpecification& GetSpecification() const = 0;
 
 		virtual void Invalidate() = 0;
+		virtual void SetUniformBuffer(Ref<UniformBuffer> uniformBuffer, uint32_t binding, uint32_t set = 0) = 0;
 
 		// TEMP: remove this when render command buffers are a thing
 		virtual void Bind() = 0;

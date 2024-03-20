@@ -3,7 +3,7 @@ import subprocess
 import CheckPython
 
 # Make sure everything we need is installed
-CheckPython.ValidatePackages()
+#CheckPython.ValidatePackage()
 
 import Vulkan
 
