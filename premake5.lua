@@ -53,7 +53,9 @@ project "KeyEngine"
 
 		"%{prj.name}/vendor/yaml-cpp/src/**.cpp",
 		"%{prj.name}/vendor/yaml-cpp/src/**.h",
-		"%{prj.name}/vendor/yaml-cpp/include/**.h"
+		"%{prj.name}/vendor/yaml-cpp/include/**.h",
+		"%{prj.name}/vendor/VulkanMemoryAllocator/**.h",
+        "%{prj.name}/vendor/VulkanMemoryAllocator/**.cpp"
 	}
 	
 	includedirs
@@ -74,6 +76,7 @@ project "KeyEngine"
 		"%{IncludeDir.stb_image}",	
 		"%{IncludeDir.yaml_cpp}",
 		"%{IncludeDir.Box2D}",
+		"%{IncludeDir.NvidiaAftermath}",
 	}
 
 	links{
@@ -84,7 +87,8 @@ project "KeyEngine"
 		"opengl32.lib",
 		"%{Library.Vulkan}",
 
-		"%{Library.mono}"
+		"%{Library.mono}",
+		"%{Library.NvidiaAftermath}",
 	}
 
 	filter "files:KeyEngine/vendor/FastNoise/**.cpp or files:KeyEngine/vendor/yaml-cpp/src/**.cpp"
@@ -185,7 +189,7 @@ project "Keya"
 
 		postbuildcommands 
 		{
-			'{COPY} "../Keya/assets" "%{cfg.targetdir}/assets"'
+			'{COPY} "../KeyEngine/vendor/NvidiaAftermath/lib/x64/GFSDK_Aftermath_Lib.x64.dll" "%{cfg.targetdir}"'
 		}
 	
 		filter "system:windows"
@@ -209,7 +213,8 @@ project "Keya"
 			postbuildcommands 
 			{
 				'{COPY} "../KeyEngine/vendor/assimp/win64/assimp-vc143-mtd.dll" "%{cfg.targetdir}"',
-				'{COPY} "../KeyEngine/vendor/mono/bin/Debug/mono-2.0-sgen.dll" "%{cfg.targetdir}"'
+				'{COPY} "../KeyEngine/vendor/mono/bin/Debug/mono-2.0-sgen.dll" "%{cfg.targetdir}"',
+				'{COPY} "%{VULKAN_SDK}/Bin/shaderc_sharedd.dll" "%{cfg.targetdir}"'
 			}
 	
 		filter "configurations:Release"

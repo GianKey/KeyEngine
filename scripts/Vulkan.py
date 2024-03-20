@@ -1,9 +1,8 @@
 import os
-import urllib.request
-import requests
+import sys
 import subprocess
 from pathlib import Path
-
+import Utils
 from io import BytesIO
 from urllib.request import urlopen
 from zipfile import ZipFile
@@ -14,20 +13,10 @@ KEY_VULKAN_VERSION = '1.3.261.1'
 VULKAN_SDK_EXE_PATH = 'KeyEngine/vendor/VulkanSDK/VulkanSDK.exe'
 
 
-def YesOrNo():
-    while True:
-        reply = str(input('[Y/N]: ')).lower().strip()
-        if reply[:1] == 'y':
-            return True
-        if reply[:1] == 'n':
-            return False
-
 
 def InstallVulkanSDK():
-    print("Downloading", VULKAN_SDK_INSTALLER_URL)
-    r = requests.get(VULKAN_SDK_INSTALLER_URL)
-    with open(VULKAN_SDK_EXE_PATH, 'wb') as outfile:
-        outfile.write(r.content)
+    print('Downloading {} to {}'.format(VULKAN_SDK_INSTALLER_URL, VULKAN_SDK_EXE_PATH))
+    Utils.DownloadFile(VULKAN_SDK_INSTALLER_URL, VULKAN_SDK_EXE_PATH)
     print("Done!")
     print("Running Vulkan SDK installer...")
     os.startfile(os.path.abspath(VULKAN_SDK_EXE_PATH))
@@ -36,9 +25,10 @@ def InstallVulkanSDK():
 
 def InstallVulkanPrompt():
     print("Would you like to install the Vulkan SDK?")
-    install = YesOrNo()
+    install = Utils.YesOrNo()
     if (install):
         InstallVulkanSDK()
+        quit()
 
 
 def CheckVulkanSDK():

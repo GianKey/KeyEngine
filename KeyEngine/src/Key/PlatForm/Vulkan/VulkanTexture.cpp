@@ -42,6 +42,27 @@ namespace Key {
 				0, nullptr,
 				1, &imageMemoryBarrier);
 		}
+		static VkSamplerAddressMode VulkanSamplerWrap(TextureWrap wrap)
+		{
+			switch (wrap)
+			{
+			case TextureWrap::Clamp:   return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+			case TextureWrap::Repeat:  return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+			}
+			KEY_CORE_ASSERT(false, "Unknown wrap mode");
+			return (VkSamplerAddressMode)0;
+		}
+
+		static VkFilter VulkanSamplerFilter(TextureFilter filter)
+		{
+			switch (filter)
+			{
+			case TextureFilter::Linear:   return VK_FILTER_LINEAR;
+			case TextureFilter::Nearest:  return VK_FILTER_NEAREST;
+			}
+			KEY_CORE_ASSERT(false, "Unknown filter");
+			return (VkFilter)0;
+		}
 
 	}
 
@@ -49,8 +70,8 @@ namespace Key {
 	// Texture2D
 	//////////////////////////////////////////////////////////////////////////////////
 
-	VulkanTexture2D::VulkanTexture2D(const std::string& path, bool srgb)
-		: m_Path(path)
+	VulkanTexture2D::VulkanTexture2D(const std::string& path, TextureProperties properties)
+		: m_Path(path), m_Properties(properties)
 	{
 		int width, height, channels;
 		if (stbi_is_hdr(path.c_str()))
@@ -80,8 +101,8 @@ namespace Key {
 		});
 	}
 
-	VulkanTexture2D::VulkanTexture2D(ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureWrap wrap)
-		: m_Format(format)
+	VulkanTexture2D::VulkanTexture2D(ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties)
+		: m_Format(format), m_Properties(properties)
 	{
 		m_Width = width;
 		m_Height = height;
@@ -131,25 +152,18 @@ namespace Key {
 		VulkanAllocator allocator("Texture2D");
 
 		// Create staging buffer
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingMemory;
 		VkBufferCreateInfo bufferCreateInfo{};
 		bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		bufferCreateInfo.size = size;
 		bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 		bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		VK_CHECK_RESULT(vkCreateBuffer(vulkanDevice, &bufferCreateInfo, nullptr, &stagingBuffer));
-		
-		VkMemoryRequirements memoryRequirements = {};
-		vkGetBufferMemoryRequirements(vulkanDevice, stagingBuffer, &memoryRequirements);
-		allocator.Allocate(memoryRequirements, &stagingMemory, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-		VK_CHECK_RESULT(vkBindBufferMemory(vulkanDevice, stagingBuffer, stagingMemory, 0));
+		VkBuffer stagingBuffer;
+		VmaAllocation stagingBufferAllocation = allocator.AllocateBuffer(bufferCreateInfo, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer);
 
 		// Copy data to staging buffer
-		uint8_t* destData;
-		VK_CHECK_RESULT(vkMapMemory(vulkanDevice, stagingMemory, 0, memoryRequirements.size, 0, (void**)&destData));
+		uint8_t* destData = allocator.MapMemory<uint8_t>(stagingBufferAllocation);
 		memcpy(destData, m_ImageData.Data, size);
-		vkUnmapMemory(vulkanDevice, stagingMemory);
+		allocator.UnmapMemory(stagingBufferAllocation);
 
 		VkImageCreateInfo imageCreateInfo{};
 		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -163,11 +177,7 @@ namespace Key {
 		imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		imageCreateInfo.extent = { m_Width, m_Height, 1 };
 		imageCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-		VK_CHECK_RESULT(vkCreateImage(vulkanDevice, &imageCreateInfo, nullptr, &info.Image));
-
-		vkGetImageMemoryRequirements(vulkanDevice, info.Image, &memoryRequirements);
-		allocator.Allocate(memoryRequirements, &info.Memory, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-		VK_CHECK_RESULT(vkBindImageMemory(vulkanDevice, info.Image, info.Memory, 0));
+		info.MemoryAlloc = allocator.AllocateImage(imageCreateInfo, VMA_MEMORY_USAGE_GPU_ONLY, info.Image);
 
 		VkCommandBuffer copyCmd = device->GetCommandBuffer(true);
 
@@ -255,8 +265,7 @@ namespace Key {
 		device->FlushCommandBuffer(copyCmd);
 
 		// Clean up staging resources
-		vkFreeMemory(vulkanDevice, stagingMemory, nullptr);
-		vkDestroyBuffer(vulkanDevice, stagingBuffer, nullptr);
+		allocator.DestroyBuffer(stagingBuffer, stagingBufferAllocation);
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// CREATE TEXTURE SAMPLER
@@ -265,12 +274,12 @@ namespace Key {
 		VkSamplerCreateInfo sampler{};
 		sampler.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 		sampler.maxAnisotropy = 1.0f;
-		sampler.magFilter = VK_FILTER_LINEAR;
-		sampler.minFilter = VK_FILTER_LINEAR;
+		sampler.magFilter = Utils::VulkanSamplerFilter(m_Properties.SamplerFilter);
+		sampler.minFilter = Utils::VulkanSamplerFilter(m_Properties.SamplerFilter);
 		sampler.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-		sampler.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		sampler.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		sampler.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		sampler.addressModeU = Utils::VulkanSamplerWrap(m_Properties.SamplerWrap);
+		sampler.addressModeV = Utils::VulkanSamplerWrap(m_Properties.SamplerWrap);
+		sampler.addressModeW = Utils::VulkanSamplerWrap(m_Properties.SamplerWrap);
 		sampler.mipLodBias = 0.0f;
 		sampler.compareOp = VK_COMPARE_OP_NEVER;
 		sampler.minLod = 0.0f;
@@ -527,8 +536,8 @@ namespace Key {
 	// TextureCube
 	//////////////////////////////////////////////////////////////////////////////////
 
-	VulkanTextureCube::VulkanTextureCube(ImageFormat format, uint32_t width, uint32_t height, const void* data)
-		: m_Format(format), m_Width(width), m_Height(height)
+	VulkanTextureCube::VulkanTextureCube(ImageFormat format, uint32_t width, uint32_t height, const void* data, TextureProperties properties)
+		: m_Format(format), m_Width(width), m_Height(height), m_Properties(properties)
 	{
 		if (data)
 		{
@@ -543,20 +552,28 @@ namespace Key {
 		});
 }
 
-	VulkanTextureCube::VulkanTextureCube(const std::string& path)
+	VulkanTextureCube::VulkanTextureCube(const std::string& path, TextureProperties properties)
+		: m_Properties(properties)
 	{
+		KEY_CORE_ASSERT(false, "Not implemented");
 	}
 
 	VulkanTextureCube::~VulkanTextureCube()
 	{
-		//Renderer::Submit([]()
-		//{
-			auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-			vkDestroyImageView(vulkanDevice, m_DescriptorImageInfo.imageView, nullptr);
-			vkDestroyImage(vulkanDevice, m_Image, nullptr);
-			vkDestroySampler(vulkanDevice, m_DescriptorImageInfo.sampler, nullptr);
-			vkFreeMemory(vulkanDevice, m_DeviceMemory, nullptr);
-		//});
+		VkImageView imageView = m_DescriptorImageInfo.imageView;
+		VkSampler sampler = m_DescriptorImageInfo.sampler;
+		VkImage image = m_Image;
+		VmaAllocation allocation = m_MemoryAlloc;
+		Renderer::Submit([imageView, sampler, image, allocation]()
+			{
+				KEY_CORE_TRACE("Destroying VulkanTextureCube");
+				auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+				vkDestroyImageView(vulkanDevice, imageView, nullptr);
+				vkDestroySampler(vulkanDevice, sampler, nullptr);
+
+				VulkanAllocator allocator("TextureCube");
+				allocator.DestroyImage(image, allocation);
+			});
 	}
 
 	static void SetImageLayout(
@@ -727,12 +744,7 @@ namespace Key {
 		imageCreateInfo.extent = { m_Width, m_Height, 1 };
 		imageCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
 		imageCreateInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-		VK_CHECK_RESULT(vkCreateImage(vulkanDevice, &imageCreateInfo, nullptr, &m_Image));
-
-		VkMemoryRequirements memoryRequirements = {};
-		vkGetImageMemoryRequirements(vulkanDevice, m_Image, &memoryRequirements);
-		allocator.Allocate(memoryRequirements, &m_DeviceMemory, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-		VK_CHECK_RESULT(vkBindImageMemory(vulkanDevice, m_Image, m_DeviceMemory, 0));
+		m_MemoryAlloc = allocator.AllocateImage(imageCreateInfo, VMA_MEMORY_USAGE_GPU_ONLY, m_Image);
 
 		m_DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
@@ -740,25 +752,18 @@ namespace Key {
 		if (m_LocalStorage)
 		{
 			// Create staging buffer
-			VkBuffer stagingBuffer;
-			VkDeviceMemory stagingMemory;
 			VkBufferCreateInfo bufferCreateInfo{};
 			bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 			bufferCreateInfo.size = m_LocalStorage.Size;
 			bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 			bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-			VK_CHECK_RESULT(vkCreateBuffer(vulkanDevice, &bufferCreateInfo, nullptr, &stagingBuffer));
-
-			VkMemoryRequirements memoryRequirements = {};
-			vkGetBufferMemoryRequirements(vulkanDevice, stagingBuffer, &memoryRequirements);
-			allocator.Allocate(memoryRequirements, &stagingMemory, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-			VK_CHECK_RESULT(vkBindBufferMemory(vulkanDevice, stagingBuffer, stagingMemory, 0));
+			VkBuffer stagingBuffer;
+			VmaAllocation stagingBufferAllocation = allocator.AllocateBuffer(bufferCreateInfo, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer);
 
 			// Copy data to staging buffer
-			uint8_t* destData;
-			VK_CHECK_RESULT(vkMapMemory(vulkanDevice, stagingMemory, 0, memoryRequirements.size, 0, (void**)&destData));
+			uint8_t* destData = allocator.MapMemory<uint8_t>(stagingBufferAllocation);
 			memcpy(destData, m_LocalStorage.Data, m_LocalStorage.Size);
-			vkUnmapMemory(vulkanDevice, stagingMemory);
+			allocator.UnmapMemory(stagingBufferAllocation);
 
 			VkCommandBuffer copyCmd = device->GetCommandBuffer(true);
 
@@ -824,9 +829,7 @@ namespace Key {
 
 			device->FlushCommandBuffer(copyCmd);
 
-			// Clean up staging resources
-			vkFreeMemory(vulkanDevice, stagingMemory, nullptr);
-			vkDestroyBuffer(vulkanDevice, stagingBuffer, nullptr);
+			allocator.DestroyBuffer(stagingBuffer, stagingBufferAllocation);
 		}
 
 		VkCommandBuffer layoutCmd = device->GetCommandBuffer(true);
@@ -852,12 +855,12 @@ namespace Key {
 		VkSamplerCreateInfo sampler{};
 		sampler.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 		sampler.maxAnisotropy = 1.0f;
-		sampler.magFilter = VK_FILTER_LINEAR;
-		sampler.minFilter = VK_FILTER_LINEAR;
+		sampler.magFilter = Utils::VulkanSamplerFilter(m_Properties.SamplerFilter);
+		sampler.minFilter = Utils::VulkanSamplerFilter(m_Properties.SamplerFilter);
 		sampler.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-		sampler.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		sampler.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		sampler.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		sampler.addressModeU = Utils::VulkanSamplerWrap(m_Properties.SamplerWrap);
+		sampler.addressModeV = Utils::VulkanSamplerWrap(m_Properties.SamplerWrap);
+		sampler.addressModeW = Utils::VulkanSamplerWrap(m_Properties.SamplerWrap);
 		sampler.mipLodBias = 0.0f;
 		sampler.compareOp = VK_COMPARE_OP_NEVER;
 		sampler.minLod = 0.0f;

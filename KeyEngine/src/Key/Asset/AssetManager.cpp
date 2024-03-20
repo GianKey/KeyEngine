@@ -242,10 +242,10 @@ namespace Key {
 
 	 void AssetManager::LoadAssetRegistry()
 	 {
-		if (!FileSystem::Exists("DataCache/AssetRegistryCache.KEYr"))
+		 if (!FileSystem::Exists("assets/cache/AssetRegistryCache.hzr"))
 			return;
 
-		std::ifstream stream("DataCache/AssetRegistryCache.KEYr");
+		 std::ifstream stream("assets/cache/AssetRegistryCache.hzr");
 		KEY_CORE_ASSERT(stream);
 		std::stringstream strStream;
 		strStream << stream.rdbuf();
@@ -421,7 +421,7 @@ namespace Key {
 		out << YAML::EndSeq;
 		out << YAML::EndMap;
 
-		std::ofstream fout("DataCache/AssetRegistryCache.KEYr");
+		std::ofstream fout("assets/cache/AssetRegistryCache.hzr");
 		fout << out.c_str();
 	}
 

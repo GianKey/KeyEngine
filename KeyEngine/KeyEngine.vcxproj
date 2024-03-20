@@ -77,7 +77,7 @@
       <PrecompiledHeaderFile>Kpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>KEY_PLATFORM_WINDOWS;KEY_BUILD_DLL;KEY_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor;vendor\assimp\include;..;vendor\GLFW\include;vendor\Glad\include;vendor\glm;vendor\Imgui;vendor\entt\include;vendor\mono\include;vendor\FastNoise;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Include;vendor\stb\include;vendor\yaml-cpp\include;vendor\Box2D\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;vendor;vendor\assimp\include;..;vendor\GLFW\include;vendor\Glad\include;vendor\glm;vendor\Imgui;vendor\entt\include;vendor\mono\include;vendor\FastNoise;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Include;vendor\stb\include;vendor\yaml-cpp\include;vendor\Box2D\include;vendor\NvidiaAftermath\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -91,7 +91,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Lib\vulkan-1.lib;vendor\mono\lib\Debug\mono-2.0-sgen.lib;vendor\VulkanSDK\1.3.261.1\Lib\shaderc_sharedd.lib;vendor\VulkanSDK\1.3.261.1\Lib\spirv-cross-cored.lib;vendor\VulkanSDK\1.3.261.1\Lib\spirv-cross-glsld.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Lib\vulkan-1.lib;vendor\mono\lib\Debug\mono-2.0-sgen.lib;vendor\NvidiaAftermath\lib\x64\GFSDK_Aftermath_Lib.x64.lib;vendor\VulkanSDK\1.3.261.1\Lib\shaderc_sharedd.lib;vendor\VulkanSDK\1.3.261.1\Lib\spirv-cross-cored.lib;vendor\VulkanSDK\1.3.261.1\Lib\spirv-cross-glsld.lib;vendor\VulkanSDK\1.3.261.1\Lib\SPIRV-Toolsd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -100,7 +100,7 @@
       <PrecompiledHeaderFile>Kpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>KEY_PLATFORM_WINDOWS;KEY_BUILD_DLL;KEY_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor;vendor\assimp\include;..;vendor\GLFW\include;vendor\Glad\include;vendor\glm;vendor\Imgui;vendor\entt\include;vendor\mono\include;vendor\FastNoise;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Include;vendor\stb\include;vendor\yaml-cpp\include;vendor\Box2D\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;vendor;vendor\assimp\include;..;vendor\GLFW\include;vendor\Glad\include;vendor\glm;vendor\Imgui;vendor\entt\include;vendor\mono\include;vendor\FastNoise;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Include;vendor\stb\include;vendor\yaml-cpp\include;vendor\Box2D\include;vendor\NvidiaAftermath\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -117,7 +117,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Lib\vulkan-1.lib;vendor\mono\lib\Debug\mono-2.0-sgen.lib;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Lib\shaderc_shared.lib;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Lib\spirv-cross-core.lib;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Lib\spirv-cross-glsl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Lib\vulkan-1.lib;vendor\mono\lib\Debug\mono-2.0-sgen.lib;vendor\NvidiaAftermath\lib\x64\GFSDK_Aftermath_Lib.x64.lib;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Lib\shaderc_shared.lib;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Lib\spirv-cross-core.lib;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Lib\spirv-cross-glsl.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
@@ -126,7 +126,7 @@
       <PrecompiledHeaderFile>Kpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>KEY_PLATFORM_WINDOWS;KEY_BUILD_DLL;KEY_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor;vendor\assimp\include;..;vendor\GLFW\include;vendor\Glad\include;vendor\glm;vendor\Imgui;vendor\entt\include;vendor\mono\include;vendor\FastNoise;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Include;vendor\stb\include;vendor\yaml-cpp\include;vendor\Box2D\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;vendor;vendor\assimp\include;..;vendor\GLFW\include;vendor\Glad\include;vendor\glm;vendor\Imgui;vendor\entt\include;vendor\mono\include;vendor\FastNoise;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Include;vendor\stb\include;vendor\yaml-cpp\include;vendor\Box2D\include;vendor\NvidiaAftermath\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -143,7 +143,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Lib\vulkan-1.lib;vendor\mono\lib\Debug\mono-2.0-sgen.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;C:\Program noSys\DevPgm\VulkanSDK\1.3.261.1\Lib\vulkan-1.lib;vendor\mono\lib\Debug\mono-2.0-sgen.lib;vendor\NvidiaAftermath\lib\x64\GFSDK_Aftermath_Lib.x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -198,6 +198,9 @@
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLShader.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLTexture.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLVertexBuffer.h" />
+    <ClInclude Include="src\Key\PlatForm\Vulkan\Debug\NsightAftermathGpuCrashTracker.h" />
+    <ClInclude Include="src\Key\PlatForm\Vulkan\Debug\NsightAftermathHelpers.h" />
+    <ClInclude Include="src\Key\PlatForm\Vulkan\Debug\NsightAftermathShaderDatabase.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\Vulkan.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanAllocator.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanComputePipeline.h" />
@@ -253,6 +256,7 @@
     <ClInclude Include="src\Key\Utilities\FileSystem.h" />
     <ClInclude Include="src\Key\Utilities\StringUtils.h" />
     <ClInclude Include="src\Kpch.h" />
+    <ClInclude Include="vendor\VulkanMemoryAllocator\vk_mem_alloc.h" />
     <ClInclude Include="vendor\yaml-cpp\include\yaml-cpp\anchor.h" />
     <ClInclude Include="vendor\yaml-cpp\include\yaml-cpp\binary.h" />
     <ClInclude Include="vendor\yaml-cpp\include\yaml-cpp\contrib\anchordict.h" />
@@ -349,6 +353,8 @@
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLShader.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLTexture.cpp" />
     <ClCompile Include="src\Key\PlatForm\OpenGL\OpenGLVertexBuffer.cpp" />
+    <ClCompile Include="src\Key\PlatForm\Vulkan\Debug\NsightAftermathGpuCrashTracker.cpp" />
+    <ClCompile Include="src\Key\PlatForm\Vulkan\Debug\NsightAftermathShaderDatabase.cpp" />
     <ClCompile Include="src\Key\PlatForm\Vulkan\Vulkan.cpp" />
     <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanAllocator.cpp" />
     <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanComputePipeline.cpp" />
@@ -404,6 +410,7 @@
     <ClCompile Include="vendor\FastNoise\FastNoise.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="vendor\VulkanMemoryAllocator\vk_mem_alloc.cpp" />
     <ClCompile Include="vendor\yaml-cpp\src\binary.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

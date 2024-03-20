@@ -2,7 +2,8 @@
 #include "VulkanDevice.h"
 
 #include "VulkanContext.h"
-
+#include "VulkanMemoryAllocator/vk_mem_alloc.h"
+#include "Debug/NsightAftermathGpuCrashTracker.h"
 namespace Key {
 
 	////////////////////////////////////////////////////////////////////////////////////
@@ -254,8 +255,30 @@ namespace Key {
 		if (m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME))
 			deviceExtensions.push_back(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME);
 
+		if (m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME))
+			deviceExtensions.push_back(VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME);
+
+		VkDeviceDiagnosticsConfigCreateInfoNV aftermathInfo = {};
+		//enable nvidiaAftermath on a compatible Nvidia GPU
+		bool canEnableAftermath = m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME) && m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME);
+		if (canEnableAftermath)
+		{
+			// Must be initialized ~before~ device has been created
+			GpuCrashTracker* gpuCrashTracker = new GpuCrashTracker();
+			gpuCrashTracker->Initialize();
+
+			VkDeviceDiagnosticsConfigFlagBitsNV aftermathFlags = (VkDeviceDiagnosticsConfigFlagBitsNV)(VK_DEVICE_DIAGNOSTICS_CONFIG_ENABLE_RESOURCE_TRACKING_BIT_NV |
+				VK_DEVICE_DIAGNOSTICS_CONFIG_ENABLE_AUTOMATIC_CHECKPOINTS_BIT_NV |
+				VK_DEVICE_DIAGNOSTICS_CONFIG_ENABLE_SHADER_DEBUG_INFO_BIT_NV);
+
+			aftermathInfo.sType = VK_STRUCTURE_TYPE_DEVICE_DIAGNOSTICS_CONFIG_CREATE_INFO_NV;
+			aftermathInfo.flags = aftermathFlags;
+		}
+
 		VkDeviceCreateInfo deviceCreateInfo = {};
 		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		if (canEnableAftermath)
+			deviceCreateInfo.pNext = &aftermathInfo;
 		deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(physicalDevice->m_QueueCreateInfos.size());;
 		deviceCreateInfo.pQueueCreateInfos = physicalDevice->m_QueueCreateInfos.data();
 		deviceCreateInfo.pEnabledFeatures = &enabledFeatures;

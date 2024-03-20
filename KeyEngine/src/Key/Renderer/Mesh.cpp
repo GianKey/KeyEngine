@@ -267,8 +267,9 @@ namespace Key {
 					parentPath /= std::string(aiTexPath.data);
 					std::string texturePath = parentPath.string();
 					KEY_MESH_LOG("    Albedo map path = {0}", texturePath);
-		
-					auto texture = Texture2D::Create(texturePath, true);
+					TextureProperties props;
+					props.SRGB = true;
+					auto texture = Texture2D::Create(texturePath, props);
 					if (texture->Loaded())
 					{
 						m_Textures[i] = texture;

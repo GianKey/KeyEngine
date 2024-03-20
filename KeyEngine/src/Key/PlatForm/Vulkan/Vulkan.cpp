@@ -19,6 +19,11 @@ namespace Key::Utils {
 
 	void RetrieveDiagnosticCheckpoints()
 	{
+		//check support of  Nvidia diagnostic checkpoints 
+		bool supported = VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME);
+		if (!supported)
+			return;
+
 		{
 			const uint32_t checkpointCount = 4;
 			VkCheckpointDataNV data[checkpointCount];
@@ -49,7 +54,7 @@ namespace Key::Utils {
 				KEY_CORE_ERROR("Checkpoint: {0} (stage: {1})", checkpoint->Data, StageToString(data[i].stage));
 			}
 		}
-		__debugbreak();
+		//__debugbreak();
 	}
 
 }

@@ -3,7 +3,7 @@
 #include "Key/Renderer/Image.h"
 
 #include "vulkan/vulkan.h"
-
+#include "VulkanMemoryAllocator/vk_mem_alloc.h"
 namespace Key {
 
 	struct VulkanImageInfo
@@ -12,6 +12,7 @@ namespace Key {
 		VkImageView ImageView;
 		VkSampler Sampler;
 		VkDeviceMemory Memory;
+		VmaAllocation MemoryAlloc = nullptr;
 	};
 
 	class VulkanImage2D : public Image2D

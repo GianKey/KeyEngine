@@ -60,7 +60,9 @@ namespace Key::Utils {
 			KEY_CORE_ERROR("VkResult is '{0}' in {1}:{2}", ::Key::Utils::VKResultToString(result), __FILE__, __LINE__);
 			if (result == VK_ERROR_DEVICE_LOST)
 			{
-				::Key::Utils::RetrieveDiagnosticCheckpoints();
+				using namespace std::chrono_literals;
+				std::this_thread::sleep_for(3s);
+				//::Key::Utils::RetrieveDiagnosticCheckpoints();
 				::Key::Utils::DumpGPUInfo();
 			}
 			KEY_CORE_ASSERT(result == VK_SUCCESS);

@@ -69,6 +69,7 @@ namespace Key {
 		caps.Version = std::to_string(properties.driverVersion);
 
 		Utils::DumpGPUInfo();
+
 		// Create fullscreen quad
 		float x = -1;
 		float y = -1;
@@ -97,7 +98,11 @@ namespace Key {
 		uint32_t indices[6] = { 0, 1, 2, 2, 3, 0, };
 		s_Data->QuadIndexBuffer = IndexBuffer::Create(indices, 6 * sizeof(uint32_t));
 
-		s_Data->BRDFLut = Texture2D::Create("assets/textures/BRDF_LUT.tga");
+		{
+			TextureProperties props;
+			props.SamplerWrap = TextureWrap::Clamp;
+			s_Data->BRDFLut = Texture2D::Create("assets/textures/BRDF_LUT.tga", props);
+		}
 
 		Renderer::Submit([]() mutable
 		{
