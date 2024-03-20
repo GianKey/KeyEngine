@@ -6,6 +6,7 @@
 #include "Key/Platform/Vulkan/VulkanContext.h"
 #include <shaderc/shaderc.hpp>
 #include <spirv_cross/spirv_glsl.hpp>
+#include <spirv-tools/libspirv.h>
 
 #include <filesystem>
 
@@ -625,6 +626,8 @@ namespace Key {
 				shaderc::Compiler compiler;
 				shaderc::CompileOptions options;
 				options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+				options.SetWarningsAsErrors();
+				options.SetGenerateDebugInfo();
 
 				const bool optimize = false;
 				if (optimize)

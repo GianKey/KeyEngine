@@ -327,11 +327,18 @@ namespace Key {
 		}
 
 		{
-			//m_Environment = Ref<Environment>::Create();
 			auto lights = m_Registry.group<SkyLightComponent>(entt::get<TransformComponent>);
+			if (lights.empty())
+				m_Environment = Ref<Environment>::Create(Renderer::GetBlackCubeTexture(), Renderer::GetBlackCubeTexture());
+
 			for (auto entity : lights)
 			{
 				auto [transformComponent, skyLightComponent] = lights.get<TransformComponent, SkyLightComponent>(entity);
+				if (!skyLightComponent.SceneEnvironment && skyLightComponent.DynamicSky)
+				{
+					Ref<TextureCube> preethamEnv = Renderer::CreatePreethamSky(skyLightComponent.TurbidityAzimuthInclination.x, skyLightComponent.TurbidityAzimuthInclination.y, skyLightComponent.TurbidityAzimuthInclination.z);
+					skyLightComponent.SceneEnvironment = Ref<Environment>::Create(preethamEnv, preethamEnv);
+				}
 				m_Environment = skyLightComponent.SceneEnvironment;
 				m_EnvironmentIntensity = skyLightComponent.Intensity;
 				if (m_Environment)
@@ -503,8 +510,8 @@ namespace Key {
 
 	void Scene::SetSkybox(const Ref<TextureCube>& skybox)
 	{
-		m_SkyboxTexture = skybox;
-		m_SkyboxMaterial->Set("u_Texture", skybox);
+		//m_SkyboxTexture = skybox;
+		//m_SkyboxMaterial->Set("u_Texture", skybox);
 	}
 
 	Entity Scene::GetMainCameraEntity()

@@ -9,6 +9,7 @@ bin-int/
 obj/
 cache/
 KeyEngine/src/Key/Doxyfile
+KeyEngine/vendor/VulkanSDK
 # Files
 *.user
 *.sln
