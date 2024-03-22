@@ -10,12 +10,13 @@
 #include <Windows.h>
 #include "Key/Platform/Vulkan/VulkanRenderer.h"
 #include "Key/Platform/Vulkan/VulkanAllocator.h"
-
-extern bool g_ApplicationRunning;
-
 #include "Key/Script/ScriptEngine.h"
 #include "Key/Asset/AssetManager.h"
 #include <imgui/imgui.h>
+#include "imgui/imgui_internal.h"
+
+extern bool g_ApplicationRunning;
+extern ImGuiContext* GImGui;
 
 namespace Key {
 	/**
@@ -41,10 +42,13 @@ namespace Key {
 	{
 		KEY_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
+
+		m_Profiler = new PerformanceProfiler();
+
 		m_Window = std::unique_ptr<Window>(Window::Create(WindowProps(props.Name, props.WindowWidth, props.WindowHeight)));
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 		m_Window->Maximize();
-		m_Window->SetVSync(true);
+		m_Window->SetVSync(false);
 
 		// Init renderer and execute command queue to compile all shaders
 		Renderer::Init();
@@ -71,6 +75,9 @@ namespace Key {
 		AssetManager::Shutdown();
 		Renderer::WaitAndRender();
 		Renderer::Shutdown();
+
+		delete m_Profiler;
+		m_Profiler = nullptr;
 	}
 
 	/**
@@ -158,6 +165,17 @@ namespace Key {
 		}
 
 		ImGui::End();
+
+		ImGui::Begin("Performance");
+		ImGui::Text("Frame Time: %.2fms\n", m_TimeStep.GetMilliseconds());
+		const auto& perFrameData = m_Profiler->GetPerFrameData();
+		for (auto&& [name, time] : perFrameData)
+		{
+			ImGui::Text("%s: %.3fms\n", name, time);
+		}
+
+		ImGui::End();
+		m_Profiler->Clear();
 
 		for (Layer* layer : m_LayerStack)
 			layer->OnImGuiRender();

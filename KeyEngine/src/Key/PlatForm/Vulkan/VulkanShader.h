@@ -79,11 +79,11 @@ namespace Key {
 
 		struct ShaderMaterialDescriptorSet
 		{
-			VkDescriptorPool Pool;
+			VkDescriptorPool Pool = nullptr;
 			std::vector<VkDescriptorSet> DescriptorSets;
 		};
 
-		ShaderMaterialDescriptorSet AllocateDescriptorSets();
+		ShaderMaterialDescriptorSet AllocateDescriptorSet(uint32_t set = 0);
 		ShaderMaterialDescriptorSet CreateDescriptorSets(uint32_t set = 0);
 		ShaderMaterialDescriptorSet CreateDescriptorSets(uint32_t set, uint32_t numberOfSets);
 		const VkWriteDescriptorSet* GetDescriptorSet(const std::string& name, uint32_t set = 0) const;
@@ -112,7 +112,7 @@ namespace Key {
 
 		std::vector<VkDescriptorSetLayout> m_DescriptorSetLayouts;
 		VkDescriptorSet m_DescriptorSet;
-		VkDescriptorPool m_DescriptorPool;
+		//VkDescriptorPool m_DescriptorPool = nullptr;
 
 		std::unordered_map<uint32_t, std::vector<VkDescriptorPoolSize>> m_TypeCounts;
 	};

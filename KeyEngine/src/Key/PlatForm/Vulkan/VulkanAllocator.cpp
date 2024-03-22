@@ -2,6 +2,12 @@
 #include "VulkanAllocator.h"
 #include "VulkanContext.h"
 
+#if KEY_LOG_RENDERER_ALLOCATIONS
+#define KEY_ALLOCATOR_LOG(...) KEY_CORE_TRACE(__VA_ARGS__)
+#else
+#define KEY_ALLOCATOR_LOG(...)
+#endif
+
 namespace Key {
 
 	namespace Utils {
@@ -78,11 +84,11 @@ namespace Key {
         // TODO: Tracking
         VmaAllocationInfo allocInfo;
         vmaGetAllocationInfo(s_Data->Allocator, allocation, &allocInfo);
-        KEY_CORE_TRACE("VulkanAllocator ({0}): allocating buffer; size = {1}", m_Tag, Utils::BytesToString(allocInfo.size));
+        KEY_ALLOCATOR_LOG("VulkanAllocator ({0}): allocating buffer; size = {1}", m_Tag, Utils::BytesToString(allocInfo.size));
 
         {
             s_Data->TotalAllocatedBytes += allocInfo.size;
-            KEY_CORE_TRACE("VulkanAllocator ({0}): total allocated since start is {1}", m_Tag, Utils::BytesToString(s_Data->TotalAllocatedBytes));
+            KEY_ALLOCATOR_LOG("VulkanAllocator ({0}): total allocated since start is {1}", m_Tag, Utils::BytesToString(s_Data->TotalAllocatedBytes));
         }
 
         return allocation;
@@ -99,11 +105,11 @@ namespace Key {
         // TODO: Tracking
         VmaAllocationInfo allocInfo;
         vmaGetAllocationInfo(s_Data->Allocator, allocation, &allocInfo);
-        KEY_CORE_TRACE("VulkanAllocator ({0}): allocating image; size = {1}", m_Tag, Utils::BytesToString(allocInfo.size));
+        KEY_ALLOCATOR_LOG("VulkanAllocator ({0}): allocating image; size = {1}", m_Tag, Utils::BytesToString(allocInfo.size));
 
         {
             s_Data->TotalAllocatedBytes += allocInfo.size;
-            KEY_CORE_TRACE("VulkanAllocator ({0}): total allocated since start is {1}", m_Tag, Utils::BytesToString(s_Data->TotalAllocatedBytes));
+            KEY_ALLOCATOR_LOG("VulkanAllocator ({0}): total allocated since start is {1}", m_Tag, Utils::BytesToString(s_Data->TotalAllocatedBytes));
         }
         return allocation;
     }

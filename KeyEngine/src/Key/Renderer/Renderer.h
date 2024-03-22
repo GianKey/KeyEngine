@@ -18,8 +18,9 @@ namespace Key {
 
 	struct RendererConfig
 	{
+		uint32_t FramesInFlight = 3;
 		// "Experimental" features
-		bool ComputeEnvironmentMaps = false;
+		bool ComputeEnvironmentMaps = true;
 
 		// Tiering settings
 		uint32_t EnvironmentMapResolution = 1024;
@@ -59,6 +60,27 @@ namespace Key {
 			new (storageBuffer) FuncT(std::forward<FuncT>(func));
 		}
 
+		template<typename FuncT>
+		static void SubmitResourceFree(FuncT&& func)
+		{
+			auto renderCmd = [](void* ptr) {
+				auto pFunc = (FuncT*)ptr;
+				(*pFunc)();
+
+				// NOTE: Instead of destroying we could try and enforce all items to be trivally destructible
+				// however some items like uniforms which contain std::strings still exist for now
+				// static_assert(std::is_trivially_destructible_v<FuncT>, "FuncT must be trivially destructible");
+				pFunc->~FuncT();
+			};
+
+			Submit([renderCmd, func]()
+				{
+					uint32_t index = Renderer::GetCurrentFrameIndex();
+					auto storageBuffer = GetRenderResourceReleaseQueue(index).Allocate(renderCmd, sizeof(func));
+					new (storageBuffer) FuncT(std::forward<FuncT>((FuncT&&)func));
+				});
+		}
+
 		/*static void* Submit(RenderCommandFn fn, unsigned int size)
 		{
 			return s_Instance->m_CommandQueue.Allocate(fn, size);
@@ -91,14 +113,18 @@ namespace Key {
 		static Ref<TextureCube> GetBlackCubeTexture();
 		static Ref<Environment> GetEmptyEnvironment();
 
-		static void SetUniformBuffer(Ref<UniformBuffer> uniformBuffer, uint32_t set);
-		static Ref<UniformBuffer> GetUniformBuffer(uint32_t binding, uint32_t set = 0);
+		static void SetUniformBuffer(Ref<UniformBuffer> uniformBuffer, uint32_t frame, uint32_t set);
+		static Ref<UniformBuffer> GetUniformBuffer(uint32_t frame, uint32_t binding, uint32_t set = 0);
 
 		static void RegisterShaderDependency(Ref<Shader> shader, Ref<Pipeline> pipeline);
 		static void RegisterShaderDependency(Ref<Shader> shader, Ref<Material> material);
 		static void OnShaderReloaded(size_t hash);
 
+		static uint32_t GetCurrentFrameIndex();
+
 		static RendererConfig& GetConfig();
+
+		static RenderCommandQueue& GetRenderResourceReleaseQueue(uint32_t index);
 	private:
 		static RenderCommandQueue& GetRenderCommandQueue();
 	};

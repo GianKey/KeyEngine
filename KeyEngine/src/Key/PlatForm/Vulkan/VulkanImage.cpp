@@ -40,15 +40,18 @@ namespace Key {
 
 	void VulkanImage2D::Release()
 	{
-		auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		vkDestroyImageView(vulkanDevice, m_Info.ImageView, nullptr);
-		vkDestroySampler(vulkanDevice, m_Info.Sampler, nullptr);
+		Ref<VulkanImage2D> instance = this;
+		VulkanImageInfo info = m_Info;
+		Renderer::SubmitResourceFree([info]() mutable
+			{
+				auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+				KEY_CORE_WARN("VulkanImage2D::Release ImageView = {0}", (const void*)info.ImageView);
+				vkDestroyImageView(vulkanDevice, info.ImageView, nullptr);
+				vkDestroySampler(vulkanDevice, info.Sampler, nullptr);
 
-		VulkanAllocator allocator("VulkanImage2D");
-		allocator.DestroyImage(m_Info.Image, m_Info.MemoryAlloc);
-
-		KEY_CORE_WARN("VulkanImage2D::Release ImageView = {0}", (const void*)m_Info.ImageView);
-
+				VulkanAllocator allocator("VulkanImage2D");
+				allocator.DestroyImage(info.Image, info.MemoryAlloc);
+			});
 		m_Info.Image = nullptr;
 		m_Info.ImageView = nullptr;
 		m_Info.Sampler = nullptr;
@@ -176,7 +179,7 @@ namespace Key {
 		m_DescriptorImageInfo.imageView = m_Info.ImageView;
 		m_DescriptorImageInfo.sampler = m_Info.Sampler;
 
-		KEY_CORE_WARN("VulkanImage2D::UpdateDescriptor to ImageView = {0}", (const void*)m_Info.ImageView);
+		//KEY_CORE_WARN("VulkanImage2D::UpdateDescriptor to ImageView = {0}", (const void*)m_Info.ImageView);
 	}
 
 }

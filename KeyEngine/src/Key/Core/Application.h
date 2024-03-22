@@ -2,6 +2,7 @@
 
 #include "Base.h"
 #include "Key/Core/TimeStep.h"
+#include "Key/Core/Timer.h"
 #include "Window.h"
 #include "LayerStack.h"
 
@@ -56,6 +57,7 @@ namespace Key {
 
 		static const char* GetConfigurationName();
 		static const char* GetPlatformName();
+		PerformanceProfiler* GetPerformanceProfiler() { return m_Profiler; }
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
@@ -70,6 +72,7 @@ namespace Key {
 		float m_LastFrameTime = 0.0f;
 		
 		TimeStep m_TimeStep;
+		PerformanceProfiler* m_Profiler = nullptr; // TODO: Should be null in Dist
 	};
 
 	//Implemented by CLIENT

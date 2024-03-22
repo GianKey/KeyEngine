@@ -68,7 +68,7 @@ namespace Key {
 		GET_INSTANCE_PROC_ADDR(instance, CmdSetCheckpointNV);
 		GET_INSTANCE_PROC_ADDR(instance, GetQueueCheckpointDataNV);
 	}
-	
+
 	void VulkanSwapChain::InitSurface(GLFWwindow* windowHandle)
 	{
 		VkPhysicalDevice physicalDevice = m_Device->GetPhysicalDevice()->GetVulkanPhysicalDevice();
@@ -197,6 +197,8 @@ namespace Key {
 				}
 			}
 		}
+
+		swapchainPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
 
 		// Determine the number of images
 		uint32_t desiredNumberOfSwapchainImages = surfCaps.minImageCount + 1;
@@ -525,16 +527,25 @@ namespace Key {
 
 	void VulkanSwapChain::BeginFrame()
 	{
-		VK_CHECK_RESULT(vkWaitForFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex], VK_TRUE, UINT64_MAX));
-		VK_CHECK_RESULT(AcquireNextImage(m_Semaphores.PresentComplete, &m_CurrentBufferIndex));
+		KEY_SCOPE_PERF("VulkanSwapChain::BeginFrame");
+
+		// Make sure the frame we're requesting has finished rendering
+		//VK_CHECK_RESULT(vkWaitForFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[(m_CurrentBufferIndex + 2) % 3], VK_TRUE, UINT64_MAX));
+
+		// Resource release queue
+		auto& queue = Renderer::GetRenderResourceReleaseQueue(m_CurrentBufferIndex);
+		queue.Execute();
+
+		//VK_CHECK_RESULT(vkWaitForFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex], VK_TRUE, UINT64_MAX));
+		//VK_CHECK_RESULT(vkResetCommandPool(m_Device->GetVulkanDevice(), m_CommandPool, 0));
+		VK_CHECK_RESULT(AcquireNextImage(m_Semaphores.PresentComplete, &m_CurrentImageIndex));
 	}
 
 	void VulkanSwapChain::Present()
 	{
-		const uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000;
+		KEY_SCOPE_PERF("VulkanSwapChain::Present");
 
-		// Use a fence to wait until the command buffer has finished execution before using it again
-		VK_CHECK_RESULT(vkResetFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex]));
+		const uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000;
 
 		// Pipeline stage at which the queue submission will wait (via pWaitSemaphores)
 		VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -546,16 +557,21 @@ namespace Key {
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_Semaphores.RenderComplete;
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pCommandBuffers = &m_DrawCommandBuffers[m_CurrentBufferIndex];
+		submitInfo.pCommandBuffers = &m_DrawCommandBuffers[m_CurrentImageIndex];
 		submitInfo.commandBufferCount = 1;
 
 		// Submit to the graphics queue passing a wait fence
+		VK_CHECK_RESULT(vkResetFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex]));
 		VK_CHECK_RESULT(vkQueueSubmit(m_Device->GetQueue(), 1, &submitInfo, m_WaitFences[m_CurrentBufferIndex]));
 
 		// Present the current buffer to the swap chain
 		// Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for swap chain presentation
 		// This ensures that the image is not presented to the windowing system until all commands have been submitted
-		VkResult result = QueuePresent(m_Device->GetQueue(), m_CurrentBufferIndex, m_Semaphores.RenderComplete);
+		VkResult result;
+		{
+			KEY_SCOPE_PERF("VulkanSwapChain::Present - QueuePresent");
+			result = QueuePresent(m_Device->GetQueue(), m_CurrentImageIndex, m_Semaphores.RenderComplete);
+		}
 
 		if (result != VK_SUCCESS || result == VK_SUBOPTIMAL_KHR)
 		{
@@ -577,6 +593,11 @@ namespace Key {
 
 		// TODO: Do we need this anywhere?
 		//vkResetCommandPool(m_Device->GetVulkanDevice(), m_CommandPool, 0);
+
+		const auto& config = Renderer::GetConfig();
+		m_CurrentBufferIndex = (m_CurrentBufferIndex + 1) % config.FramesInFlight;
+		// Make sure the frame we're requesting has finished rendering
+		VK_CHECK_RESULT(vkWaitForFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex], VK_TRUE, UINT64_MAX));
 	}
 
 	VkResult VulkanSwapChain::AcquireNextImage(VkSemaphore presentCompleteSemaphore, uint32_t* imageIndex)

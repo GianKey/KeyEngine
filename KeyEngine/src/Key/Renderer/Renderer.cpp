@@ -10,8 +10,11 @@
 #include "SceneRenderer.h"
 #include "Renderer2D.h"
 
+#include "Key/Core/Timer.h"
+
 #include "Key/Platform/OpenGL/OpenGLRenderer.h"
 #include "Key/Platform/Vulkan/VulkanRenderer.h"
+#include "Key/Platform/Vulkan/VulkanContext.h"
 namespace Key {
 
 	static std::unordered_map<size_t, Ref<Pipeline>> s_PipelineCache;
@@ -52,6 +55,11 @@ namespace Key {
 		}
 	}
 
+	uint32_t Renderer::GetCurrentFrameIndex()
+	{
+		return VulkanContext::Get()->GetSwapChain().GetCurrentBufferIndex();
+	}
+
 	void RendererAPI::SetAPI(RendererAPIType api)
 	{
 		// TODO: make sure this is called at a valid time
@@ -68,11 +76,12 @@ namespace Key {
 		Ref<Texture2D> WhiteTexture;
 		Ref<TextureCube> BlackCubeTexture;
 		Ref<Environment> EmptyEnvironment;
-		std::map<uint32_t, std::map<uint32_t, Ref<UniformBuffer>>> UniformBuffers;
+		std::map<uint32_t, std::map<uint32_t, std::map<uint32_t, Ref<UniformBuffer>>>> UniformBuffers; // frame->set->binding
 	};
 
 	static RendererData* s_Data = nullptr;
 	static RenderCommandQueue* s_CommandQueue = nullptr;
+	static RenderCommandQueue s_ResourceFreeQueue[3];
 
 	static RendererAPI* InitRendererAPI()
 	{
@@ -89,6 +98,7 @@ namespace Key {
 	{
 		s_Data = new RendererData();
 		s_CommandQueue = new RenderCommandQueue();
+
 		s_RendererAPI = InitRendererAPI();
 
 		s_Data->m_ShaderLibrary = Ref<ShaderLibrary>::Create();
@@ -101,7 +111,7 @@ namespace Key {
 
 		Renderer::GetShaderLibrary()->Load("assets/shaders/Grid.glsl");
 		Renderer::GetShaderLibrary()->Load("assets/shaders/SceneComposite.glsl");
-		Renderer::GetShaderLibrary()->Load("assets/shaders/KeyPBR_Static.glsl", true);
+		Renderer::GetShaderLibrary()->Load("assets/shaders/KeyPBR_Static.glsl");
 		//Renderer::GetShaderLibrary()->Load("assets/shaders/KeyPBR_Anim.glsl");
 		//Renderer::GetShaderLibrary()->Load("assets/shaders/Outline.glsl");
 		Renderer::GetShaderLibrary()->Load("assets/shaders/Skybox.glsl");
@@ -144,6 +154,7 @@ namespace Key {
 
 	void Renderer::WaitAndRender()
 	{
+		KEY_SCOPE_PERF("Renderer::WaitAndRender");
 		s_CommandQueue->Execute();
 	}
 
@@ -309,22 +320,28 @@ namespace Key {
 		return s_Data->EmptyEnvironment;
 	}
 
-	void Renderer::SetUniformBuffer(Ref<UniformBuffer> uniformBuffer, uint32_t set)
+	void Renderer::SetUniformBuffer(Ref<UniformBuffer> uniformBuffer, uint32_t frame, uint32_t set)
 	{
-		s_Data->UniformBuffers[set][uniformBuffer->GetBinding()] = uniformBuffer;
+		s_Data->UniformBuffers[frame][set][uniformBuffer->GetBinding()] = uniformBuffer;
 	}
 
-	Ref<UniformBuffer> Renderer::GetUniformBuffer(uint32_t binding, uint32_t set)
+	Ref<UniformBuffer> Renderer::GetUniformBuffer(uint32_t frame, uint32_t binding, uint32_t set)
 	{
-		KEY_CORE_ASSERT(s_Data->UniformBuffers.find(set) != s_Data->UniformBuffers.end());
-		KEY_CORE_ASSERT(s_Data->UniformBuffers.at(set).find(binding) != s_Data->UniformBuffers.at(set).end());
+		KEY_CORE_ASSERT(s_Data->UniformBuffers.find(frame) != s_Data->UniformBuffers.end());
+		KEY_CORE_ASSERT(s_Data->UniformBuffers.at(frame).find(set) != s_Data->UniformBuffers.at(frame).end());
+		KEY_CORE_ASSERT(s_Data->UniformBuffers.at(frame).at(set).find(binding) != s_Data->UniformBuffers.at(frame).at(set).end());
 
-		return s_Data->UniformBuffers.at(set).at(binding);
+		return s_Data->UniformBuffers.at(frame).at(set).at(binding);
 	}
 
 	RenderCommandQueue& Renderer::GetRenderCommandQueue()
 	{
 		return *s_CommandQueue;
+	}
+
+	RenderCommandQueue& Renderer::GetRenderResourceReleaseQueue(uint32_t index)
+	{
+		return s_ResourceFreeQueue[index];
 	}
 
 	RendererConfig& Renderer::GetConfig()
