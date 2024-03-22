@@ -47,8 +47,7 @@ def CheckVulkanSDK():
 
 
 VulkanSDKDebugLibsURL = 'https://files.lunarg.com/SDK-1.2.170.0/VulkanSDK-1.2.170.0-DebugLibs.zip'
-VulkanSDKDebugLibsURL = 'https://files.lunarg.com/SDK-1.3.261.1/VulkanSDK-1.3.261.1-DebugLibs.zip'
-OutputDirectory = "KeyEngine/vendor/VulkanSDK/1.3.261.1"
+OutputDirectory = VULKAN_SDK
 TempZipFile = f"{OutputDirectory}/VulkanSDK.zip"
 
 

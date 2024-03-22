@@ -10,6 +10,7 @@ obj/
 cache/
 KeyEngine/src/Key/Doxyfile
 KeyEngine/vendor/VulkanSDK
+Keya/assets/cache
 # Files
 *.user
 *.sln
