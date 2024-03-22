@@ -48,7 +48,7 @@ namespace Key {
 		m_Window = std::unique_ptr<Window>(Window::Create(WindowProps(props.Name, props.WindowWidth, props.WindowHeight)));
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 		m_Window->Maximize();
-		m_Window->SetVSync(false);
+		m_Window->SetVSync(true);
 
 		// Init renderer and execute command queue to compile all shaders
 		Renderer::Init();

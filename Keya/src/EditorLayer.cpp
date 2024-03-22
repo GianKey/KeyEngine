@@ -832,6 +832,7 @@ namespace Key {
 									ImGui::EndDragDropTarget();
 								}
 
+								ImGui::PopStyleVar();
 								if (ImGui::IsItemHovered())
 								{
 									if (normalMap)
