@@ -172,27 +172,6 @@ namespace Key {
 		InvalidateDescriptorSets();
 	}
 
-	void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const VkDescriptorImageInfo& imageInfo)
-	{
-		const VkWriteDescriptorSet* wds = m_Shader.As<VulkanShader>()->GetDescriptorSet(name);
-		KEY_CORE_ASSERT(wds);
-
-		if (m_ImageInfos.find(name) != m_ImageInfos.end())
-		{
-			if (m_ImageInfos.at(name).imageView == imageInfo.imageView)
-				return;
-		}
-
-		m_ImageInfos[name] = imageInfo;
-
-		// VkWriteDescriptorSet descriptorSet = *wds;
-		// descriptorSet.pImageInfo = &m_ImageInfos.at(name);
-		// m_WriteDescriptors.push_back(descriptorSet);
-		KEY_CORE_ASSERT(false);
-
-		InvalidateDescriptorSets();
-	}
-
 	void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const Ref<Image2D>& image)
 	{
 		KEY_CORE_ASSERT(image.As<VulkanImage2D>()->GetImageInfo().ImageView, "ImageView is null");
@@ -378,7 +357,7 @@ namespace Key {
 			m_DirtyDescriptorSets[frameIndex] = false;
 			m_WriteDescriptors[frameIndex].clear();
 
-			KEY_CORE_WARN("VulkanMaterial - updating descriptor set for buffer {0}", frameIndex);
+			//KEY_CORE_WARN("VulkanMaterial - updating descriptor set for buffer {0}", frameIndex);
 
 			for (auto& wd : m_UBWriteDescriptors[frameIndex])
 				m_WriteDescriptors[frameIndex].push_back(wd);

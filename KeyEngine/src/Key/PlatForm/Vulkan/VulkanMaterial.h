@@ -121,7 +121,7 @@ namespace Key {
 		void SetVulkanDescriptor(const std::string& name, const Ref<Texture2D>& texture);
 		void SetVulkanDescriptor(const std::string& name, const Ref<TextureCube>& texture);
 		void SetVulkanDescriptor(const std::string& name, const Ref<Image2D>& image);
-		void SetVulkanDescriptor(const std::string& name, const VkDescriptorImageInfo& imageInfo);
+		
 
 		const ShaderUniform* FindUniformDeclaration(const std::string& name);
 		const ShaderResourceDeclaration* FindResourceDeclaration(const std::string& name);

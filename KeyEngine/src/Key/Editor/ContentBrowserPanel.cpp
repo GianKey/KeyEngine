@@ -205,16 +205,18 @@ namespace Key {
 
 		Ref<Image2D> iconRef = m_AssetIconMap.find(asset->Extension) != m_AssetIconMap.end() ? m_AssetIconMap[asset->Extension]->GetImage() : m_FileTex->GetImage();
 
-		if (m_SelectedAssets.IsSelected(assetHandle))
+		bool selected = m_SelectedAssets.IsSelected(assetHandle);
+
+		if (selected)
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.25f, 0.25f, 0.25f, 0.75f));
 
 		float buttonWidth = ImGui::GetColumnWidth() - 15.0f;
 		UI::ImageButton(iconRef, { buttonWidth, buttonWidth });
 
-		if (m_SelectedAssets.IsSelected(assetHandle))
+		if (selected)
 			ImGui::PopStyleColor();
 
-		HandleDragDrop((iconRef), asset);
+		HandleDragDrop(iconRef, asset);
 
 		if (ImGui::IsItemHovered())
 		{
@@ -243,7 +245,7 @@ namespace Key {
 				if (!Input::IsKeyPressed(KeyCode::LeftControl))
 					m_SelectedAssets.Clear();
 
-				if (m_SelectedAssets.IsSelected(assetHandle))
+				if (selected)
 					m_SelectedAssets.Deselect(assetHandle);
 				else
 					m_SelectedAssets.Select(assetHandle);

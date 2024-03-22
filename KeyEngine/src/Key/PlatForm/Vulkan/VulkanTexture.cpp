@@ -125,11 +125,8 @@ namespace Key {
 
 	VulkanTexture2D::~VulkanTexture2D()
 	{
-		Ref<Image2D> image = m_Image;
-		Renderer::Submit([image]() mutable
-		{
-			image->Release();
-		});
+		if (m_Image)
+			m_Image->Release();
 	}
 
 	void VulkanTexture2D::Invalidate()
@@ -334,11 +331,6 @@ namespace Key {
 	Buffer VulkanTexture2D::GetWriteableBuffer()
 	{
 		return m_ImageData;
-	}
-
-	bool VulkanTexture2D::Loaded() const
-	{
-		return true;
 	}
 
 	const std::string& VulkanTexture2D::GetPath() const

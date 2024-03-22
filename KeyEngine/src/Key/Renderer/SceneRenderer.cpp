@@ -639,7 +639,7 @@ namespace Key {
 		// Grid
 		if (GetOptions().ShowGrid)
 		{
-			const glm::mat4 transform = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(16.0f));
+			const glm::mat4 transform = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(8.0f));
 			Renderer::RenderQuad(s_Data->GridPipeline, s_Data->GridMaterial, transform);
 		}
 

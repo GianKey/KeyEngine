@@ -125,16 +125,16 @@ namespace Key {
 
 		QuadVertex* data = new QuadVertex[4];
 
-		data[0].Position = glm::vec3(x, y, 0.1f);
+		data[0].Position = glm::vec3(x, y, 0.0f);
 		data[0].TexCoord = glm::vec2(0, 0);
 
-		data[1].Position = glm::vec3(x + width, y, 0.1f);
+		data[1].Position = glm::vec3(x + width, y, 0.0f);
 		data[1].TexCoord = glm::vec2(1, 0);
 
-		data[2].Position = glm::vec3(x + width, y + height, 0.1f);
+		data[2].Position = glm::vec3(x + width, y + height, 0.0f);
 		data[2].TexCoord = glm::vec2(1, 1);
 
-		data[3].Position = glm::vec3(x, y + height, 0.1f);
+		data[3].Position = glm::vec3(x, y + height, 0.0f);
 		data[3].TexCoord = glm::vec2(0, 1);
 
 		s_Data->QuadVertexBuffer = VertexBuffer::Create(data, 4 * sizeof(QuadVertex));
@@ -190,11 +190,14 @@ namespace Key {
 
 				uint32_t bufferIndex = VulkanContext::Get()->GetSwapChain().GetCurrentBufferIndex();
 
+				auto& materials = mesh->GetMaterials();
+				for (auto& material : materials)
+					material.As<VulkanMaterial>()->RT_UpdateForRendering();
+
 				auto& submeshes = mesh->GetSubmeshes();
 				for (Submesh& submesh : submeshes)
 				{
 					auto& material = mesh->GetMaterials()[submesh.MaterialIndex].As<VulkanMaterial>();
-					material->RT_UpdateForRendering();
 
 					VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
 					VkDescriptorSet descriptorSet = material->GetDescriptorSet(bufferIndex);
@@ -428,6 +431,7 @@ namespace Key {
 
 				VkCommandBufferBeginInfo cmdBufInfo = {};
 				cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+				cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 				cmdBufInfo.pNext = nullptr;
 
 				VkCommandBuffer drawCommandBuffer = swapChain.GetCurrentDrawCommandBuffer();
