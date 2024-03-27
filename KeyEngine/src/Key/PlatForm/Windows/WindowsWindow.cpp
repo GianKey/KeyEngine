@@ -49,6 +49,9 @@ namespace Key {
 		}
 		if (RendererAPI::Current() == RendererAPIType::Vulkan)
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	/*	else if(RendererAPI::Current() == RendererAPIType::OpenGL)
+			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);*/
+
 
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 
@@ -83,24 +86,24 @@ namespace Key {
 
 				switch (action)
 				{
-				case GLFW_PRESS:
-				{
-					KeyPressedEvent event((KeyCode)key, 0);
-					data.EventCallback(event);
-					break;
-				}
-				case GLFW_RELEASE:
-				{
-					KeyReleasedEvent event((KeyCode)key);
-					data.EventCallback(event);
-					break;
-				}
-				case GLFW_REPEAT:
-				{
-					KeyPressedEvent event((KeyCode)key, 1);
-					data.EventCallback(event);
-					break;
-				}
+					case GLFW_PRESS:
+					{
+						KeyPressedEvent event((KeyCode)key, 0);
+						data.EventCallback(event);
+						break;
+					}
+					case GLFW_RELEASE:
+					{
+						KeyReleasedEvent event((KeyCode)key);
+						data.EventCallback(event);
+						break;
+					}
+					case GLFW_REPEAT:
+					{
+						KeyPressedEvent event((KeyCode)key, 1);
+						data.EventCallback(event);
+						break;
+					}
 				}
 			});
 
@@ -118,18 +121,18 @@ namespace Key {
 
 				switch (action)
 				{
-				case GLFW_PRESS:
-				{
-					MouseButtonPressedEvent event(button);
-					data.EventCallback(event);
-					break;
-				}
-				case GLFW_RELEASE:
-				{
-					MouseButtonReleasedEvent event(button);
-					data.EventCallback(event);
-					break;
-				}
+					case GLFW_PRESS:
+					{
+						MouseButtonPressedEvent event(button);
+						data.EventCallback(event);
+						break;
+					}
+					case GLFW_RELEASE:
+					{
+						MouseButtonReleasedEvent event(button);
+						data.EventCallback(event);
+						break;
+					}
 				}
 			});
 

@@ -219,7 +219,7 @@ namespace Key {
 		{
 			shaderc::Compiler compiler;
 			shaderc::CompileOptions options;
-			options.SetTargetEnvironment(shaderc_target_env_opengl_compat, shaderc_env_version_opengl_4_5);
+			options.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5);
 
 	{
 				spirv_cross::CompilerGLSL glsl(binary);

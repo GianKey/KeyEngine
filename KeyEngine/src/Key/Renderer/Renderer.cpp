@@ -87,8 +87,8 @@ namespace Key {
 	{
 		switch (RendererAPI::Current())
 		{
-		case RendererAPIType::OpenGL: return new OpenGLRenderer();
-		case RendererAPIType::Vulkan: return new VulkanRenderer();
+			case RendererAPIType::OpenGL: return new OpenGLRenderer();
+			case RendererAPIType::Vulkan: return new VulkanRenderer();
 		}
 		KEY_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;

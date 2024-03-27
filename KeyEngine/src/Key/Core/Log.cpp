@@ -18,7 +18,7 @@ namespace Key {
 		std::vector<spdlog::sink_ptr> KeySinks =
 		{
 			std::make_shared<spdlog::sinks::stdout_color_sink_mt>(),
-			std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/HAZEL.log", true)
+			std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/KeyEngine.log", true)
 		};
 
 		std::vector<spdlog::sink_ptr> appSinks =

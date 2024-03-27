@@ -1,9 +1,6 @@
 [submodule "KeyEngine/vendor/spdlog"]
 	path = KeyEngine/vendor/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "KeyEngine/vendor/GLFW"]
-	path = KeyEngine/vendor/GLFW
-	url = git@github.com:TheCherno/glfw.git
 [submodule "KeyEngine/vendor/imgui"]
 	path = KeyEngine/vendor/imgui
 	url = git@github.com:TheCherno/imgui.git
@@ -13,3 +10,6 @@
 [submodule "KeyEngine/vendor/Box2D"]
 	path = KeyEngine/vendor/Box2D
 	url = https://github.com/TheCherno/Box2D
+[submodule "KeyEngine/vendor/GLFW"]
+	path = KeyEngine/vendor/GLFW
+	url = https://github.com/glfw/glfw.git
