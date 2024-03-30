@@ -246,6 +246,7 @@ namespace Key {
 	VulkanDevice::VulkanDevice(const Ref<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures)
 		: m_PhysicalDevice(physicalDevice), m_EnabledFeatures(enabledFeatures)
 	{
+		const bool enableAftermath = false;
 		// Do we need to enable any other extensions (eg. NV_RAYTRACING?)
 		std::vector<const char*> deviceExtensions;
 		// If the device will be used for presenting to a display via a swapchain we need to request the swapchain extension
@@ -260,7 +261,7 @@ namespace Key {
 
 		VkDeviceDiagnosticsConfigCreateInfoNV aftermathInfo = {};
 		//enable nvidiaAftermath on a compatible Nvidia GPU
-		bool canEnableAftermath = m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME) && m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME);
+		bool canEnableAftermath = enableAftermath && m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME) && m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME);
 		if (canEnableAftermath)
 		{
 			// Must be initialized ~before~ device has been created
@@ -312,7 +313,7 @@ namespace Key {
 		VK_CHECK_RESULT(vkCreateCommandPool(m_LogicalDevice, &cmdPoolInfo, nullptr, &m_ComputeCommandPool));
 
 		// Get a graphics queue from the device
-		vkGetDeviceQueue(m_LogicalDevice, m_PhysicalDevice->m_QueueFamilyIndices.Graphics, 0, &m_Queue);
+		vkGetDeviceQueue(m_LogicalDevice, m_PhysicalDevice->m_QueueFamilyIndices.Graphics, 0, &m_GraphicsQueue);
 		vkGetDeviceQueue(m_LogicalDevice, m_PhysicalDevice->m_QueueFamilyIndices.Compute, 0, &m_ComputeQueue);
 	}
 
@@ -354,7 +355,7 @@ namespace Key {
 
 	void VulkanDevice::FlushCommandBuffer(VkCommandBuffer commandBuffer)
 	{
-		FlushCommandBuffer(commandBuffer, m_Queue);
+		FlushCommandBuffer(commandBuffer, m_GraphicsQueue);
 	}
 
 	void VulkanDevice::FlushCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue)

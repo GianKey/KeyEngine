@@ -8,8 +8,7 @@
 
 namespace Key {
 
-	OpenGLContext::OpenGLContext(GLFWwindow* windowHandle)
-		: m_WindowHandle(windowHandle)
+	OpenGLContext::OpenGLContext()
 	{
 	}
 
@@ -17,7 +16,7 @@ namespace Key {
 	{
 	}
 
-	void OpenGLContext::Create()
+	void OpenGLContext::Init()
 	{
 		KEY_CORE_INFO("OpenGLContext::Create");
 
@@ -40,9 +39,9 @@ namespace Key {
 #endif
 	}
 
-	void OpenGLContext::SwapBuffers()
-	{
-		glfwSwapBuffers(m_WindowHandle);
-	}
+	//void OpenGLContext::SwapBuffers()
+	//{
+	//	glfwSwapBuffers(m_WindowHandle);
+	//}
 
 }

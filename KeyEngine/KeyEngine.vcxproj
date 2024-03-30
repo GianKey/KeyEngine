@@ -198,6 +198,7 @@
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLShader.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLTexture.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLUniformBuffer.h" />
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLUniformBufferSet.h" />
     <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLVertexBuffer.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\Debug\NsightAftermathGpuCrashTracker.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\Debug\NsightAftermathHelpers.h" />
@@ -214,12 +215,14 @@
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanIndexBuffer.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanMaterial.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanPipeline.h" />
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanRenderCommandBuffer.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanRenderPass.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanRenderer.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanShader.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanSwapChain.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanTexture.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanUniformBuffer.h" />
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanUniformBufferSet.h" />
     <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanVertexBuffer.h" />
     <ClInclude Include="src\Key\PlatForm\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Key\Renderer\Camera.h" />
@@ -232,6 +235,7 @@
     <ClInclude Include="src\Key\Renderer\MeshFactory.h" />
     <ClInclude Include="src\Key\Renderer\OrthographicCamera.h" />
     <ClInclude Include="src\Key\Renderer\Pipeline.h" />
+    <ClInclude Include="src\Key\Renderer\RenderCommandBuffer.h" />
     <ClInclude Include="src\Key\Renderer\RenderCommandQueue.h" />
     <ClInclude Include="src\Key\Renderer\RenderPass.h" />
     <ClInclude Include="src\Key\Renderer\Renderer.h" />
@@ -246,6 +250,7 @@
     <ClInclude Include="src\Key\Renderer\ShaderUniform.h" />
     <ClInclude Include="src\Key\Renderer\Texture.h" />
     <ClInclude Include="src\Key\Renderer\UniformBuffer.h" />
+    <ClInclude Include="src\Key\Renderer\UniformBufferSet.h" />
     <ClInclude Include="src\Key\Renderer\VertexBuffer.h" />
     <ClInclude Include="src\Key\Scene\Components.h" />
     <ClInclude Include="src\Key\Scene\Entity.h" />
@@ -371,6 +376,7 @@
     <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanIndexBuffer.cpp" />
     <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanMaterial.cpp" />
     <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanPipeline.cpp" />
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanRenderCommandBuffer.cpp" />
     <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanRenderPass.cpp" />
     <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanRenderer.cpp" />
     <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanShader.cpp" />
@@ -391,6 +397,7 @@
     <ClCompile Include="src\Key\Renderer\MeshFactory.cpp" />
     <ClCompile Include="src\Key\Renderer\OrthographicCamera.cpp" />
     <ClCompile Include="src\Key\Renderer\Pipeline.cpp" />
+    <ClCompile Include="src\Key\Renderer\RenderCommandBuffer.cpp" />
     <ClCompile Include="src\Key\Renderer\RenderCommandQueue.cpp" />
     <ClCompile Include="src\Key\Renderer\RenderPass.cpp" />
     <ClCompile Include="src\Key\Renderer\Renderer.cpp" />
@@ -401,6 +408,7 @@
     <ClCompile Include="src\Key\Renderer\Shader.cpp" />
     <ClCompile Include="src\Key\Renderer\Texture.cpp" />
     <ClCompile Include="src\Key\Renderer\UniformBuffer.cpp" />
+    <ClCompile Include="src\Key\Renderer\UniformBufferSet.cpp" />
     <ClCompile Include="src\Key\Renderer\VertexBuffer.cpp" />
     <ClCompile Include="src\Key\Scene\Entity.cpp" />
     <ClCompile Include="src\Key\Scene\Scene.cpp" />

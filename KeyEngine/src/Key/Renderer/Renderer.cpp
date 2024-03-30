@@ -57,7 +57,7 @@ namespace Key {
 
 	uint32_t Renderer::GetCurrentFrameIndex()
 	{
-		return VulkanContext::Get()->GetSwapChain().GetCurrentBufferIndex();
+		return Application::Get().GetWindow().GetSwapChain().GetCurrentBufferIndex();
 	}
 
 	void RendererAPI::SetAPI(RendererAPIType api)
@@ -68,15 +68,13 @@ namespace Key {
 
 	struct RendererData
 	{
-		RendererConfig Config;
-
+	
 		Ref<ShaderLibrary> m_ShaderLibrary;
 
 		Ref<Pipeline> m_FullscreenQuadPipeline;
 		Ref<Texture2D> WhiteTexture;
 		Ref<TextureCube> BlackCubeTexture;
 		Ref<Environment> EmptyEnvironment;
-		std::map<uint32_t, std::map<uint32_t, std::map<uint32_t, Ref<UniformBuffer>>>> UniformBuffers; // frame->set->binding
 	};
 
 	static RendererData* s_Data = nullptr;
@@ -129,13 +127,13 @@ namespace Key {
 		s_Data->EmptyEnvironment = Ref<Environment>::Create(s_Data->BlackCubeTexture, s_Data->BlackCubeTexture);
 
 		s_RendererAPI->Init();
-		SceneRenderer::Init();
+
 	}
 
 	void Renderer::Shutdown()
 	{
 		s_ShaderDependencies.clear();
-		SceneRenderer::Shutdown();
+
 		s_RendererAPI->Shutdown();
 
 		delete s_Data;
@@ -158,16 +156,16 @@ namespace Key {
 		s_CommandQueue->Execute();
 	}
 
-	void Renderer::BeginRenderPass(Ref<RenderPass> renderPass, bool clear)
+	void Renderer::BeginRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<RenderPass> renderPass, bool clear)
 	{
 		KEY_CORE_ASSERT(renderPass, "Render pass cannot be null!");
 
-		s_RendererAPI->BeginRenderPass(renderPass);
+		s_RendererAPI->BeginRenderPass(renderCommandBuffer, renderPass);
 	}
 
-	void Renderer::EndRenderPass()
+	void Renderer::EndRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer)
 	{
-		s_RendererAPI->EndRenderPass();
+		s_RendererAPI->EndRenderPass(renderCommandBuffer);
 	}
 
 	void Renderer::BeginFrame()
@@ -180,9 +178,9 @@ namespace Key {
 		s_RendererAPI->EndFrame();
 	}
 
-	void Renderer::SetSceneEnvironment(Ref<Environment> environment, Ref<Image2D> shadow)
+	void Renderer::SetSceneEnvironment(Ref<SceneRenderer> sceneRenderer, Ref<Environment> environment, Ref<Image2D> shadow)
 	{
-		s_RendererAPI->SetSceneEnvironment(environment, shadow);
+		s_RendererAPI->SetSceneEnvironment(sceneRenderer, environment, shadow);
 	}
 
 	std::pair<Ref<TextureCube>, Ref<TextureCube>> Renderer::CreateEnvironmentMap(const std::string& filepath)
@@ -195,22 +193,22 @@ namespace Key {
 		return s_RendererAPI->CreatePreethamSky(turbidity, azimuth, inclination);
 	}
 
-	void Renderer::RenderMesh(Ref<Pipeline> pipeline, Ref<Mesh> mesh, const glm::mat4& transform)
+	void Renderer::RenderMesh(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Mesh> mesh, const glm::mat4& transform)
 	{
-		s_RendererAPI->RenderMesh(pipeline, mesh, transform);
+		s_RendererAPI->RenderMesh(renderCommandBuffer, pipeline, uniformBufferSet, mesh, transform);
 	}
 		
-	void Renderer::RenderMeshWithMaterial(Ref<Pipeline> pipeline, Ref<Mesh> mesh, Ref<Material> material, const glm::mat4& transform, Buffer additionalUniforms)
+	void Renderer::RenderMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Mesh> mesh, const glm::mat4& transform, Ref<Material> material, Buffer additionalUniforms)
 	{
-		s_RendererAPI->RenderMeshWithMaterial(pipeline, mesh, material, transform, additionalUniforms);
+		s_RendererAPI->RenderMeshWithMaterial(renderCommandBuffer, pipeline, uniformBufferSet, mesh, material, transform, additionalUniforms);
 	}
 
-	void Renderer::RenderQuad(Ref<Pipeline> pipeline, Ref<Material> material, const glm::mat4& transform)
+	void Renderer::RenderQuad(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Material> material, const glm::mat4& transform)
 	{
-		s_RendererAPI->RenderQuad(pipeline, material, transform);
+		s_RendererAPI->RenderQuad(renderCommandBuffer, pipeline, uniformBufferSet, material, transform);
 	}
 
-	void Renderer::SubmitQuad(Ref<Material> material, const glm::mat4& transform)
+	void Renderer::SubmitQuad(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Material> material, const glm::mat4& transform)
 	{
 		/*bool depthTest = true;
 		if (material)
@@ -229,9 +227,9 @@ namespace Key {
         Renderer::DrawIndexed(6, PrimitiveType::Triangles, depthTest);*/
 	}
 
-	void Renderer::SubmitFullscreenQuad(Ref<Pipeline> pipeline, Ref<Material> material)
+	void Renderer::SubmitFullscreenQuad(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Material> material)
 	{
-		s_RendererAPI->SubmitFullscreenQuad(pipeline, material);
+		s_RendererAPI->SubmitFullscreenQuad(renderCommandBuffer, pipeline, uniformBufferSet, material);
 	}
 
 #if 0
@@ -320,20 +318,6 @@ namespace Key {
 		return s_Data->EmptyEnvironment;
 	}
 
-	void Renderer::SetUniformBuffer(Ref<UniformBuffer> uniformBuffer, uint32_t frame, uint32_t set)
-	{
-		s_Data->UniformBuffers[frame][set][uniformBuffer->GetBinding()] = uniformBuffer;
-	}
-
-	Ref<UniformBuffer> Renderer::GetUniformBuffer(uint32_t frame, uint32_t binding, uint32_t set)
-	{
-		KEY_CORE_ASSERT(s_Data->UniformBuffers.find(frame) != s_Data->UniformBuffers.end());
-		KEY_CORE_ASSERT(s_Data->UniformBuffers.at(frame).find(set) != s_Data->UniformBuffers.at(frame).end());
-		KEY_CORE_ASSERT(s_Data->UniformBuffers.at(frame).at(set).find(binding) != s_Data->UniformBuffers.at(frame).at(set).end());
-
-		return s_Data->UniformBuffers.at(frame).at(set).at(binding);
-	}
-
 	RenderCommandQueue& Renderer::GetRenderCommandQueue()
 	{
 		return *s_CommandQueue;
@@ -346,7 +330,8 @@ namespace Key {
 
 	RendererConfig& Renderer::GetConfig()
 	{
-		return s_Data->Config;
+		static RendererConfig config;
+		return config;
 	}
 
 }

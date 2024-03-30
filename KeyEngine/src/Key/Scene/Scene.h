@@ -15,6 +15,7 @@
 #include "Key/Editor/EditorCamera.h"
 
 namespace Key {
+	class SceneRenderer;
 
 	struct Light
 	{
@@ -51,8 +52,8 @@ namespace Key {
 		void Init();
 
 		void OnUpdate(TimeStep ts);
-		void OnRenderRuntime(TimeStep ts);
-		void OnRenderEditor(TimeStep ts, const EditorCamera& editorCamera);
+		void OnRenderRuntime(Ref<SceneRenderer> renderer, TimeStep ts);
+		void OnRenderEditor(Ref<SceneRenderer> renderer, TimeStep ts, const EditorCamera& editorCamera);
 		void OnEvent(Event& e);
 
 		// Runtime
@@ -88,6 +89,7 @@ namespace Key {
 		Entity FindEntityByUUID(UUID id);
 
 		glm::mat4 GetTransformRelativeToParent(Entity entity);
+		glm::mat4 GetWorldSpaceTransform(Entity entity);
 
 		const EntityMap& GetEntityMap() const { return m_EntityIDMap; }
 		void CopyTo(Ref<Scene>& target);

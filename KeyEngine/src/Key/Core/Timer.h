@@ -2,7 +2,7 @@
 
 #include <chrono>
 #include <unordered_map>
-
+#include "Log.h"
 namespace Key {
 
 	class Timer
@@ -31,6 +31,21 @@ namespace Key {
 	private:
 		std::chrono::time_point<std::chrono::high_resolution_clock> m_Start;
 	};
+
+    class ScopedTimer
+    {
+    public:
+        ScopedTimer(const std::string& name)
+            : m_Name(name) {}
+        ~ScopedTimer()
+        {
+            float time = m_Timer.ElapsedMillis();
+            KEY_CORE_TRACE("[TIMER] {0} - {1}ms", m_Name, time);
+        }
+    private:
+        std::string m_Name;
+        Timer m_Timer;
+    };
 
     class PerformanceProfiler
     {
@@ -70,4 +85,6 @@ namespace Key {
 #define KEY_SCOPE_PERF(name)\
     ScopePerfTimer timer__LINE__(name, Application::Get().GetPerformanceProfiler());
 
+#define KEY_SCOPE_TIMER(name)\
+    ScopedTimer timer__LINE__(name);
 }

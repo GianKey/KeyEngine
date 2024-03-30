@@ -31,7 +31,7 @@ namespace Key::Utils {
 				data[i].sType = VK_STRUCTURE_TYPE_CHECKPOINT_DATA_NV;
 
 			uint32_t retrievedCount = checkpointCount;
-			vkGetQueueCheckpointDataNV(::Key::VulkanContext::GetCurrentDevice()->GetQueue(), &retrievedCount, data);
+			vkGetQueueCheckpointDataNV(::Key::VulkanContext::GetCurrentDevice()->GetGraphicsQueue(), &retrievedCount, data);
 			KEY_CORE_ERROR("RetrieveDiagnosticCheckpoints (Graphics Queue):");
 			for (uint32_t i = 0; i < retrievedCount; i++)
 			{

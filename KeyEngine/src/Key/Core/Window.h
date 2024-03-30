@@ -5,6 +5,8 @@
 #include "Key/Renderer/RendererContext.h"
 
 namespace Key {
+	
+	class VulkanSwapChain;
 
 	struct WindowProps
 	{
@@ -28,6 +30,7 @@ namespace Key {
 
 		virtual ~Window() = default;
 
+		virtual void Init() = 0;
 		virtual void ProcessEvents() = 0;
 		virtual void SwapBuffers() = 0;
 
@@ -48,6 +51,7 @@ namespace Key {
 		virtual const std::string& GetTitle() const = 0;
 		virtual void SetTitle(const std::string& title) = 0;
 
+		virtual VulkanSwapChain& GetSwapChain() = 0;
 		virtual void* GetNativeWindow() const = 0;
 		virtual Ref<RendererContext> GetRenderContext() = 0;
 		static Window* Create(const WindowProps& props = WindowProps());

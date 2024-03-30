@@ -9,7 +9,7 @@
 #include "Key/Script/ScriptEngine.h"
 
 #include "Key/Renderer/Renderer2D.h"
-
+#include "Key/Renderer/SceneRenderer.h"
 #include "Key/Math/Math.h"
 #include "Key/Renderer/Renderer.h"
 #define GLM_ENABLE_EXPERIMENTAL
@@ -215,7 +215,7 @@ namespace Key {
 		}
 	}
 
-	void Scene::OnRenderRuntime(TimeStep ts)
+	void Scene::OnRenderRuntime(Ref<SceneRenderer> renderer, TimeStep ts)
 	{
 		/////////////////////////////////////////////////////////////////////
 		// RENDER 3D SCENE
@@ -266,7 +266,8 @@ namespace Key {
 		m_SkyboxMaterial->Set("u_Uniforms.TextureLod", m_SkyboxLod);
 
 		auto group = m_Registry.group<MeshComponent>(entt::get<TransformComponent>);
-		SceneRenderer::BeginScene(this, { camera, cameraViewMatrix });
+		renderer->SetScene(this);
+		renderer->BeginScene({ camera, cameraViewMatrix });
 		for (auto entity : group)
 		{
 			auto [transformComponent, meshComponent] = group.get<TransformComponent, MeshComponent>(entity);
@@ -276,10 +277,10 @@ namespace Key {
 				glm::mat4 transform = GetTransformRelativeToParent(Entity(entity, this));
 
 				// TODO: Should we render (logically)
-				SceneRenderer::SubmitMesh(meshComponent, transform);
+				renderer->SubmitMesh(meshComponent, transform);
 			}
 		}
-		SceneRenderer::EndScene();
+		renderer->EndScene();
 		/////////////////////////////////////////////////////////////////////
 
 #if 0
@@ -301,7 +302,7 @@ namespace Key {
 #endif
 	}
 
-	void Scene::OnRenderEditor(TimeStep ts, const EditorCamera& editorCamera)
+	void Scene::OnRenderEditor(Ref<SceneRenderer> renderer, TimeStep ts, const EditorCamera& editorCamera)
 	{
 		/////////////////////////////////////////////////////////////////////
 		// RENDER 3D SCENE
@@ -349,7 +350,8 @@ namespace Key {
 		m_SkyboxMaterial->Set("u_Uniforms.TextureLod", m_SkyboxLod);
 
 		auto group = m_Registry.group<MeshComponent>(entt::get<TransformComponent>);
-		SceneRenderer::BeginScene(this, { editorCamera, editorCamera.GetViewMatrix(), 0.1f, 1000.0f, 45.0f }); // TODO: real values
+		renderer->SetScene(this);
+		renderer->BeginScene({ editorCamera, editorCamera.GetViewMatrix(), 0.1f, 1000.0f, 45.0f }); // TODO: real values
 		for (auto entity : group)
 		{
 			auto [meshComponent, transformComponent] = group.get<MeshComponent, TransformComponent>(entity);
@@ -361,12 +363,12 @@ namespace Key {
 
 				// TODO: Should we render (logically)
 				if (m_SelectedEntity == entity)
-					SceneRenderer::SubmitSelectedMesh(meshComponent, transform);
+					renderer->SubmitSelectedMesh(meshComponent, transform);
 				else
-					SceneRenderer::SubmitMesh(meshComponent, transform);
+					renderer->SubmitMesh(meshComponent, transform);
 			}
 		}
-		SceneRenderer::EndScene();
+		renderer->EndScene();
 		/////////////////////////////////////////////////////////////////////
 
 #if 0
@@ -648,6 +650,20 @@ namespace Key {
 
 		return transform * entity.Transform().GetTransform();
 	}
+
+	glm::mat4 Scene::GetWorldSpaceTransform(Entity entity)
+	{
+		glm::mat4 transform = entity.Transform().GetTransform();
+
+		while (Entity parent = FindEntityByUUID(entity.GetParentUUID()))
+		{
+			transform = parent.Transform().GetTransform() * transform;
+			entity = parent;
+		}
+
+		return transform;
+	}
+
 
 	// Copy to runtime
 	void Scene::CopyTo(Ref<Scene>& target)

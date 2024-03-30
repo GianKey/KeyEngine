@@ -11,6 +11,7 @@ cache/
 KeyEngine/src/Key/Doxyfile
 KeyEngine/vendor/VulkanSDK
 Keya/assets/cache
+.idea/
 # Files
 *.user
 *.sln

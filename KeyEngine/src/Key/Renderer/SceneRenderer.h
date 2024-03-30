@@ -4,7 +4,10 @@
 #include "Key/Scene/Components.h"
 #include "Key/Renderer/Mesh.h"
 #include "RenderPass.h"
+#include "Key/Renderer/UniformBufferSet.h"
+#include "Key/Renderer/RenderCommandBuffer.h"
 
+#include <map>
 namespace Key {
 
 	struct SceneRendererOptions
@@ -21,35 +24,151 @@ namespace Key {
 		float FOV;
 	};
 
-	class SceneRenderer
+    class SceneRenderer : public RefCounted
 	{
 	public:
-		static void Init();
-		static void Shutdown();
+		SceneRenderer(Ref<Scene> scene);
+		~SceneRenderer();
 
-		static void SetViewportSize(uint32_t width, uint32_t height);
+		void Init();
 
-		static void BeginScene(const Scene* scene, const SceneRendererCamera& camera);
-		static void EndScene();
+		void SetScene(Ref<Scene> scene);
 
-		static void SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform = glm::mat4(1.0f), Ref<Material> overrideMaterial = nullptr); 
-		static void SubmitSelectedMesh(Ref<Mesh> mesh, const glm::mat4& transform = glm::mat4(1.0f));
+		void SetViewportSize(uint32_t width, uint32_t height);
+		void BeginScene(const SceneRendererCamera& camera);
+		void EndScene();
 
-		static std::pair<Ref<TextureCube>, Ref<TextureCube>> CreateEnvironmentMap(const std::string& filepath);
+		void SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform = glm::mat4(1.0f), Ref<Material> overrideMaterial = nullptr);
+		void SubmitSelectedMesh(Ref<Mesh> mesh, const glm::mat4& transform = glm::mat4(1.0f));
 
-		static Ref<RenderPass> GetFinalRenderPass();
-	
-		static Ref<Image2D> GetFinalPassImage();
+		Ref<RenderPass> GetFinalRenderPass();
+		Ref<Image2D> GetFinalPassImage();
 
-		static SceneRendererOptions& GetOptions();
 
-		static void OnImGuiRender();
+		SceneRendererOptions& GetOptions();
+
+		void OnImGuiRender();
 	private:
-		static void FlushDrawList();
-		static void ShadowMapPass();
-		static void GeometryPass();
-		static void CompositePass();
-		static void BloomBlurPass();	
+        void FlushDrawList();
+        void ShadowMapPass();
+        void GeometryPass();
+        void CompositePass();
+        void BloomBlurPass();
+
+        struct CascadeData
+        {
+            glm::mat4 ViewProj;
+            glm::mat4 View;
+            float SplitDepth;
+        };
+        void CalculateCascades(CascadeData* cascades, const SceneRendererCamera& sceneCamera, const glm::vec3& lightDirection);
+    private:
+        Ref<Scene> m_Scene;
+        Ref<RenderCommandBuffer> m_CommandBuffer;
+
+        struct SceneInfo
+        {
+            SceneRendererCamera SceneCamera;
+
+            // Resources
+            Ref<Environment> SceneEnvironment;
+            float SkyboxLod = 0.0f;
+            float SceneEnvironmentIntensity;
+            LightEnvironment SceneLightEnvironment;
+            Light ActiveLight;
+        } m_SceneData;
+
+        Ref<Shader> m_CompositeShader;
+        Ref<Shader> m_BloomBlurShader;
+        Ref<Shader> m_BloomBlendShader;
+
+        struct UBCamera
+        {
+            glm::mat4 ViewProjection;
+            glm::mat4 InverseViewProjection;
+            glm::mat4 View;
+        } CameraData;
+
+        struct UBShadow
+        {
+            glm::mat4 ViewProjection[4];
+        } ShadowData;
+
+        struct Light
+        {
+            glm::vec3 Direction;
+            float Padding = 0.0f;
+            glm::vec3 Radiance;
+            float Multiplier;
+        };
+
+        struct UBScene
+        {
+            Light lights;
+            glm::vec3 u_CameraPosition;
+        } SceneDataUB;
+
+        struct UBRendererData
+        {
+            glm::vec4 u_CascadeSplits;
+            bool ShowCascades = false;
+            char Padding0[3] = { 0,0,0 }; // Bools are 4-bytes in GLSL
+            bool SoftShadows = true;
+            char Padding1[3] = { 0,0,0 };
+            float LightSize = 0.5f;
+            float MaxShadowDistance = 200.0f;
+            float ShadowFade = 1.0f;
+            bool CascadeFading = true;
+            char Padding2[3] = { 0,0,0 };
+            float CascadeTransitionFade = 1.0f;
+        } RendererDataUB;
+
+        Ref<UniformBufferSet> m_UniformBufferSet;
+
+        Ref<Shader> ShadowMapShader, ShadowMapAnimShader;
+        Ref<RenderPass> ShadowMapRenderPass[4];
+        float LightDistance = 0.1f;
+        float CascadeSplitLambda = 0.98f;
+        glm::vec4 CascadeSplits;
+        float CascadeFarPlaneOffset = 15.0f, CascadeNearPlaneOffset = -15.0f;
+
+        bool EnableBloom = false;
+        float BloomThreshold = 1.5f;
+
+        glm::vec2 FocusPoint = { 0.5f, 0.5f };
+
+        RendererID ShadowMapSampler;
+        Ref<Material> CompositeMaterial;
+
+        Ref<Pipeline> m_GeometryPipeline;
+        Ref<Pipeline> m_CompositePipeline;
+        Ref<Pipeline> m_ShadowPassPipeline;
+        Ref<Material> m_ShadowPassMaterial;
+        Ref<Pipeline> m_SkyboxPipeline;
+        Ref<Material> m_SkyboxMaterial;
+
+        struct DrawCommand
+        {
+            Ref<Mesh> Mesh;
+            Ref<Material> Material;
+            glm::mat4 Transform;
+        };
+        std::vector<DrawCommand> m_DrawList;
+        std::vector<DrawCommand> m_SelectedMeshDrawList;
+        std::vector<DrawCommand> m_ShadowPassDrawList;
+
+        // Grid
+        Ref<Pipeline> m_GridPipeline;
+        Ref<Shader> m_GridShader;
+        Ref<Material> m_GridMaterial;
+        Ref<Material> m_OutlineMaterial, OutlineAnimMaterial;
+
+        SceneRendererOptions m_Options;
+
+        uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
+        bool m_NeedsResize = false;
+        bool m_Active = false;
+        bool m_ResourcesCreated = false;
 	};
 
 }

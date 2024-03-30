@@ -3,7 +3,7 @@
 #include "Key/Utilities/StringUtils.h"
 #include "Key/Utilities/FileSystem.h"
 #include "Key/Renderer/Mesh.h"
-#include "Key/Renderer/SceneRenderer.h"
+#include "Key/Renderer/Renderer.h"
 #include "yaml-cpp/yaml.h"
 
 namespace Key {
@@ -37,7 +37,7 @@ namespace Key {
 
 	bool EnvironmentSerializer::TryLoadData(Ref<Asset>& asset) const
 	{
-		auto [radiance, irradiance] = SceneRenderer::CreateEnvironmentMap(asset->FilePath);
+		auto [radiance, irradiance] = Renderer::CreateEnvironmentMap(asset->FilePath);
 
 		if (!radiance || !irradiance)
 			return false;

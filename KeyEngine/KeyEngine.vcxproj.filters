@@ -606,6 +606,21 @@
     <ClInclude Include="vendor\yaml-cpp\src\token.h">
       <Filter>vendor\yaml-cpp\src</Filter>
     </ClInclude>
+    <ClInclude Include="src\Key\Renderer\UniformBufferSet.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\Renderer\RenderCommandBuffer.h">
+      <Filter>src\Key\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanRenderCommandBuffer.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\Vulkan\VulkanUniformBufferSet.h">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key\PlatForm\OpenGL\OpenGLUniformBufferSet.h">
+      <Filter>src\Key\PlatForm\OpenGL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Key\Asset\AssetImporter.cpp">
@@ -976,6 +991,15 @@
     </ClCompile>
     <ClCompile Include="vendor\yaml-cpp\src\tag.cpp">
       <Filter>vendor\yaml-cpp\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Renderer\UniformBufferSet.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\Renderer\RenderCommandBuffer.cpp">
+      <Filter>src\Key\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Key\PlatForm\Vulkan\VulkanRenderCommandBuffer.cpp">
+      <Filter>src\Key\PlatForm\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -4,7 +4,7 @@
 #include "Key/Renderer/RendererContext.h"
 #include <GLFW/glfw3.h>
 #include "Key/Core/input.h"
-
+#include "Key/Platform/Vulkan/VulkanSwapChain.h"
 namespace Key {
 
 	class WindowsWindow : public Window
@@ -12,7 +12,7 @@ namespace Key {
 	public:
 		WindowsWindow(const WindowProps& props);
 		virtual ~WindowsWindow();
-
+		virtual void Init() override;
 		virtual void ProcessEvents() override;
 		virtual void SwapBuffers() override;
 
@@ -31,6 +31,7 @@ namespace Key {
 
 		inline virtual void* GetNativeWindow() const { return m_Window; }
 		virtual Ref<RendererContext> GetRenderContext() override { return m_RendererContext; }
+		virtual VulkanSwapChain& GetSwapChain() override;
 
 		virtual std::pair<uint32_t, uint32_t> GetSize() const override { return { m_Data.Width, m_Data.Height }; }
 		virtual std::pair<float, float> GetWindowPos() const override;
@@ -52,10 +53,10 @@ namespace Key {
 
 		WindowData m_Data;
 
-		
+		WindowProps m_Properties;
 		GLFWcursor* m_ImGuiMouseCursors[9] = { 0 };
 		float m_LastFrameTime = 0.0f;
-
+		VulkanSwapChain m_SwapChain;
 		Ref<RendererContext> m_RendererContext;
 	};
 

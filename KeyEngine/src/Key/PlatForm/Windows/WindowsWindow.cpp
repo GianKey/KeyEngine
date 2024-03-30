@@ -1,7 +1,7 @@
 #include "Kpch.h"
 #include <glad/glad.h>
 #include "WindowsWindow.h"
-
+#include "Key/Platform/Vulkan/VulkanContext.h"
 #include "Key/Core/Application.h"
 #include "Key/Core/Events/KeyBoardEvent.h"
 #include "Key/Core/Events/MouseEvent.h"
@@ -21,9 +21,9 @@ namespace Key {
 		return new WindowsWindow(props);
 	}
 
-	WindowsWindow::WindowsWindow(const WindowProps& props)
+	WindowsWindow::WindowsWindow(const WindowProps& props) : m_Properties(props)
 	{
-		Init(props);
+		
 	}
 
 	WindowsWindow::~WindowsWindow()
@@ -31,13 +31,13 @@ namespace Key {
 		Shutdown();
 	}
 
-	void WindowsWindow::Init(const WindowProps& props)
+	void WindowsWindow::Init()
 	{
-		m_Data.Title = props.Title;
-		m_Data.Width = props.Width;
-		m_Data.Height = props.Height;
+		m_Data.Title = m_Properties.Title;
+		m_Data.Width = m_Properties.Width;
+		m_Data.Height = m_Properties.Height;
 
-		KEY_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
+		KEY_CORE_INFO("Creating window {0} ({1}, {2})", m_Properties.Title, m_Properties.Width, m_Properties.Height);
 
 		if (!s_GLFWInitialized)
 		{
@@ -53,11 +53,18 @@ namespace Key {
 			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);*/
 
 
-		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-
+		m_Window = glfwCreateWindow((int)m_Properties.Width, (int)m_Properties.Height, m_Data.Title.c_str(), nullptr, nullptr);
 		// Create Renderer Context
-		m_RendererContext = RendererContext::Create(m_Window);
-		m_RendererContext->Create();
+		m_RendererContext = RendererContext::Create();
+		m_RendererContext->Init();
+
+		Ref<VulkanContext> context = m_RendererContext.As<VulkanContext>();
+
+		m_SwapChain.Init(VulkanContext::GetInstance(), context->GetDevice());
+		m_SwapChain.InitSurface(m_Window);
+
+		uint32_t width = m_Data.Width, height = m_Data.Height;
+		m_SwapChain.Create(&width, &height, true);
 
 		//glfwMaximizeWindow(m_Window);
 		glfwSetWindowUserPointer(m_Window, &m_Data);
@@ -196,7 +203,7 @@ namespace Key {
 
 	void WindowsWindow::SwapBuffers()
 	{
-		m_RendererContext->SwapBuffers();
+		m_SwapChain.Present();
 	}
 
 	void WindowsWindow::SetVSync(bool enabled)
@@ -227,5 +234,10 @@ namespace Key {
 	{
 		m_Data.Title = title;
 		glfwSetWindowTitle(m_Window, m_Data.Title.c_str());
+	}
+
+	VulkanSwapChain& WindowsWindow::GetSwapChain()
+	{
+		return m_SwapChain;
 	}
 }

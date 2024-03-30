@@ -3,6 +3,7 @@
 
 #include "Key/Renderer/Renderer.h"
 #include "Key/Renderer/Framebuffer.h"
+#include "Key/Platform/Vulkan/VulkanSwapChain.h"
 #include <GLFW/glfw3.h>
 
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -46,6 +47,7 @@ namespace Key {
 		m_Profiler = new PerformanceProfiler();
 
 		m_Window = std::unique_ptr<Window>(Window::Create(WindowProps(props.Name, props.WindowWidth, props.WindowHeight)));
+		m_Window->Init();
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 		m_Window->Maximize();
 		m_Window->SetVSync(true);
@@ -125,7 +127,7 @@ namespace Key {
 
 		m_Minimized = false;
 
-		m_Window->GetRenderContext()->OnResize(width, height);
+		m_Window->GetSwapChain().OnResize(width, height);
 
 		auto& fbs = FramebufferPool::GetGlobal()->GetAll();
 		for (auto& fb : fbs)
@@ -304,7 +306,7 @@ namespace Key {
 				Renderer::EndFrame();
 
 				// On Render thread
-				m_Window->GetRenderContext()->BeginFrame();
+				m_Window->GetSwapChain().BeginFrame();
 				//Update render command address
 				Renderer::WaitAndRender();
 				m_Window->SwapBuffers();
