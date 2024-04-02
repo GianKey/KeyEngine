@@ -42,7 +42,13 @@ namespace Key {
 
 			IncRef();
 		}
-
+		/**
+		 * 拷贝构造函数，用于创建一个新的Ref对象。
+		 * 它接受一个Ref<T2>对象作为参数，并将其转换为Ref<T>对象。
+		 * 转换后的Ref对象将具有与other相同的实例指针，并且引用计数将增加。
+		*   @tparam T2 其他类型的Ref对象类型.
+		* @param other 参数other是要转换的Ref对象.
+		 */
 		template<typename T2>
 		Ref(const Ref<T2>& other)
 		{

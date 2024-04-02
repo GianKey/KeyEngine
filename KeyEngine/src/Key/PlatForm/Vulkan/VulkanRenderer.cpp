@@ -549,7 +549,7 @@ namespace Key {
 				renderPassBeginInfo.renderArea.extent.width = width;
 				renderPassBeginInfo.renderArea.extent.height = height;
 
-				// TODO: Does our framebuffer have a depth attachment?
+				// TODO:framebuffer have a depth attachment
 
 				const auto& clearValues = framebuffer->GetVulkanClearValues();
 

@@ -2,7 +2,7 @@
 #include "AssetEditorPanel.h"
 #include "DefaultAssetEditors.h"
 #include "Key/Asset/AssetManager.h"
-
+#include "MeshViewerPanel.h"
 namespace Key {
 
 	AssetEditor::AssetEditor(const char* title)
@@ -55,11 +55,24 @@ namespace Key {
 	void AssetEditorPanel::RegisterDefaultEditors()
 	{
 		RegisterEditor<TextureViewer>(AssetType::Texture);
+		RegisterEditor<MeshViewerPanel>(AssetType::Mesh);
 	}
 
 	void AssetEditorPanel::UnregisterAllEditors()
 	{
 		s_Editors.clear();
+	}
+
+	void AssetEditorPanel::OnUpdate(TimeStep ts)
+	{
+		for (auto& kv : s_Editors)
+			kv.second->OnUpdate(ts);
+	}
+
+	void AssetEditorPanel::OnEvent(Event& e)
+	{
+		for (auto& kv : s_Editors)
+			kv.second->OnEvent(e);
 	}
 
 	void AssetEditorPanel::OnImGuiRender()

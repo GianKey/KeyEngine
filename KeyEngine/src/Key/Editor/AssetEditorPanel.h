@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Key/ImGui/ImGui.h"
-
+#include "Key/Core/TimeStep.h"
+#include "Key/Core/Events/Event.h"
 namespace Key {
 
 	class AssetEditor
@@ -12,7 +13,10 @@ namespace Key {
 	public:
 		virtual ~AssetEditor(){}
 
-		void OnImGuiRender();
+		virtual void OnUpdate(TimeStep ts) {}
+		virtual void OnEvent(Event& e) {}
+		virtual void OnImGuiRender();
+
 		void SetOpen(bool isOpen);
 		virtual void SetAsset(const Ref<Asset>& asset) = 0;
 
@@ -37,6 +41,8 @@ namespace Key {
 	public:
 		static void RegisterDefaultEditors();
 		static void UnregisterAllEditors();
+		static void OnUpdate(TimeStep ts);
+		static void OnEvent(Event& e);
 		static void OnImGuiRender();
 		static void OpenEditor(const Ref<Asset>& asset);
 

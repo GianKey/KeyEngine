@@ -39,7 +39,7 @@ namespace Key::UI {
 		ImGui::PushItemWidth(-1);
 
 		char buffer[256];
-		strcpy(buffer, value.c_str());
+		strcpy_s<256>(buffer, value.c_str());
 
 		s_IDBuffer[0] = '#';
 		s_IDBuffer[1] = '#';

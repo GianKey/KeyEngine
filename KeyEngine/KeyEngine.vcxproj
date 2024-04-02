@@ -179,6 +179,7 @@
     <ClInclude Include="src\Key\Editor\ContentBrowserPanel.h" />
     <ClInclude Include="src\Key\Editor\DefaultAssetEditors.h" />
     <ClInclude Include="src\Key\Editor\EditorCamera.h" />
+    <ClInclude Include="src\Key\Editor\MeshViewerPanel.h" />
     <ClInclude Include="src\Key\Editor\ObjectsPanel.h" />
     <ClInclude Include="src\Key\Editor\SceneHierarchyPanel.h" />
     <ClInclude Include="src\Key\EntryPoint.h" />
@@ -342,6 +343,7 @@
     <ClCompile Include="src\Key\Editor\ContentBrowserPanel.cpp" />
     <ClCompile Include="src\Key\Editor\DefaultAssetEditors.cpp" />
     <ClCompile Include="src\Key\Editor\EditorCamera.cpp" />
+    <ClCompile Include="src\Key\Editor\MeshViewerPanel.cpp" />
     <ClCompile Include="src\Key\Editor\ObjectsPanel.cpp" />
     <ClCompile Include="src\Key\Editor\SceneHierarchyPanel.cpp" />
     <ClCompile Include="src\Key\ImGui\ImGuiBuild.cpp" />

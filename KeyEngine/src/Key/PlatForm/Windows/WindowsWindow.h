@@ -37,7 +37,6 @@ namespace Key {
 		virtual std::pair<float, float> GetWindowPos() const override;
 		
 	private:
-		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
 	private:
 		GLFWwindow* m_Window;

@@ -48,7 +48,7 @@ namespace Key {
 	}
 
 	EditorLayer::EditorLayer()
-		: m_SceneType(SceneType::Model), m_EditorCamera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 1000.0f))
+		: m_SceneType(SceneType::Model), m_EditorCamera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 1000.0f)), m_SecondEditorCamera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 1000.0f))
 	{
 	}
 
@@ -75,7 +75,8 @@ namespace Key {
 
 		//OpenScene("assets/scenes/AnimationTest.hsc");
 		NewScene();
-		//OpenScene("assets/scenes/ShadowTest.hsc");
+		m_ViewportRenderer = Ref<SceneRenderer>::Create(m_CurrentScene);
+		m_SecondViewportRenderer = Ref<SceneRenderer>::Create(m_CurrentScene);
 		AssetEditorPanel::RegisterDefaultEditors();
 		FileSystem::StartWatching();
 	}
@@ -137,22 +138,27 @@ namespace Key {
 
 	void EditorLayer::OnUpdate(TimeStep ts)
 	{
-		auto [x, y] = GetMouseViewportSpace();
-
+	
 		//SceneRenderer::SetFocusPoint({ x * 0.5f + 0.5f, y * 0.5f + 0.5f });
 
 		switch (m_SceneState)
 		{
 		case SceneState::Edit:
 		{
-			//if (m_ViewportPanelFocused)
+			m_EditorCamera.SetActive(m_ViewportPanelFocused);
 			m_EditorCamera.OnUpdate(ts);
 
-			m_EditorScene->OnRenderEditor(ts, m_EditorCamera);
-
+			m_EditorScene->OnRenderEditor(m_ViewportRenderer, ts, m_EditorCamera);
+			if (m_ShowSecondViewport)
+			{
+				m_SecondEditorCamera.SetActive(m_ViewportPanel2Focused);
+				m_SecondEditorCamera.OnUpdate(ts);
+				m_EditorScene->OnRenderEditor(m_SecondViewportRenderer, ts, m_SecondEditorCamera);
+			}
+#if RENDERER_2D
 			if (m_DrawOnTopBoundingBoxes)
 			{
-				Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
+				Renderer::BeginRenderPass(m_ViewportRenderer->GetFinalRenderPass(), false);
 				auto viewProj = m_EditorCamera.GetViewProjection();
 				Renderer2D::BeginScene(viewProj, false);
 				// TODO: Renderer::DrawAABB(m_MeshEntity.GetComponent<MeshComponent>(), m_MeshEntity.GetComponent<TransformComponent>());
@@ -166,7 +172,7 @@ namespace Key {
 
 				if (selection.Mesh && selection.Entity.HasComponent<MeshComponent>())
 				{
-					Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
+					Renderer::BeginRenderPass(m_ViewportRenderer->GetFinalRenderPass(), false);
 					auto viewProj = m_EditorCamera.GetViewProjection();
 					Renderer2D::BeginScene(viewProj, false);
 					glm::vec4 color = (m_SelectionMode == SelectionMode::Entity) ? glm::vec4{ 1.0f, 1.0f, 1.0f, 1.0f } : glm::vec4{ 0.2f, 0.9f, 0.2f, 1.0f };
@@ -185,7 +191,7 @@ namespace Key {
 					const auto& size = selection.Entity.GetComponent<BoxCollider2DComponent>().Size;
 					const TransformComponent& transform = selection.Entity.GetComponent<TransformComponent>();
 
-					Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
+					Renderer::BeginRenderPass(m_ViewportRenderer->GetFinalRenderPass(), false);
 					auto viewProj = m_EditorCamera.GetViewProjection();
 					Renderer2D::BeginScene(viewProj, false);
 					Renderer2D::DrawRotatedRect({ transform.Translation.x, transform.Translation.y }, size * 2.0f, transform.Rotation.z, { 0.0f, 1.0f, 1.0f, 1.0f });
@@ -198,7 +204,7 @@ namespace Key {
 					const auto& size = selection.Entity.GetComponent<CircleCollider2DComponent>().Radius;
 					const TransformComponent& transform = selection.Entity.GetComponent<TransformComponent>();
 
-					Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
+					Renderer::BeginRenderPass(m_ViewportRenderer->GetFinalRenderPass(), false);
 					auto viewProj = m_EditorCamera.GetViewProjection();
 					Renderer2D::BeginScene(viewProj, false);
 					Renderer2D::DrawCircle({ transform.Translation.x, transform.Translation.y }, size, { 0.0f, 1.0f, 1.0f, 1.0f });
@@ -206,7 +212,7 @@ namespace Key {
 					Renderer::EndRenderPass();
 				}
 			}
-
+#endif
 			break;
 		}
 		case SceneState::Play:
@@ -215,7 +221,7 @@ namespace Key {
 				m_EditorCamera.OnUpdate(ts);
 
 			m_RuntimeScene->OnUpdate(ts);
-			m_RuntimeScene->OnRenderRuntime(ts);
+			m_RuntimeScene->OnRenderRuntime(m_ViewportRenderer, ts);
 			break;
 		}
 		case SceneState::Pause:
@@ -223,15 +229,16 @@ namespace Key {
 			if (m_ViewportPanelFocused)
 				m_EditorCamera.OnUpdate(ts);
 
-			m_RuntimeScene->OnRenderRuntime(ts);
+			m_RuntimeScene->OnRenderRuntime(m_ViewportRenderer, ts);
 			break;
 		}
+		AssetEditorPanel::OnUpdate(ts);
 		}
 	}
 
 	void EditorLayer::ShowBoundingBoxes(bool show, bool onTop)
 	{
-		SceneRenderer::GetOptions().ShowBoundingBoxes = show && !onTop;
+		m_ViewportRenderer->GetOptions().ShowBoundingBoxes = show && !onTop;
 		m_DrawOnTopBoundingBoxes = show && onTop;
 	}
 
@@ -455,8 +462,7 @@ namespace Key {
 
 		m_ContentBrowserPanel->OnImGuiRender();
 		m_ObjectsPanel->OnImGuiRender();
-		AssetEditorPanel::OnImGuiRender();
-
+		
 		// ImGui::ShowDemoWindow();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
@@ -507,7 +513,7 @@ namespace Key {
 
 		auto viewportOffset = ImGui::GetCursorPos(); // includes tab bar
 		auto viewportSize = ImGui::GetContentRegionAvail();
-		SceneRenderer::SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+		m_ViewportRenderer->SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
 		m_EditorScene->SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
 		if (m_RuntimeScene)
 			m_RuntimeScene->SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
@@ -515,7 +521,7 @@ namespace Key {
 		m_EditorCamera.SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
 
 		// Render viewport image
-		UI::Image(SceneRenderer::GetFinalPassImage(), viewportSize, { 0, 1 }, { 1, 0 });
+		UI::Image(m_ViewportRenderer->GetFinalPassImage(), viewportSize, { 0, 1 }, { 1, 0 });
 
 		static int counter = 0;
 		auto windowSize = ImGui::GetWindowSize();
@@ -526,10 +532,9 @@ namespace Key {
 		ImVec2 maxBound = { minBound.x + windowSize.x, minBound.y + windowSize.y };
 		m_ViewportBounds[0] = { minBound.x, minBound.y };
 		m_ViewportBounds[1] = { maxBound.x, maxBound.y };
-		m_AllowViewportCameraEvents = ImGui::IsMouseHoveringRect(minBound, maxBound);
-
+	
 		// Gizmos
-		if (m_GizmoType != -1 && m_SelectionContext.size())
+		if (m_GizmoType != -1 && m_SelectionContext.size() && m_ViewportPanelMouseOver)
 		{
 			auto& selection = m_SelectionContext[0];
 
@@ -629,6 +634,137 @@ namespace Key {
 		ImGui::End();
 		ImGui::PopStyleVar();
 
+		if (m_ShowSecondViewport)
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+			ImGui::Begin("Second Viewport");
+
+			m_ViewportPanel2MouseOver = ImGui::IsWindowHovered();
+			m_ViewportPanel2Focused = ImGui::IsWindowFocused();
+
+			auto viewportOffset = ImGui::GetCursorPos(); // includes tab bar
+			auto viewportSize = ImGui::GetContentRegionAvail();
+			if (viewportSize.x > 1 && viewportSize.y > 1)
+			{
+				m_SecondViewportRenderer->SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+				m_SecondEditorCamera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 1000.0f));
+				m_SecondEditorCamera.SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+
+				// Render viewport image
+				UI::Image(m_SecondViewportRenderer->GetFinalPassImage(), viewportSize, { 0, 1 }, { 1, 0 });
+
+				static int counter = 0;
+				auto windowSize = ImGui::GetWindowSize();
+				ImVec2 minBound = ImGui::GetWindowPos();
+				minBound.x += viewportOffset.x;
+				minBound.y += viewportOffset.y;
+
+				ImVec2 maxBound = { minBound.x + windowSize.x, minBound.y + windowSize.y };
+				m_SecondViewportBounds[0] = { minBound.x, minBound.y };
+				m_SecondViewportBounds[1] = { maxBound.x, maxBound.y };
+
+				// Gizmos
+				if (m_GizmoType != -1 && m_SelectionContext.size() && m_ViewportPanel2MouseOver)
+				{
+					auto& selection = m_SelectionContext[0];
+
+					float rw = (float)ImGui::GetWindowWidth();
+					float rh = (float)ImGui::GetWindowHeight();
+					ImGuizmo::SetOrthographic(false);
+					ImGuizmo::SetDrawlist();
+					ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, rw, rh);
+
+					bool snap = Input::IsKeyPressed(KEY_KEY_LEFT_CONTROL);
+
+					TransformComponent& entityTransform = selection.Entity.Transform();
+					glm::mat4 transform = m_CurrentScene->GetTransformRelativeToParent(selection.Entity);
+					float snapValue = GetSnapValue();
+					float snapValues[3] = { snapValue, snapValue, snapValue };
+
+					if (m_SelectionMode == SelectionMode::Entity)
+					{
+						ImGuizmo::Manipulate(glm::value_ptr(m_SecondEditorCamera.GetViewMatrix()),
+							glm::value_ptr(m_SecondEditorCamera.GetProjectionMatrix()),
+							(ImGuizmo::OPERATION)m_GizmoType,
+							ImGuizmo::LOCAL,
+							glm::value_ptr(transform),
+							nullptr,
+							snap ? snapValues : nullptr);
+
+						if (ImGuizmo::IsUsing())
+						{
+							glm::vec3 translation, rotation, scale;
+							Math::DecomposeTransform(transform, translation, rotation, scale);
+
+							Entity parent = m_CurrentScene->FindEntityByUUID(selection.Entity.GetParentUUID());
+							if (parent)
+							{
+								glm::vec3 parentTranslation, parentRotation, parentScale;
+								Math::DecomposeTransform(m_CurrentScene->GetTransformRelativeToParent(parent), parentTranslation, parentRotation, parentScale);
+
+								glm::vec3 deltaRotation = (rotation - parentRotation) - entityTransform.Rotation;
+								entityTransform.Translation = translation - parentTranslation;
+								entityTransform.Rotation += deltaRotation;
+								entityTransform.Scale = scale;
+							}
+							else
+							{
+								glm::vec3 deltaRotation = rotation - entityTransform.Rotation;
+								entityTransform.Translation = translation;
+								entityTransform.Rotation += deltaRotation;
+								entityTransform.Scale = scale;
+							}
+						}
+					}
+					else
+					{
+						glm::mat4 transformBase = transform * selection.Mesh->Transform;
+						ImGuizmo::Manipulate(glm::value_ptr(m_SecondEditorCamera.GetViewMatrix()),
+							glm::value_ptr(m_SecondEditorCamera.GetProjectionMatrix()),
+							(ImGuizmo::OPERATION)m_GizmoType,
+							ImGuizmo::LOCAL,
+							glm::value_ptr(transformBase),
+							nullptr,
+							snap ? snapValues : nullptr);
+
+						selection.Mesh->Transform = glm::inverse(transform) * transformBase;
+					}
+				}
+
+				if (ImGui::BeginDragDropTarget())
+				{
+					auto data = ImGui::AcceptDragDropPayload("asset_payload");
+					if (data)
+					{
+						int count = data->DataSize / sizeof(AssetHandle);
+
+						for (int i = 0; i < count; i++)
+						{
+							AssetHandle assetHandle = *(((AssetHandle*)data->Data) + i);
+							Ref<Asset> asset = AssetManager::GetAsset<Asset>(assetHandle);
+
+							// We can't really support dragging and dropping scenes when we're dropping multiple assets
+							if (count == 1 && asset->Type == AssetType::Scene)
+							{
+								OpenScene(asset->FilePath);
+							}
+
+							if (asset->Type == AssetType::Mesh)
+							{
+								Entity entity = m_EditorScene->CreateEntity(asset->FileName);
+								entity.AddComponent<MeshComponent>(Ref<Mesh>(asset));
+								SelectEntity(entity);
+							}
+						}
+					}
+					ImGui::EndDragDropTarget();
+				}
+			}
+			ImGui::End();
+			ImGui::PopStyleVar();
+		}
+
+
 		if (ImGui::BeginMenuBar())
 		{
 			if (ImGui::BeginMenu("File"))
@@ -670,7 +806,7 @@ namespace Key {
 
 			if (ImGui::BeginMenu("Edit"))
 			{
-
+				ImGui::MenuItem("Second Viewport", nullptr, &m_ShowSecondViewport);
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("Help"))
@@ -997,7 +1133,7 @@ namespace Key {
 		ImGui::End();
 
 		ScriptEngine::OnImGuiRender();
-		SceneRenderer::OnImGuiRender();
+		m_ViewportRenderer->OnImGuiRender();
 
 		ImGui::End();
 
@@ -1051,6 +1187,7 @@ namespace Key {
 
 			ImGui::EndPopup();
 		}
+		AssetEditorPanel::OnImGuiRender();
 	}
 
 	void EditorLayer::OnEvent(Event& e)
@@ -1060,6 +1197,8 @@ namespace Key {
 			if (m_ViewportPanelMouseOver)
 				m_EditorCamera.OnEvent(e);
 
+			if (m_ViewportPanel2MouseOver)
+				m_SecondEditorCamera.OnEvent(e);
 			m_EditorScene->OnEvent(e);
 		}
 		else if (m_SceneState == SceneState::Play)
@@ -1070,6 +1209,8 @@ namespace Key {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(KEY_BIND_EVENT_FN(EditorLayer::OnKeyPressedEvent));
 		dispatcher.Dispatch<MouseButtonPressedEvent>(KEY_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
+
+		AssetEditorPanel::OnEvent(e);
 	}
 
 	bool EditorLayer::OnKeyPressedEvent(KeyPressedEvent& e)
@@ -1145,7 +1286,7 @@ namespace Key {
 				break;
 			case KeyCode::G:
 				// Toggle grid
-				SceneRenderer::GetOptions().ShowGrid = !SceneRenderer::GetOptions().ShowGrid;
+				m_ViewportRenderer->GetOptions().ShowGrid = !m_ViewportRenderer->GetOptions().ShowGrid;
 				break;
 			case KeyCode::N:
 				NewScene();
@@ -1175,12 +1316,13 @@ namespace Key {
 	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
 	{
 		auto [mx, my] = Input::GetMousePosition();
-		if (e.GetMouseButton() == KEY_MOUSE_BUTTON_LEFT && m_ViewportPanelMouseOver && !Input::IsKeyPressed(KeyCode::LeftAlt) && !ImGuizmo::IsOver() && m_SceneState != SceneState::Play)
+		if (e.GetMouseButton() == KEY_MOUSE_BUTTON_LEFT && (m_ViewportPanelMouseOver || m_ViewportPanel2MouseOver) && !Input::IsKeyPressed(KeyCode::LeftAlt) && !ImGuizmo::IsOver() && m_SceneState != SceneState::Play)
 		{
-			auto [mouseX, mouseY] = GetMouseViewportSpace();
+			auto [mouseX, mouseY] = GetMouseViewportSpace(m_ViewportPanelMouseOver);
 			if (mouseX > -1.0f && mouseX < 1.0f && mouseY > -1.0f && mouseY < 1.0f)
 			{
-				auto [origin, direction] = CastRay(mouseX, mouseY);
+				const auto& camera = m_ViewportPanelMouseOver ? m_EditorCamera : m_SecondEditorCamera;
+				auto [origin, direction] = CastRay(camera, mouseX, mouseY);
 
 				m_SelectionContext.clear();
 				m_EditorScene->SetSelectedEntity({});
@@ -1229,26 +1371,27 @@ namespace Key {
 		return false;
 	}
 
-	std::pair<float, float> EditorLayer::GetMouseViewportSpace()
+	std::pair<float, float> EditorLayer::GetMouseViewportSpace(bool primaryViewport)
 	{
 		auto [mx, my] = ImGui::GetMousePos();
-		mx -= m_ViewportBounds[0].x;
-		my -= m_ViewportBounds[0].y;
-		auto viewportWidth = m_ViewportBounds[1].x - m_ViewportBounds[0].x;
-		auto viewportHeight = m_ViewportBounds[1].y - m_ViewportBounds[0].y;
+		const auto& viewportBounds = primaryViewport ? m_ViewportBounds : m_SecondViewportBounds;
+		mx -= viewportBounds[0].x;
+		my -= viewportBounds[0].y;
+		auto viewportWidth = viewportBounds[1].x - viewportBounds[0].x;
+		auto viewportHeight = viewportBounds[1].y - viewportBounds[0].y;
 
 		return { (mx / viewportWidth) * 2.0f - 1.0f, ((my / viewportHeight) * 2.0f - 1.0f) * -1.0f };
 	}
 
-	std::pair<glm::vec3, glm::vec3> EditorLayer::CastRay(float mx, float my)
+	std::pair<glm::vec3, glm::vec3> EditorLayer::CastRay(const EditorCamera& camera, float mx, float my)
 	{
 		glm::vec4 mouseClipPos = { mx, my, -1.0f, 1.0f };
 
-		auto inverseProj = glm::inverse(m_EditorCamera.GetProjectionMatrix());
-		auto inverseView = glm::inverse(glm::mat3(m_EditorCamera.GetViewMatrix()));
+		auto inverseProj = glm::inverse(camera.GetProjectionMatrix());
+		auto inverseView = glm::inverse(glm::mat3(camera.GetViewMatrix()));
 
 		glm::vec4 ray = inverseProj * mouseClipPos;
-		glm::vec3 rayPos = m_EditorCamera.GetPosition();
+		glm::vec3 rayPos = camera.GetPosition();
 		glm::vec3 rayDir = inverseView * glm::vec3(ray);
 
 		return { rayPos, rayDir };
@@ -1271,12 +1414,15 @@ namespace Key {
 
 	Ray EditorLayer::CastMouseRay()
 	{
+#if 0
 		auto [mouseX, mouseY] = GetMouseViewportSpace();
 		if (mouseX > -1.0f && mouseX < 1.0f && mouseY > -1.0f && mouseY < 1.0f)
 		{
 			auto [origin, direction] = CastRay(mouseX, mouseY);
 			return Ray(origin, direction);
 		}
+#endif
+		KEY_CORE_ASSERT(false);
 		return Ray::Zero();
 	}
 
