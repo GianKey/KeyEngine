@@ -5,8 +5,6 @@
 # KeyEngine
 Key Engine 是一款个人游戏引擎。我使用它作为学习实时渲染和引擎技术的平台。
 
-See [build.md](build.md)
-
 # 特性
 
 - 支持Vulkan和OpenGL的渲染后端
