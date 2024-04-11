@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\src\vulkan\vk_safe_struct_core.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\src\vulkan\vk_safe_struct_ext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\src\vulkan\vk_safe_struct_khr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\src\vulkan\vk_safe_struct_utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\src\vulkan\vk_safe_struct_vendor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\src\vulkan\vk_safe_struct_manual.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\include\vulkan\utility\vk_safe_struct.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\include\vulkan\utility\vk_safe_struct_utils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\src\vulkan\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{5664BA45-C6C0-346E-9006-309B124B53BE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{76E34F95-910D-31AC-B6F5-7783938F7D40}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

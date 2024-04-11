@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\src\layer\vk_layer_settings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\src\layer\vk_layer_settings_helper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\src\layer\layer_settings_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\src\layer\layer_settings_util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\src\layer\layer_settings_manager.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\src\layer\layer_settings_util.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\include\vulkan\layer\vk_layer_settings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\include\vulkan\layer\vk_layer_settings.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="E:\Project\GameProject\Enginer\Library\Vulkan-Utility-Libraries\src\layer\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{5664BA45-C6C0-346E-9006-309B124B53BE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{76E34F95-910D-31AC-B6F5-7783938F7D40}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

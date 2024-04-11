@@ -1,0 +1,8 @@
+        include(CMakeFindDependencyMacro)
+        # NOTE: Because VulkanHeaders is a PUBLIC dependency it needs to be found prior to VulkanUtilityLibraries
+        find_dependency(VulkanHeaders REQUIRED)
+
+        @PACKAGE_INIT@
+
+        include(@PACKAGE_VUL_EXPORT_TARGETS@)
+    

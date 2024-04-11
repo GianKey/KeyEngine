@@ -977,7 +977,7 @@ namespace Key {
 										ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
 										ImGui::TextUnformatted(normalMap->GetPath().c_str());
 										ImGui::PopTextWrapPos();
-										UI::Image(normalMap, ImVec2(384, 384));
+										//UI::Image(normalMap, ImVec2(384, 384));
 										ImGui::EndTooltip();
 									}
 									if (ImGui::IsItemClicked())

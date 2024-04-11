@@ -17,10 +17,10 @@ namespace Key {
 #define BIT(x) (1 << x)
 
 /**
- * Ê¹ÓÃ std::bind À´´´½¨Ò»¸ö³ÉÔ±º¯ÊýµÄ°ó¶¨.
- * @param &x º¯ÊýµØÖ·
- * @param this Ö¸Ïòµ±Ç°ÊµÀý
- * @param std::placeholders::_1 Ò»¸öÕ¼Î»·û£¬±íÊ¾ÔÚµ÷ÓÃ°ó¶¨µÄº¯ÊýÊ±£¬´«µÝµÚÒ»¸ö²ÎÊý
+ * ä½¿ç”¨ std::bind æ¥åˆ›å»ºä¸€ä¸ªæˆå‘˜å‡½æ•°çš„ç»‘å®š.
+ * @param &x å‡½æ•°åœ°å€
+ * @param this æŒ‡å‘å½“å‰å®žä¾‹
+ * @param std::placeholders::_1 ä¸€ä¸ªå ä½ç¬¦ï¼Œè¡¨ç¤ºåœ¨è°ƒç”¨ç»‘å®šçš„å‡½æ•°æ—¶ï¼Œä¼ é€’ç¬¬ä¸€ä¸ªå‚æ•°
  */
 #define KEY_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
 

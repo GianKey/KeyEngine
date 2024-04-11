@@ -230,6 +230,7 @@ namespace Key {
 
 				std::vector<std::vector<VkWriteDescriptorSet>> writeDescriptors;
 
+
 				auto& materials = mesh->GetMaterials();
 				for (auto& material : materials)
 				{
@@ -701,10 +702,11 @@ namespace Key {
 				writeDescriptors[1].pImageInfo = &envFilteredCubemap->GetVulkanDescriptorInfo();
 
 				vkUpdateDescriptorSets(device, (uint32_t)writeDescriptors.size(), writeDescriptors.data(), 0, NULL);
-				environmentIrradiancePipeline->Begin();
+				environmentIrradiancePipeline->Execute(descriptorSet.DescriptorSets.data(), descriptorSet.DescriptorSets.size(), irradianceMap->GetWidth() / 32, irradianceMap->GetHeight() / 32, 6);
+			/*	environmentIrradiancePipeline->Begin();
 				environmentIrradiancePipeline->SetPushConstants(&Renderer::GetConfig().IrradianceMapComputeSamples, sizeof(uint32_t));
 				environmentIrradiancePipeline->Dispatch(descriptorSet.DescriptorSets[0], irradianceMap->GetWidth() / 32, irradianceMap->GetHeight() / 32, 6);
-				environmentIrradiancePipeline->End();
+				environmentIrradiancePipeline->End();*/
 
 				irradianceCubemap->GenerateMips();
 			});
