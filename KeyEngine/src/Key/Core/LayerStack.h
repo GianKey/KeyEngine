@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Key/Core/Base.h"
 #include "Layer.h"
 
@@ -7,9 +7,9 @@
 namespace Key {
 
 	/**
-	 * @brief ͼ��ջ��.
+	 * @brief 图层栈类.
 	 * 
-	 * ����ͼ����������ں���Ⱦ˳�򡣿������ɵ����ӡ��Ƴ��͹���ͼ�㣬�Ӷ�ʵ������ͼ�������
+	 * 管理图层的生命周期和渲染顺序。可以轻松地添加、移除和管理图层，从而实现灵活的图层管理。
 	 */
 	class  LayerStack
 	{

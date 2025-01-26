@@ -1,19 +1,16 @@
-#pragma once
+ï»¿#pragma once
 
 #include "Kpch.h"
 
 /**
- * @brief. RenderCommandQueueµÄÀà£¬ÓÃÓÚ¹ÜÀíäÖÈ¾ÃüÁî¶ÓÁĞ
- * 
- * ¸ÃÀàµÄÖ÷ÒªÄ¿µÄÊÇÌá¹©Ò»ÖÖ»úÖÆ£¬Ê¹µÃäÖÈ¾ÃüÁî¿ÉÒÔÔÚÃüÁî¶ÓÁĞÖĞ½øĞĞ¹ÜÀíºÍÖ´ĞĞ¡£
- * ¾ßÌåµÄäÖÈ¾ÃüÁîÓÉÊ¹ÓÃÕßÍ¨¹ıAllocate·½·¨Ìí¼Óµ½¶ÓÁĞÖĞ£¬È»ºóÍ¨¹ıµ÷ÓÃExecute·½·¨À´Öğ¸öÖ´ĞĞÕâĞ©ÃüÁî¡£
- * 
+ * @brief. RenderCommandQueue
  */
 namespace Key {
 	class RenderCommandQueue
 	{
 	public:
-		///Ö¸ÏòÃ»ÓĞ·µ»ØÖµÇÒ²ÎÊıÎªvoidµÄº¯ÊıµÄÖ¸ÕëÀàĞÍ*
+	
+		////Pointer type to a function with no return value and parameter void *
 		typedef void(*RenderCommandFn) (void*);
 
 		RenderCommandQueue();
