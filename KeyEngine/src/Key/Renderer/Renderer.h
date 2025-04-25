@@ -56,7 +56,7 @@ namespace Key {
 				pFunc->~FuncT();
 			};
 			auto storageBuffer = GetRenderCommandQueue().Allocate(renderCmd, sizeof(func));
-			///½« FuncT ÀàĞÍµÄ¶ÔÏó¹¹ÔìÔÚ storageBuffer Ö¸ÏòµÄÄÚ´æÎ»ÖÃÉÏ¡£
+			///å°† FuncT ç±»å‹çš„å¯¹è±¡æ„é€ åœ¨ storageBuffer æŒ‡å‘çš„å†…å­˜ä½ç½®ä¸Šã€‚
 			new (storageBuffer) FuncT(std::forward<FuncT>(func));
 		}
 

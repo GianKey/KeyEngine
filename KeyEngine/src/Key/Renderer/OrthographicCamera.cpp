@@ -14,7 +14,7 @@ namespace Key {
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), m_Position) *
 			glm::rotate(glm::mat4(1.0f), glm::radians(m_Rotation), glm::vec3(0, 0, 1));
 		m_ViewMatrix = glm::inverse(transform);
-		//注意矩阵相乘的顺序，先乘 view 矩阵 之后再乘 proj 矩阵
+		//娉ㄦ剰鐭╅樀鐩镐箻鐨勯『搴忥紝鍏堜箻 view 鐭╅樀 涔嬪悗鍐嶄箻 proj 鐭╅樀
 		m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
 	}
 

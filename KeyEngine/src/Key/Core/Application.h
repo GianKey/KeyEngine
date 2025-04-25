@@ -15,8 +15,8 @@ namespace Key {
 	
 	/**
 	 * @struct ApplicationProps
-	 * @brief Ó¦ÓÃ³ÌĞòµÄ»ù±¾ĞÅÏ¢
-	 * ÓÃÓÚ´´½¨³õÊ¼»¯Ó¦ÓÃ
+	 * @brief åº”ç”¨ç¨‹åºçš„åŸºæœ¬ä¿¡æ¯
+	 * ç”¨äºåˆ›å»ºåˆå§‹åŒ–åº”ç”¨
 	 */
 	struct ApplicationProps {
 		std::string Name;
@@ -24,9 +24,9 @@ namespace Key {
 	};
 
 	/**
-	 * @brief Ó¦ÓÃÀà
+	 * @brief åº”ç”¨ç±»
 	 * 
-	 * Ç°¶ËÊ¹ÓÃÒıÇæÔ´ÂëÖ´ĞĞ¹¦ÄÜµÄÀà
+	 * å‰ç«¯ä½¿ç”¨å¼•æ“æºç æ‰§è¡ŒåŠŸèƒ½çš„ç±»
 	 */
 	class  Application
 	{
