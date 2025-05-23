@@ -1,5 +1,7 @@
 #include "Kpch.h"
 #include "DefaultAssetEditors.h"
+#include "Key/Asset/AssetImporter.h"
+#include "Key/Asset/AssetManager.h"
 
 namespace Key {
 
@@ -30,8 +32,6 @@ namespace Key {
 		//ImGui::Image((ImTextureID)m_Asset->GetRendererID(), { imageSize, imageSize });
 
 		UI::BeginPropertyGrid();
-		UI::Property("Width", textureWidth, 0.1F, 0.0F, 0.0F, true);
-		UI::Property("Height", textureHeight, 0.1F, 0.0F, 0.0F, true);
 		UI::Property("Width", textureWidth, 0.1f, 0.0f, 0.0f, true);
 		UI::Property("Height", textureHeight, 0.1f, 0.0f, 0.0f, true);
 		// UI::Property("Bits", bitsPerPixel, 0.1f, 0.0f, 0.0f, true); // TODO: Format

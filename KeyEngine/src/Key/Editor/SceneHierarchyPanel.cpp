@@ -1,14 +1,16 @@
 #include "Kpch.h"
 #include "SceneHierarchyPanel.h"
 
+#include <imgui.h>
+#include <imgui/imgui_internal.h>
+
 #include "Key/Core/Application.h"
+#include "Key/Math/Math.h"
 #include "Key/Renderer/Mesh.h"
 #include "Key/Script/ScriptEngine.h"
 #include "Key/Renderer/MeshFactory.h"
-#include "Key/Math/Math.h"
+
 #include "Key/Asset/AssetManager.h"
-#include <imgui.h>
-#include <imgui/imgui_internal.h>
 
 #include <assimp/scene.h>
 
@@ -19,6 +21,7 @@
 
 #include "Key/ImGui/ImGui.h"
 #include "Key/Renderer/Renderer.h"
+
 // TODO:
 // - Eventually change imgui node IDs to be entity/asset GUID
 
@@ -49,7 +52,6 @@ namespace Key {
 	{
 		m_SelectionContext = entity;
 
-
 		if (m_SelectionChangedCallback)
 			m_SelectionChangedCallback(m_SelectionContext);
 	}
@@ -64,9 +66,9 @@ namespace Key {
 			uint32_t entityCount = 0, meshCount = 0;
 			m_Context->m_Registry.each([&](auto entity)
 			{
-					Entity e(entity, m_Context.Raw());
-					if (e.HasComponent<IDComponent>() && e.GetParentUUID() == 0)
-						DrawEntityNode(e);
+				Entity e(entity, m_Context.Raw());
+				if (e.HasComponent<IDComponent>() && e.GetParentUUID() == 0)
+					DrawEntityNode(e);
 			});
 
 			if (ImGui::BeginDragDropTargetCustom(windowRect, ImGui::GetCurrentWindow()->ID))
@@ -77,27 +79,11 @@ namespace Key {
 				{
 					UUID droppedHandle = *((UUID*)payload->Data);
 					Entity e = m_Context->FindEntityByUUID(droppedHandle);
-					Entity previousParent = m_Context->FindEntityByUUID(e.GetParentUUID());
-
-					if (previousParent)
-					{
-						auto& children = previousParent.Children();
-						children.erase(std::remove(children.begin(), children.end(), droppedHandle), children.end());
-						
-						glm::mat4 parentTransform = m_Context->GetTransformRelativeToParent(previousParent);
-						glm::vec3 parentTranslation, parentRotation, parentScale;
-						Math::DecomposeTransform(parentTransform, parentTranslation, parentRotation, parentScale);
-
-						e.Transform().Translation = e.Transform().Translation + parentTranslation;
-					}
-
-					e.SetParentUUID(0);
-
+					m_Context->UnparentEntity(e);
 				}
 
 				ImGui::EndDragDropTarget();
 			}
-
 
 			if (ImGui::BeginPopupContextWindow(0, 1, false))
 			{
@@ -114,36 +100,57 @@ namespace Key {
 						newEntity.AddComponent<CameraComponent>();
 						SetSelected(newEntity);
 					}
-					if (ImGui::BeginMenu("Mesh"))
+					if (ImGui::BeginMenu("3D"))
 					{
-						if (ImGui::MenuItem("Empty Mesh"))
-						{
-							auto newEntity = m_Context->CreateEntity("Empty Mesh");
-							newEntity.AddComponent<MeshComponent>();
-							SetSelected(newEntity);
-						}
 						if (ImGui::MenuItem("Cube"))
 						{
 							auto newEntity = m_Context->CreateEntity("Cube");
-							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("assets/meshes/Default/Cube.fbx"));
+							Ref<MeshAsset> meshAsset = AssetManager::GetAsset<MeshAsset>("assets/meshes/Default/Cube.fbx");
+							newEntity.AddComponent<MeshComponent>(Ref<Mesh>::Create(meshAsset));
 							SetSelected(newEntity);
 						}
 						if (ImGui::MenuItem("Sphere"))
 						{
 							auto newEntity = m_Context->CreateEntity("Sphere");
-							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("assets/meshes/Default/Sphere.fbx"));
+							Ref<MeshAsset> meshAsset = AssetManager::GetAsset<MeshAsset>("assets/meshes/Default/Sphere.fbx");
+							newEntity.AddComponent<MeshComponent>(Ref<Mesh>::Create(meshAsset));
 							SetSelected(newEntity);
 						}
 						if (ImGui::MenuItem("Capsule"))
 						{
 							auto newEntity = m_Context->CreateEntity("Capsule");
-							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("assets/meshes/Default/Capsule.fbx"));
+							Ref<MeshAsset> meshAsset = AssetManager::GetAsset<MeshAsset>("assets/meshes/Default/Capsule.fbx");
+							newEntity.AddComponent<MeshComponent>(Ref<Mesh>::Create(meshAsset));
+							
+							SetSelected(newEntity);
+						}
+						if (ImGui::MenuItem("Cylinder"))
+						{
+							auto newEntity = m_Context->CreateEntity("Cylinder");
+							Ref<MeshAsset> meshAsset = AssetManager::GetAsset<MeshAsset>("assets/meshes/Default/Cylinder.fbx");
+							newEntity.AddComponent<MeshComponent>(Ref<Mesh>::Create(meshAsset));
+							
+							SetSelected(newEntity);
+						}
+						if (ImGui::MenuItem("Torus"))
+						{
+							auto newEntity = m_Context->CreateEntity("Torus");
+							Ref<MeshAsset> meshAsset = AssetManager::GetAsset<MeshAsset>("assets/meshes/Default/Torus.fbx");
+							newEntity.AddComponent<MeshComponent>(Ref<Mesh>::Create(meshAsset));
 							SetSelected(newEntity);
 						}
 						if (ImGui::MenuItem("Plane"))
 						{
 							auto newEntity = m_Context->CreateEntity("Plane");
-							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("assets/meshes/Default/Plane.fbx"));
+							Ref<MeshAsset> meshAsset = AssetManager::GetAsset<MeshAsset>("assets/meshes/Default/Plane.fbx");
+							newEntity.AddComponent<MeshComponent>(Ref<Mesh>::Create(meshAsset));
+							SetSelected(newEntity);
+						}
+						if (ImGui::MenuItem("Cone"))
+						{
+							auto newEntity = m_Context->CreateEntity("Cone");
+							Ref<MeshAsset> meshAsset = AssetManager::GetAsset<MeshAsset>("assets/meshes/Default/Cone.fbx");
+							newEntity.AddComponent<MeshComponent>(Ref<Mesh>::Create(meshAsset));
 							SetSelected(newEntity);
 						}
 						ImGui::EndMenu();
@@ -208,11 +215,11 @@ namespace Key {
 		if (entity.Children().empty())
 			flags |= ImGuiTreeNodeFlags_Leaf;
 
-		// TODO: This should probably be a function that checks that the entities components are valid
-		bool missingMesh = entity.HasComponent<MeshComponent>() && (entity.GetComponent<MeshComponent>().Mesh && entity.GetComponent<MeshComponent>().Mesh->Type == AssetType::Missing);
+		// TODO(Peter): This should probably be a function that checks that the entities components are valid
+		bool missingMesh = entity.HasComponent<MeshComponent>() && (entity.GetComponent<MeshComponent>().Mesh && entity.GetComponent<MeshComponent>().Mesh->IsFlagSet(AssetFlag::Missing));
 		if (missingMesh)
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.4f, 0.3f, 1.0f));
-		
+
 		bool opened = ImGui::TreeNodeEx((void*)(uint32_t)entity, flags, name);
 		if (ImGui::IsItemClicked())
 		{
@@ -249,27 +256,7 @@ namespace Key {
 			{
 				UUID droppedHandle = *((UUID*)payload->Data);
 				Entity e = m_Context->FindEntityByUUID(droppedHandle);
-
-				
-				if (!entity.IsDescendantOf(e))
-				{
-					// Remove from previous parent
-					Entity previousParent = m_Context->FindEntityByUUID(e.GetParentUUID());
-					if (previousParent)
-					{
-						auto& parentChildren = previousParent.Children();
-						parentChildren.erase(std::remove(parentChildren.begin(), parentChildren.end(), droppedHandle), parentChildren.end());
-					}
-
-					glm::mat4 parentTransform = m_Context->GetTransformRelativeToParent(entity);
-					glm::vec3 parentTranslation, parentRotation, parentScale;
-					Math::DecomposeTransform(parentTransform, parentTranslation, parentRotation, parentScale);
-
-					e.Transform().Translation = e.Transform().Translation - parentTranslation;
-					e.SetParentUUID(entity.GetUUID());
-					entity.Children().push_back(droppedHandle);
-
-				}
+				m_Context->ParentEntity(e, entity);
 			}
 
 			ImGui::EndDragDropTarget();
@@ -298,15 +285,7 @@ namespace Key {
 		}
 	}
 
-	static std::tuple<glm::vec3, glm::quat, glm::vec3> GetTransformDecomposition(const glm::mat4& transform)
-	{
-		glm::vec3 scale, translation, skew;
-		glm::vec4 perspective;
-		glm::quat orientation;
-		glm::decompose(transform, scale, orientation, translation, skew, perspective);
 
-		return { translation, orientation, scale };
-	}
 
 	template<typename T, typename UIFunction>
 	static void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction, bool canBeRemoved = true)
@@ -314,6 +293,9 @@ namespace Key {
 		const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
 		if (entity.HasComponent<T>())
 		{
+			// NOTE(Peter):
+			//	This fixes an issue where the first "+" button would display the "Remove" buttons for ALL components on an Entity.
+			//	This is due to ImGui::TreeNodeEx only pushing the id for it's children if it's actually open
 			ImGui::PushID((void*)typeid(T).hash_code());
 			auto& component = entity.GetComponent<T>();
 			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
@@ -333,7 +315,6 @@ namespace Key {
 			{
 				ImGui::OpenPopup("ComponentSettings");
 			}
-
 
 			if (ImGui::BeginPopup("ComponentSettings"))
 			{
@@ -557,261 +538,268 @@ namespace Key {
 
 		DrawComponent<TransformComponent>("Transform", entity, [](TransformComponent& component)
 		{
-				DrawVec3Control("Translation", component.Translation);
-				glm::vec3 rotation = glm::degrees(component.Rotation);
-				DrawVec3Control("Rotation", rotation);
-				component.Rotation = glm::radians(rotation);
-				DrawVec3Control("Scale", component.Scale, 1.0f);
+			DrawVec3Control("Translation", component.Translation);
+			glm::vec3 rotation = glm::degrees(component.Rotation);
+			DrawVec3Control("Rotation", rotation);
+			component.Rotation = glm::radians(rotation);
+			DrawVec3Control("Scale", component.Scale, 1.0f);
 		}, false);
 
 		DrawComponent<MeshComponent>("Mesh", entity, [&](MeshComponent& mc)
 		{
-				UI::BeginPropertyGrid();
-				UI::PropertyAssetReference("Mesh", mc.Mesh, AssetType::Mesh);
-				UI::EndPropertyGrid();
+			UI::BeginPropertyGrid();
+			Ref<MeshAsset> meshAsset;
+			if (mc.Mesh)
+				meshAsset = mc.Mesh->GetMeshAsset();
+			if (UI::PropertyAssetReference("Mesh", meshAsset))
+			{
+				mc.Mesh = Ref<Mesh>::Create(meshAsset);
+			}
+			UI::EndPropertyGrid();
 		});
 
 		DrawComponent<CameraComponent>("Camera", entity, [](CameraComponent& cc)
 		{
-				UI::BeginPropertyGrid();
-				// Projection Type
-				const char* projTypeStrings[] = { "Perspective", "Orthographic" };
-				int currentProj = (int)cc.Camera.GetProjectionType();
-				if (UI::PropertyDropdown("Projection", projTypeStrings, 2, &currentProj))
-				{
-					cc.Camera.SetProjectionType((SceneCamera::ProjectionType)currentProj);
-				}
+			UI::BeginPropertyGrid();
 
-				// Perspective parameters
-				if (cc.Camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
-				{
-					float verticalFOV = cc.Camera.GetPerspectiveVerticalFOV();
-					if (UI::Property("Vertical FOV", verticalFOV))
-						cc.Camera.SetPerspectiveVerticalFOV(verticalFOV);
+			// Projection Type
+			const char* projTypeStrings[] = { "Perspective", "Orthographic" };
+			int currentProj = (int)cc.Camera.GetProjectionType();
+			if (UI::PropertyDropdown("Projection", projTypeStrings, 2, &currentProj))
+			{
+				cc.Camera.SetProjectionType((SceneCamera::ProjectionType)currentProj);
+			}
 
-					float nearClip = cc.Camera.GetPerspectiveNearClip();
-					if (UI::Property("Near Clip", nearClip))
-						cc.Camera.SetPerspectiveNearClip(nearClip);
-					ImGui::SameLine();
-					float farClip = cc.Camera.GetPerspectiveFarClip();
-					if (UI::Property("Far Clip", farClip))
-						cc.Camera.SetPerspectiveFarClip(farClip);
-				}
+			// Perspective parameters
+			if (cc.Camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
+			{
+				float verticalFOV = cc.Camera.GetPerspectiveVerticalFOV();
+				if (UI::Property("Vertical FOV", verticalFOV))
+					cc.Camera.SetPerspectiveVerticalFOV(verticalFOV);
 
-				// Orthographic parameters
-				else if (cc.Camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic)
-				{
-					float orthoSize = cc.Camera.GetOrthographicSize();
-					if (UI::Property("Size", orthoSize))
-						cc.Camera.SetOrthographicSize(orthoSize);
+				float nearClip = cc.Camera.GetPerspectiveNearClip();
+				if (UI::Property("Near Clip", nearClip))
+					cc.Camera.SetPerspectiveNearClip(nearClip);
+				ImGui::SameLine();
+				float farClip = cc.Camera.GetPerspectiveFarClip();
+				if (UI::Property("Far Clip", farClip))
+					cc.Camera.SetPerspectiveFarClip(farClip);
+			}
 
-					float nearClip = cc.Camera.GetOrthographicNearClip();
-					if (UI::Property("Near Clip", nearClip))
-						cc.Camera.SetOrthographicNearClip(nearClip);
-					ImGui::SameLine();
-					float farClip = cc.Camera.GetOrthographicFarClip();
-					if (UI::Property("Far Clip", farClip))
-						cc.Camera.SetOrthographicFarClip(farClip);
-				}
+			// Orthographic parameters
+			else if (cc.Camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic)
+			{
+				float orthoSize = cc.Camera.GetOrthographicSize();
+				if (UI::Property("Size", orthoSize))
+					cc.Camera.SetOrthographicSize(orthoSize);
 
-				UI::EndPropertyGrid();
-			});
+				float nearClip = cc.Camera.GetOrthographicNearClip();
+				if (UI::Property("Near Clip", nearClip))
+					cc.Camera.SetOrthographicNearClip(nearClip);
+				ImGui::SameLine();
+				float farClip = cc.Camera.GetOrthographicFarClip();
+				if (UI::Property("Far Clip", farClip))
+					cc.Camera.SetOrthographicFarClip(farClip);
+			}
+
+			UI::EndPropertyGrid();
+		});
 
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](SpriteRendererComponent& mc)
-			{
-			});
+		{
+		});
 
 		DrawComponent<DirectionalLightComponent>("Directional Light", entity, [](DirectionalLightComponent& dlc)
-			{
-				UI::BeginPropertyGrid();
-				UI::PropertyColor("Radiance", dlc.Radiance);
-				UI::Property("Intensity", dlc.Intensity);
-				UI::Property("Cast Shadows", dlc.CastShadows);
-				UI::Property("Soft Shadows", dlc.SoftShadows);
-				UI::Property("Source Size", dlc.LightSize);
-				UI::EndPropertyGrid();
-			});
+		{
+			UI::BeginPropertyGrid();
+			UI::PropertyColor("Radiance", dlc.Radiance);
+			UI::Property("Intensity", dlc.Intensity);
+			UI::Property("Cast Shadows", dlc.CastShadows);
+			UI::Property("Soft Shadows", dlc.SoftShadows);
+			UI::Property("Source Size", dlc.LightSize);
+			UI::EndPropertyGrid();
+		});
 
 		DrawComponent<SkyLightComponent>("Sky Light", entity, [](SkyLightComponent& slc)
+		{
+			UI::BeginPropertyGrid();
+			UI::PropertyAssetReference("Environment Map", slc.SceneEnvironment);
+			UI::Property("Intensity", slc.Intensity, 0.01f, 0.0f, 5.0f);
+			ImGui::Separator();
+			UI::Property("Dynamic Sky", slc.DynamicSky);
+			if (slc.DynamicSky)
 			{
-				UI::BeginPropertyGrid();
-				UI::PropertyAssetReference("Environment Map", slc.SceneEnvironment, AssetType::EnvMap);
-				UI::Property("Intensity", slc.Intensity, 0.01f, 0.0f, 5.0f);
-				ImGui::Separator();
-				UI::Property("Dynamic Sky", slc.DynamicSky);
-				if (slc.DynamicSky)
+				bool changed = UI::Property("Turbidity", slc.TurbidityAzimuthInclination.x, 0.01f);
+				changed |= UI::Property("Azimuth", slc.TurbidityAzimuthInclination.y, 0.01f);
+				changed |= UI::Property("Inclination", slc.TurbidityAzimuthInclination.z, 0.01f);
+				if (changed)
 				{
-					bool changed = UI::Property("Turbidity", slc.TurbidityAzimuthInclination.x, 0.01f);
-					changed |= UI::Property("Azimuth", slc.TurbidityAzimuthInclination.y, 0.01f);
-					changed |= UI::Property("Inclination", slc.TurbidityAzimuthInclination.z, 0.01f);
-					if (changed)
-					{
-						Ref<TextureCube> preethamEnv = Renderer::CreatePreethamSky(slc.TurbidityAzimuthInclination.x, slc.TurbidityAzimuthInclination.y, slc.TurbidityAzimuthInclination.z);
-						slc.SceneEnvironment = Ref<Environment>::Create(preethamEnv, preethamEnv);
-					}
+					Ref<TextureCube> preethamEnv = Renderer::CreatePreethamSky(slc.TurbidityAzimuthInclination.x, slc.TurbidityAzimuthInclination.y, slc.TurbidityAzimuthInclination.z);
+					slc.SceneEnvironment = Ref<Environment>::Create(preethamEnv, preethamEnv);
 				}
-				UI::EndPropertyGrid();
-			});
+			}
+			UI::EndPropertyGrid();
+		});
 
 		DrawComponent<ScriptComponent>("Script", entity, [=](ScriptComponent& sc) mutable
+		{
+			UI::BeginPropertyGrid();
+			std::string oldName = sc.ModuleName;
+			if (UI::Property("Module Name", sc.ModuleName, !ScriptEngine::ModuleExists(sc.ModuleName))) // TODO: no live edit
 			{
-				UI::BeginPropertyGrid();
-				std::string oldName = sc.ModuleName;
-				if (UI::Property("Module Name", sc.ModuleName, !ScriptEngine::ModuleExists(sc.ModuleName))) // TODO: no live edit
-				{
-					// Shutdown old script
-					if (ScriptEngine::ModuleExists(oldName))
-						ScriptEngine::ShutdownScriptEntity(entity, oldName);
+				// Shutdown old script
+				if (ScriptEngine::ModuleExists(oldName))
+					ScriptEngine::ShutdownScriptEntity(entity, oldName);
 
-					if (ScriptEngine::ModuleExists(sc.ModuleName))
-						ScriptEngine::InitScriptEntity(entity);
-				}
-
-				// Public Fields
 				if (ScriptEngine::ModuleExists(sc.ModuleName))
+					ScriptEngine::InitScriptEntity(entity);
+			}
+
+			// Public Fields
+			if (ScriptEngine::ModuleExists(sc.ModuleName))
+			{
+				EntityInstanceData& entityInstanceData = ScriptEngine::GetEntityInstanceData(entity.GetSceneUUID(), id);
+				auto& moduleFieldMap = entityInstanceData.ModuleFieldMap;
+				if (moduleFieldMap.find(sc.ModuleName) != moduleFieldMap.end())
 				{
-					EntityInstanceData& entityInstanceData = ScriptEngine::GetEntityInstanceData(entity.GetSceneUUID(), id);
-					auto& moduleFieldMap = entityInstanceData.ModuleFieldMap;
-					if (moduleFieldMap.find(sc.ModuleName) != moduleFieldMap.end())
+					auto& publicFields = moduleFieldMap.at(sc.ModuleName);
+					for (auto& [name, field] : publicFields)
 					{
-						auto& publicFields = moduleFieldMap.at(sc.ModuleName);
-						for (auto& [name, field] : publicFields)
+						bool isRuntime = m_Context->m_IsPlaying && field.IsRuntimeAvailable();
+						switch (field.Type)
 						{
-							bool isRuntime = m_Context->m_IsPlaying && field.IsRuntimeAvailable();
-							switch (field.Type)
+						case FieldType::Int:
+						{
+							int value = isRuntime ? field.GetRuntimeValue<int>() : field.GetStoredValue<int>();
+							if (UI::Property(field.Name.c_str(), value))
 							{
-								case FieldType::Int:
-								{
-									int value = isRuntime ? field.GetRuntimeValue<int>() : field.GetStoredValue<int>();
-									if (UI::Property(field.Name.c_str(), value))
-									{
-										if (isRuntime)
-											field.SetRuntimeValue(value);
-										else
-											field.SetStoredValue(value);
-									}
-									break;
-								}
-								case FieldType::Float:
-								{
-									float value = isRuntime ? field.GetRuntimeValue<float>() : field.GetStoredValue<float>();
-									if (UI::Property(field.Name.c_str(), value, 0.2f))
-									{
-										if (isRuntime)
-											field.SetRuntimeValue(value);
-										else
-											field.SetStoredValue(value);
-									}
-									break;
-								}
-								case FieldType::Vec2:
-								{
-									glm::vec2 value = isRuntime ? field.GetRuntimeValue<glm::vec2>() : field.GetStoredValue<glm::vec2>();
-									if (UI::Property(field.Name.c_str(), value, 0.2f))
-									{
-										if (isRuntime)
-											field.SetRuntimeValue(value);
-										else
-											field.SetStoredValue(value);
-									}
-									break;
-								}
-								case FieldType::Vec3:
-								{
-									glm::vec3 value = isRuntime ? field.GetRuntimeValue<glm::vec3>() : field.GetStoredValue<glm::vec3>();
-									if (UI::Property(field.Name.c_str(), value, 0.2f))
-									{
-										if (isRuntime)
-											field.SetRuntimeValue(value);
-										else
-											field.SetStoredValue(value);
-									}
-									break;
-								}
-								case FieldType::Vec4:
-								{
-									glm::vec4 value = isRuntime ? field.GetRuntimeValue<glm::vec4>() : field.GetStoredValue<glm::vec4>();
-									if (UI::Property(field.Name.c_str(), value, 0.2f))
-									{
-										if (isRuntime)
-											field.SetRuntimeValue(value);
-										else
-											field.SetStoredValue(value);
-									}
-									break;
-								}
-
-								/*case FieldType::ClassReference:
-								{
-									Ref<Asset>* asset = (Ref<Asset>*)(isRuntime ? field.GetRuntimeValueRaw() : field.GetStoredValueRaw());
-									std::string label = field.Name + "(" + field.TypeName + ")";
-									
-									if (!AssetManager::IsAssetHandleValid((*asset)->Handle))
-										break;
-
-									if (UI::PropertyAssetReference(label.c_str(), *asset))
-									{
-										if (isRuntime)
-											field.SetRuntimeValueRaw(asset);
-										else
-											field.SetStoredValueRaw(asset);
-									}
-									break;
-								}*/
+								if (isRuntime)
+									field.SetRuntimeValue(value);
+								else
+									field.SetStoredValue(value);
 							}
+							break;
+						}
+						case FieldType::Float:
+						{
+							float value = isRuntime ? field.GetRuntimeValue<float>() : field.GetStoredValue<float>();
+							if (UI::Property(field.Name.c_str(), value, 0.2f))
+							{
+								if (isRuntime)
+									field.SetRuntimeValue(value);
+								else
+									field.SetStoredValue(value);
+							}
+							break;
+						}
+						case FieldType::Vec2:
+						{
+							glm::vec2 value = isRuntime ? field.GetRuntimeValue<glm::vec2>() : field.GetStoredValue<glm::vec2>();
+							if (UI::Property(field.Name.c_str(), value, 0.2f))
+							{
+								if (isRuntime)
+									field.SetRuntimeValue(value);
+								else
+									field.SetStoredValue(value);
+							}
+							break;
+						}
+						case FieldType::Vec3:
+						{
+							glm::vec3 value = isRuntime ? field.GetRuntimeValue<glm::vec3>() : field.GetStoredValue<glm::vec3>();
+							if (UI::Property(field.Name.c_str(), value, 0.2f))
+							{
+								if (isRuntime)
+									field.SetRuntimeValue(value);
+								else
+									field.SetStoredValue(value);
+							}
+							break;
+						}
+						case FieldType::Vec4:
+						{
+							glm::vec4 value = isRuntime ? field.GetRuntimeValue<glm::vec4>() : field.GetStoredValue<glm::vec4>();
+							if (UI::Property(field.Name.c_str(), value, 0.2f))
+							{
+								if (isRuntime)
+									field.SetRuntimeValue(value);
+								else
+									field.SetStoredValue(value);
+							}
+							break;
+						}
+						/*case FieldType::ClassReference:
+						{
+							Ref<Asset>* asset = (Ref<Asset>*)(isRuntime ? field.GetRuntimeValueRaw() : field.GetStoredValueRaw());
+							std::string label = field.Name + "(" + field.TypeName + ")";
+
+							if (!AssetManager::IsAssetHandleValid((*asset)->Handle))
+								break;
+
+							if (UI::PropertyAssetReference(label.c_str(), *asset))
+							{
+								if (isRuntime)
+									field.SetRuntimeValueRaw(asset);
+								else
+									field.SetStoredValueRaw(asset);
+							}
+							break;
+						}*/
 						}
 					}
 				}
+			}
 
-				UI::EndPropertyGrid();
+			UI::EndPropertyGrid();
 #if TODO
-				if (ImGui::Button("Run Script"))
-				{
-					ScriptEngine::OnCreateEntity(entity);
-				}
+			if (ImGui::Button("Run Script"))
+			{
+				ScriptEngine::OnCreateEntity(entity);
+			}
 #endif
-			});
+		});
 
 		DrawComponent<RigidBody2DComponent>("Rigidbody 2D", entity, [](RigidBody2DComponent& rb2dc)
+		{
+			UI::BeginPropertyGrid();
+
+			// Rigidbody2D Type
+			const char* rb2dTypeStrings[] = { "Static", "Dynamic", "Kinematic" };
+			UI::PropertyDropdown("Type", rb2dTypeStrings, 3, (int*)&rb2dc.BodyType);
+
+			if (rb2dc.BodyType == RigidBody2DComponent::Type::Dynamic)
 			{
 				UI::BeginPropertyGrid();
-				// Rigidbody2D Type
-				const char* rb2dTypeStrings[] = { "Static", "Dynamic", "Kinematic" };
-				UI::PropertyDropdown("Type", rb2dTypeStrings, 3, (int*)&rb2dc.BodyType);
-
-				if (rb2dc.BodyType == RigidBody2DComponent::Type::Dynamic)
-				{
-					UI::BeginPropertyGrid();
-					UI::Property("Fixed Rotation", rb2dc.FixedRotation);
-					UI::EndPropertyGrid();
-				}
+				UI::Property("Fixed Rotation", rb2dc.FixedRotation);
 				UI::EndPropertyGrid();
-			});
+			}
+
+			UI::EndPropertyGrid();
+		});
 
 		DrawComponent<BoxCollider2DComponent>("Box Collider 2D", entity, [](BoxCollider2DComponent& bc2dc)
-			{
-				UI::BeginPropertyGrid();
+		{
+			UI::BeginPropertyGrid();
 
-				UI::Property("Offset", bc2dc.Offset);
-				UI::Property("Size", bc2dc.Size);
-				UI::Property("Density", bc2dc.Density);
-				UI::Property("Friction", bc2dc.Friction);
+			UI::Property("Offset", bc2dc.Offset);
+			UI::Property("Size", bc2dc.Size);
+			UI::Property("Density", bc2dc.Density);
+			UI::Property("Friction", bc2dc.Friction);
 
-				UI::EndPropertyGrid();
-			});
-
+			UI::EndPropertyGrid();
+		});
+	
 		DrawComponent<CircleCollider2DComponent>("Circle Collider 2D", entity, [](CircleCollider2DComponent& cc2dc)
-			{
-				UI::BeginPropertyGrid();
+		{
+			UI::BeginPropertyGrid();
 
-				UI::Property("Offset", cc2dc.Offset);
-				UI::Property("Radius", cc2dc.Radius);
-				UI::Property("Density", cc2dc.Density);
-				UI::Property("Friction", cc2dc.Friction);
+			UI::Property("Offset", cc2dc.Offset);
+			UI::Property("Radius", cc2dc.Radius);
+			UI::Property("Density", cc2dc.Density);
+			UI::Property("Friction", cc2dc.Friction);
 
-				UI::EndPropertyGrid();
-			});
-
+			UI::EndPropertyGrid();
+		});
 	}
 
 }

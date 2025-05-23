@@ -49,7 +49,6 @@ namespace Key {
 
 		std::vector<VkClearValue> m_ClearValues;
 
-		VkSampler m_ColorAttachmentSampler;
 		VkRenderPass m_RenderPass = nullptr;
 		VkFramebuffer m_Framebuffer = nullptr;
 

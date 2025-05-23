@@ -1,9 +1,12 @@
 #pragma once
-#include "Key/Asset/Assets.h"
+
+#include "Key/Asset/AssetMetadata.h"
+
 #include "imgui/imgui.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
 #include "Key/Renderer/Texture.h"
 
 namespace Key::UI {
@@ -118,6 +121,28 @@ namespace Key::UI {
 
 		return modified;
 	}
+
+	static bool PropertySlider(const char* label, int& value, int min, int max)
+	{
+		bool modified = false;
+
+		ImGui::Text(label);
+		ImGui::NextColumn();
+		ImGui::PushItemWidth(-1);
+
+		s_IDBuffer[0] = '#';
+		s_IDBuffer[1] = '#';
+		memset(s_IDBuffer + 2, 0, 14);
+		itoa(s_Counter++, s_IDBuffer + 2, 16);
+		if (ImGui::SliderInt(s_IDBuffer, &value, min, max))
+			modified = true;
+
+		ImGui::PopItemWidth();
+		ImGui::NextColumn();
+
+		return modified;
+	}
+
 	static bool PropertySlider(const char* label, float& value, float min, float max)
 	{
 		bool modified = false;
@@ -202,28 +227,7 @@ namespace Key::UI {
 		return modified;
 	}
 
-	static bool PropertySlider(const char* label, int& value, int min, int max)
-	{
-		bool modified = false;
-
-		ImGui::Text(label);
-		ImGui::NextColumn();
-		ImGui::PushItemWidth(-1);
-
-		s_IDBuffer[0] = '#';
-		s_IDBuffer[1] = '#';
-		memset(s_IDBuffer + 2, 0, 14);
-		itoa(s_Counter++, s_IDBuffer + 2, 16);
-		if (ImGui::SliderInt(s_IDBuffer, &value, min, max))
-			modified = true;
-
-		ImGui::PopItemWidth();
-		ImGui::NextColumn();
-
-		return modified;
-	}
-
-	static bool Property(const char* label, float& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f, bool readOnly = false) 
+	static bool Property(const char* label, float& value, float delta = 0.1f, float min = 0.0f, float max = 0.0f, bool readOnly = false)
 	{
 		bool modified = false;
 
@@ -264,7 +268,7 @@ namespace Key::UI {
 		s_IDBuffer[1] = '#';
 		memset(s_IDBuffer + 2, 0, 14);
 		itoa(s_Counter++, s_IDBuffer + 2, 16);
-		if (ImGui::DragFloat3(s_IDBuffer, glm::value_ptr(value), delta))
+		if (ImGui::DragFloat2(s_IDBuffer, glm::value_ptr(value), delta))
 			modified = true;
 
 		ImGui::PopItemWidth();
@@ -335,6 +339,7 @@ namespace Key::UI {
 
 		return modified;
 	}
+
 	static bool PropertyDropdown(const char* label, const char** options, int32_t optionCount, int32_t* selected)
 	{
 		const char* current = options[*selected];
@@ -402,7 +407,7 @@ namespace Key::UI {
 	}
 
 	template<typename T>
-	static bool PropertyAssetReference(const char* label, Ref<T>& object, AssetType supportedType)
+	static bool PropertyAssetReference(const char* label, Ref<T>& object)
 	{
 		bool modified = false;
 
@@ -412,9 +417,9 @@ namespace Key::UI {
 
 		if (object)
 		{
-			if (object->Type != AssetType::Missing)
+			if (!object->IsFlagSet(AssetFlag::Missing))
 			{
-				char* assetName = ((Ref<Asset>&)object)->FileName.data();
+				char* assetName = AssetManager::GetMetadata(object->Handle).FileName.data();
 				ImGui::InputText("##assetRef", assetName, 256, ImGuiInputTextFlags_ReadOnly);
 			}
 			else
@@ -435,7 +440,7 @@ namespace Key::UI {
 			{
 				AssetHandle assetHandle = *(AssetHandle*)data->Data;
 				Ref<Asset> asset = AssetManager::GetAsset<Asset>(assetHandle);
-				if (asset->Type == supportedType)
+				if (asset->GetAssetType() == T::GetStaticType())
 				{
 					object = asset.As<T>();
 					modified = true;
@@ -447,7 +452,6 @@ namespace Key::UI {
 		ImGui::NextColumn();
 		return modified;
 	}
-
 
 	static void EndPropertyGrid()
 	{

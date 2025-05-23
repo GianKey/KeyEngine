@@ -8,13 +8,13 @@
 #include "Key/Renderer/Material.h"
 #include "Key/Renderer/SceneEnvironment.h"
 
-
 #include "entt/entt.hpp"
 
 #include "SceneCamera.h"
 #include "Key/Editor/EditorCamera.h"
 
 namespace Key {
+
 	class SceneRenderer;
 
 	struct Light
@@ -30,7 +30,7 @@ namespace Key {
 		glm::vec3 Direction = { 0.0f, 0.0f, 0.0f };
 		glm::vec3 Radiance = { 0.0f, 0.0f, 0.0f };
 		float Multiplier = 0.0f;
-
+		
 		// C++ only
 		bool CastShadows = true;
 	};
@@ -43,12 +43,14 @@ namespace Key {
 	class Entity;
 	using EntityMap = std::unordered_map<UUID, Entity>;
 
-	class Scene : public RefCounted
+	struct TransformComponent;
+
+	class Scene : public Asset
 	{
 	public:
 		Scene(const std::string& debugName = "Scene", bool isEditorScene = false);
 		~Scene();
-
+		
 		void Init();
 
 		void OnUpdate(TimeStep ts);
@@ -88,8 +90,14 @@ namespace Key {
 		Entity FindEntityByTag(const std::string& tag);
 		Entity FindEntityByUUID(UUID id);
 
+		void ConvertToLocalSpace(Entity entity);
+		void ConvertToWorldSpace(Entity entity);
 		glm::mat4 GetTransformRelativeToParent(Entity entity);
-		glm::mat4 GetWorldSpaceTransform(Entity entity);
+		glm::mat4 GetWorldSpaceTransformMatrix(Entity entity);
+		TransformComponent GetWorldSpaceTransform(Entity entity);
+
+		void ParentEntity(Entity entity, Entity parent);
+		void UnparentEntity(Entity entity);
 
 		const EntityMap& GetEntityMap() const { return m_EntityIDMap; }
 		void CopyTo(Ref<Scene>& target);
@@ -103,6 +111,9 @@ namespace Key {
 
 		// Editor-specific
 		void SetSelectedEntity(entt::entity entity) { m_SelectedEntity = entity; }
+
+		static AssetType GetStaticType() { return AssetType::Scene; }
+		virtual AssetType GetAssetType() const override { return GetStaticType(); }
 	private:
 		UUID m_SceneID;
 		entt::entity m_SceneEntity;
@@ -125,7 +136,7 @@ namespace Key {
 
 		entt::entity m_SelectedEntity;
 
-		Entity* m_PhysicsBodyEntityBuffer = nullptr;
+		Entity* m_Physics2DBodyEntityBuffer = nullptr;
 
 		float m_SkyboxLod = 1.0f;
 		bool m_IsPlaying = false;

@@ -20,13 +20,14 @@ namespace Key {
 		{
 			UI::Image(m_CubeImage, ImVec2(20, 20));
 			ImGui::SameLine();
+
 			ImGui::Text(label);
 
 			ImGui::SetDragDropPayload("asset_payload", &handle, sizeof(AssetHandle));
 			ImGui::EndDragDropSource();
 		}
 	}
-	
+
 	void ObjectsPanel::OnImGuiRender()
 	{
 		static const AssetHandle CubeHandle = AssetManager::GetAssetHandleFromFilePath("assets/meshes/Default/Cube.fbx");
@@ -41,8 +42,8 @@ namespace Key {
 		{
 			ImGui::BeginChild("##objects_window");
 			DrawObject("Cube", CubeHandle);
-			DrawObject("Capsule", CapsuleHandle);
 			DrawObject("Sphere", SphereHandle);
+			DrawObject("Capsule", CapsuleHandle);
 			DrawObject("Cylinder", CylinderHandle);
 			DrawObject("Torus", TorusHandle);
 			DrawObject("Plane", PlaneHandle);

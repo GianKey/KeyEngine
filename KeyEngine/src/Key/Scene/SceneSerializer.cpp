@@ -5,6 +5,7 @@
 #include "Components.h"
 #include "Key/Script/ScriptEngine.h"
 #include "Key/Renderer/MeshFactory.h"
+
 #include "Key/Asset/AssetManager.h"
 
 #include "yaml-cpp/yaml.h"
@@ -154,7 +155,7 @@ namespace Key {
 	{
 	}
 
-	static std::tuple<glm::vec3, glm::quat, glm::vec3> GetTransformDecomposition(const glm::mat4& transform)
+	/*static std::tuple<glm::vec3, glm::quat, glm::vec3> GetTransformDecomposition(const glm::mat4& transform)
 	{
 		glm::vec3 scale, translation, skew;
 		glm::vec4 perspective;
@@ -162,7 +163,7 @@ namespace Key {
 		glm::decompose(transform, scale, orientation, translation, skew, perspective);
 
 		return { translation, orientation, scale };
-	}
+	}*/
 
 	static void SerializeEntity(YAML::Emitter& out, Entity entity)
 	{
@@ -270,7 +271,10 @@ namespace Key {
 
 			auto mesh = entity.GetComponent<MeshComponent>().Mesh;
 			if (mesh)
-				out << YAML::Key << "AssetID" << YAML::Value << mesh->Handle;
+			{
+				auto meshAsset = mesh->GetMeshAsset();
+				out << YAML::Key << "AssetID" << YAML::Value << meshAsset->Handle;
+			}
 			else
 				out << YAML::Key << "AssetID" << YAML::Value << 0;
 
@@ -279,6 +283,7 @@ namespace Key {
 
 		if (entity.HasComponent<CameraComponent>())
 		{
+			out << YAML::Key << "CameraComponent";
 			out << YAML::BeginMap; // CameraComponent
 
 			auto& cameraComponent = entity.GetComponent<CameraComponent>();
@@ -294,6 +299,8 @@ namespace Key {
 			out << YAML::Key << "OrthographicFar" << YAML::Value << camera.GetOrthographicFarClip();
 			out << YAML::EndMap; // Camera
 			out << YAML::Key << "Primary" << YAML::Value << cameraComponent.Primary;
+
+			out << YAML::EndMap; // CameraComponent
 		}
 
 		if (entity.HasComponent<DirectionalLightComponent>())
@@ -396,7 +403,6 @@ namespace Key {
 		out << YAML::EndMap; // Environment
 	}
 
-
 	void SceneSerializer::Serialize(const std::string& filepath)
 	{
 		YAML::Emitter out;
@@ -410,15 +416,16 @@ namespace Key {
 		out << YAML::Key << "Entities";
 		out << YAML::Value << YAML::BeginSeq;
 		m_Scene->m_Registry.each([&](auto entityID)
-			{
-				Entity entity = { entityID, m_Scene.Raw() };
-				if (!entity || !entity.HasComponent<IDComponent>())
-					return;
+		{
+			Entity entity = { entityID, m_Scene.Raw() };
+			if (!entity || !entity.HasComponent<IDComponent>())
+				return;
 
-				SerializeEntity(out, entity);
+			SerializeEntity(out, entity);
 
-			});
+		});
 		out << YAML::EndSeq;
+		
 		out << YAML::EndMap;
 
 		std::ofstream fout(filepath);
@@ -516,6 +523,7 @@ namespace Key {
 						{
 							for (auto field : storedFields)
 							{
+								std::string name = field["Name"].as<std::string>();
 								std::string typeName = field["TypeName"] ? field["TypeName"].as<std::string>() : "";
 								FieldType type = (FieldType)field["Type"].as<uint32_t>();
 								EntityInstanceData& data = ScriptEngine::GetEntityInstanceData(m_Scene->GetUUID(), uuid);
@@ -529,41 +537,41 @@ namespace Key {
 								auto dataNode = field["Data"];
 								switch (type)
 								{
-								case FieldType::Float:
-								{
-									publicFields.at(name).SetStoredValue(dataNode.as<float>());
-									break;
-								}
-								case FieldType::Int:
-								{
-									publicFields.at(name).SetStoredValue(dataNode.as<int32_t>());
-									break;
-								}
-								case FieldType::UnsignedInt:
-								{
-									publicFields.at(name).SetStoredValue(dataNode.as<uint32_t>());
-									break;
-								}
-								case FieldType::String:
-								{
-									KEY_CORE_ASSERT(false, "Unimplemented");
-									break;
-								}
-								case FieldType::Vec2:
-								{
-									publicFields.at(name).SetStoredValue(dataNode.as<glm::vec2>());
-									break;
-								}
-								case FieldType::Vec3:
-								{
-									publicFields.at(name).SetStoredValue(dataNode.as<glm::vec3>());
-									break;
-								}
-								case FieldType::Vec4:
-								{
-									publicFields.at(name).SetStoredValue(dataNode.as<glm::vec4>());
-									break;
-								}
+									case FieldType::Float:
+									{
+										publicFields.at(name).SetStoredValue(dataNode.as<float>());
+										break;
+									}
+									case FieldType::Int:
+									{
+										publicFields.at(name).SetStoredValue(dataNode.as<int32_t>());
+										break;
+									}
+									case FieldType::UnsignedInt:
+									{
+										publicFields.at(name).SetStoredValue(dataNode.as<uint32_t>());
+										break;
+									}
+									case FieldType::String:
+									{
+										KEY_CORE_ASSERT(false, "Unimplemented");
+										break;
+									}
+									case FieldType::Vec2:
+									{
+										publicFields.at(name).SetStoredValue(dataNode.as<glm::vec2>());
+										break;
+									}
+									case FieldType::Vec3:
+									{
+										publicFields.at(name).SetStoredValue(dataNode.as<glm::vec3>());
+										break;
+									}
+									case FieldType::Vec4:
+									{
+										publicFields.at(name).SetStoredValue(dataNode.as<glm::vec4>());
+										break;
+									}
 								}
 							}
 						}
@@ -583,20 +591,24 @@ namespace Key {
 
 					if (AssetManager::IsAssetHandleValid(assetHandle))
 					{
-						component.Mesh = AssetManager::GetAsset<Mesh>(assetHandle);
+						component.Mesh = Ref<Mesh>::Create(AssetManager::GetAsset<MeshAsset>(assetHandle));
 					}
 					else
 					{
 						component.Mesh = Ref<Asset>::Create().As<Mesh>();
-						component.Mesh->Type = AssetType::Missing;
-					
+						component.Mesh->SetFlag(AssetFlag::Missing, true);
+
 						std::string filepath = meshComponent["AssetPath"] ? meshComponent["AssetPath"].as<std::string>() : "";
 						if (filepath.empty())
+						{
 							KEY_CORE_ERROR("Tried to load non-existent mesh in Entity: {0}", deserializedEntity.GetUUID());
+						}
 						else
+						{
 							KEY_CORE_ERROR("Tried to load invalid mesh '{0}' in Entity {1}", filepath, deserializedEntity.GetUUID());
+							component.Mesh->SetFlag(AssetFlag::Invalid, true);
+						}
 					}
-					
 				}
 
 				auto cameraComponent = entity["CameraComponent"];
@@ -607,24 +619,27 @@ namespace Key {
 
 					component.Camera = SceneCamera();
 					auto& camera = component.Camera;
-					if (cameraNode["ProjectionType"])
-						camera.SetProjectionType((SceneCamera::ProjectionType)cameraNode["ProjectionType"].as<int>());
-					if (cameraNode["PerspectiveFOV"])
-						camera.SetPerspectiveVerticalFOV(cameraNode["PerspectiveFOV"].as<float>());
-					if (cameraNode["PerspectiveNear"])
-						camera.SetPerspectiveNearClip(cameraNode["PerspectiveNear"].as<float>());
-					if (cameraNode["PerspectiveFar"])
-						camera.SetPerspectiveFarClip(cameraNode["PerspectiveFar"].as<float>());
-					if (cameraNode["OrthographicSize"])
-						camera.SetOrthographicSize(cameraNode["OrthographicSize"].as<float>());
-					if (cameraNode["OrthographicNear"])
-						camera.SetOrthographicNearClip(cameraNode["OrthographicNear"].as<float>());
-					if (cameraNode["OrthographicFar"])
-						camera.SetOrthographicFarClip(cameraNode["OrthographicFar"].as<float>());
+
+					if (cameraNode.IsMap())
+					{
+						if (cameraNode["ProjectionType"])
+							camera.SetProjectionType((SceneCamera::ProjectionType)cameraNode["ProjectionType"].as<int>());
+						if (cameraNode["PerspectiveFOV"])
+							camera.SetPerspectiveVerticalFOV(cameraNode["PerspectiveFOV"].as<float>());
+						if (cameraNode["PerspectiveNear"])
+							camera.SetPerspectiveNearClip(cameraNode["PerspectiveNear"].as<float>());
+						if (cameraNode["PerspectiveFar"])
+							camera.SetPerspectiveFarClip(cameraNode["PerspectiveFar"].as<float>());
+						if (cameraNode["OrthographicSize"])
+							camera.SetOrthographicSize(cameraNode["OrthographicSize"].as<float>());
+						if (cameraNode["OrthographicNear"])
+							camera.SetOrthographicNearClip(cameraNode["OrthographicNear"].as<float>());
+						if (cameraNode["OrthographicFar"])
+							camera.SetOrthographicFarClip(cameraNode["OrthographicFar"].as<float>());
+					}
 
 					component.Primary = cameraComponent["Primary"].as<bool>();
 				}
-
 
 				auto directionalLightComponent = entity["DirectionalLightComponent"];
 				if (directionalLightComponent)
@@ -659,6 +674,7 @@ namespace Key {
 						else
 							KEY_CORE_ERROR("Tried to load invalid environment map '{0}' in Entity {1}", filepath, deserializedEntity.GetUUID());
 					}
+
 					component.Intensity = skyLightComponent["Intensity"].as<float>();
 					component.Angle = skyLightComponent["Angle"].as<float>();
 				}
@@ -695,13 +711,12 @@ namespace Key {
 					auto& component = deserializedEntity.AddComponent<CircleCollider2DComponent>();
 					component.Offset = circleCollider2DComponent["Offset"].as<glm::vec2>();
 					component.Radius = circleCollider2DComponent["Radius"].as<float>();
-					component.Density = circleCollider2DComponent["Density"] ? circleCollider2DComponent["Density"].as<float>() : 1.0f;
+					component.Density = circleCollider2DComponent["Density"] ? circleCollider2DComponent["Density"].as<float>() : 1.0f; 
 					component.Friction = circleCollider2DComponent["Friction"] ? circleCollider2DComponent["Friction"].as<float>() : 1.0f;
 				}
-
 			}
 		}
-
+		
 		return true;
 	}
 

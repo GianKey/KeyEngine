@@ -266,8 +266,11 @@ namespace Key {
 #endif
 	void Renderer::DrawAABB(Ref<Mesh> mesh, const glm::mat4& transform, const glm::vec4& color)
 	{
-		for (Submesh& submesh : mesh->m_Submeshes)
+		const auto& meshAssetSubmeshes = mesh->GetMeshAsset()->GetSubmeshes();
+		auto& submeshes = mesh->GetSubmeshes();
+		for (uint32_t submeshIndex : submeshes)
 		{
+			const Submesh& submesh = meshAssetSubmeshes[submeshIndex];
 			auto& aabb = submesh.BoundingBox;
 			auto aabbTransform = transform * submesh.Transform;
 			DrawAABB(aabb, aabbTransform);

@@ -9,9 +9,11 @@
 #include "Key/Script/ScriptEngine.h"
 
 #include "Key/Renderer/Renderer2D.h"
-#include "Key/Renderer/SceneRenderer.h"
+
 #include "Key/Math/Math.h"
 #include "Key/Renderer/Renderer.h"
+#include "Key/Renderer/SceneRenderer.h"
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -35,7 +37,7 @@ namespace Key {
 	};
 
 	// TODO: MOVE TO PHYSICS FILE!
-	class ContactListener : public b2ContactListener
+	class ContactListener2D : public b2ContactListener
 	{
 	public:
 		virtual void BeginContact(b2Contact* contact) override
@@ -94,7 +96,7 @@ namespace Key {
 		}
 	};
 
-	static ContactListener s_Box2DContactListener;
+	static ContactListener2D s_Box2DContactListener;
 
 	struct Box2DWorldComponent
 	{
@@ -120,8 +122,11 @@ namespace Key {
 
 		Scene* scene = s_ActiveScenes[sceneID];
 
-		auto entityID = registry.get<IDComponent>(entity).ID;
-		ScriptEngine::OnScriptComponentDestroyed(sceneID, entityID);
+		if (registry.has<IDComponent>(entity))
+		{
+			auto entityID = registry.get<IDComponent>(entity).ID;
+			ScriptEngine::OnScriptComponentDestroyed(sceneID, entityID);
+		}
 	}
 
 	Scene::Scene(const std::string& debugName, bool isEditorScene)
@@ -138,6 +143,7 @@ namespace Key {
 		b2dWorld.World->SetContactListener(&s_Box2DContactListener);
 
 		s_ActiveScenes[m_SceneID] = this;
+		
 
 		Init();
 	}
@@ -157,7 +163,6 @@ namespace Key {
 		m_SkyboxMaterial = Material::Create(skyboxShader);
 		m_SkyboxMaterial->SetFlag(MaterialFlag::DepthTest, false);
 	}
-
 
 	// Merge OnUpdate/Render into one function?
 	void Scene::OnUpdate(TimeStep ts)
@@ -201,7 +206,8 @@ namespace Key {
 			for (auto entity : view)
 			{
 				auto& transformComponent = view.get(entity);
-				glm::mat4 transform = GetTransformRelativeToParent(Entity(entity, this));
+				Entity e = Entity(entity, this);
+				glm::mat4 transform = GetTransformRelativeToParent(e);
 				glm::vec3 translation;
 				glm::vec3 rotation;
 				glm::vec3 scale;
@@ -224,7 +230,6 @@ namespace Key {
 		if (!cameraEntity)
 			return;
 
-		// Process camera entity
 		glm::mat4 cameraViewMatrix = glm::inverse(GetTransformRelativeToParent(cameraEntity));
 		KEY_CORE_ASSERT(cameraEntity, "Scene does not contain any cameras!");
 		SceneCamera& camera = cameraEntity.GetComponent<CameraComponent>();
@@ -271,7 +276,7 @@ namespace Key {
 		for (auto entity : group)
 		{
 			auto [transformComponent, meshComponent] = group.get<TransformComponent, MeshComponent>(entity);
-			if (meshComponent.Mesh && meshComponent.Mesh->Type == AssetType::Mesh)
+			if (meshComponent.Mesh && !meshComponent.Mesh->IsFlagSet(AssetFlag::Missing))
 			{
 				meshComponent.Mesh->OnUpdate(ts);
 				glm::mat4 transform = GetTransformRelativeToParent(Entity(entity, this));
@@ -308,7 +313,6 @@ namespace Key {
 		// RENDER 3D SCENE
 		/////////////////////////////////////////////////////////////////////
 
-		// Process lights
 		{
 			m_LightEnvironment = LightEnvironment();
 			auto lights = m_Registry.group<DirectionalLightComponent>(entt::get<TransformComponent>);
@@ -355,10 +359,11 @@ namespace Key {
 		for (auto entity : group)
 		{
 			auto [meshComponent, transformComponent] = group.get<MeshComponent, TransformComponent>(entity);
-			if (meshComponent.Mesh && meshComponent.Mesh->Type == AssetType::Mesh)
+			if (meshComponent.Mesh && !meshComponent.Mesh->IsFlagSet(AssetFlag::Missing))
 			{
 				meshComponent.Mesh->OnUpdate(ts);
 
+				// TODO(Peter): Is this any good?
 				glm::mat4 transform = GetTransformRelativeToParent(Entity{ entity, this });
 
 				// TODO: Should we render (logically)
@@ -368,6 +373,7 @@ namespace Key {
 					renderer->SubmitMesh(meshComponent, transform);
 			}
 		}
+
 		renderer->EndScene();
 		/////////////////////////////////////////////////////////////////////
 
@@ -411,10 +417,10 @@ namespace Key {
 		// Box2D physics
 		auto sceneView = m_Registry.view<Box2DWorldComponent>();
 		auto& world = m_Registry.get<Box2DWorldComponent>(sceneView.front()).World;
-
+		
 		{
 			auto view = m_Registry.view<RigidBody2DComponent>();
-			m_PhysicsBodyEntityBuffer = new Entity[view.size()];
+			m_Physics2DBodyEntityBuffer = new Entity[view.size()];
 			uint32_t physicsBodyEntityBufferIndex = 0;
 			for (auto entity : view)
 			{
@@ -431,12 +437,12 @@ namespace Key {
 				else if (rigidBody2D.BodyType == RigidBody2DComponent::Type::Kinematic)
 					bodyDef.type = b2_kinematicBody;
 				bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
-
+				
 				bodyDef.angle = transform.Rotation.z;
 
 				b2Body* body = world->CreateBody(&bodyDef);
 				body->SetFixedRotation(rigidBody2D.FixedRotation);
-				Entity* entityStorage = &m_PhysicsBodyEntityBuffer[physicsBodyEntityBufferIndex++];
+				Entity* entityStorage = &m_Physics2DBodyEntityBuffer[physicsBodyEntityBufferIndex++];
 				*entityStorage = e;
 				body->SetUserData((void*)entityStorage);
 				rigidBody2D.RuntimeBody = body;
@@ -494,13 +500,15 @@ namespace Key {
 				}
 			}
 		}
-
 		m_IsPlaying = true;
 	}
 
 	void Scene::OnRuntimeStop()
 	{
-		delete[] m_PhysicsBodyEntityBuffer;
+		Input::SetCursorMode(CursorMode::Normal);
+
+		delete[] m_Physics2DBodyEntityBuffer;
+		
 		m_IsPlaying = false;
 	}
 
@@ -554,6 +562,8 @@ namespace Key {
 		if (!name.empty())
 			entity.AddComponent<TagComponent>(name);
 
+		entity.AddComponent<RelationshipComponent>();
+
 		KEY_CORE_ASSERT(m_EntityIDMap.find(uuid) == m_EntityIDMap.end());
 		m_EntityIDMap[uuid] = entity;
 		return entity;
@@ -599,9 +609,7 @@ namespace Key {
 			newEntity = CreateEntity();
 
 		CopyComponentIfExists<TransformComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
-
 		CopyComponentIfExists<RelationshipComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
-
 		CopyComponentIfExists<MeshComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
 		CopyComponentIfExists<DirectionalLightComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
 		CopyComponentIfExists<SkyLightComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
@@ -640,9 +648,35 @@ namespace Key {
 		return Entity{};
 	}
 
+	void Scene::ConvertToLocalSpace(Entity entity)
+	{
+		Entity parent = FindEntityByUUID(entity.GetParentUUID());
+
+		if (!parent)
+			return;
+
+		auto& transform = entity.Transform();
+		glm::mat4 parentTransform = GetWorldSpaceTransformMatrix(parent);
+
+		glm::mat4 localTransform = glm::inverse(parentTransform) * transform.GetTransform();
+		Math::DecomposeTransform(localTransform, transform.Translation, transform.Rotation, transform.Scale);
+	}
+
+	void Scene::ConvertToWorldSpace(Entity entity)
+	{
+		Entity parent = FindEntityByUUID(entity.GetParentUUID());
+
+		if (!parent)
+			return;
+
+		glm::mat4 transform = GetTransformRelativeToParent(entity);
+		auto& entityTransform = entity.Transform();
+		Math::DecomposeTransform(transform, entityTransform.Translation, entityTransform.Rotation, entityTransform.Scale);
+	}
+
 	glm::mat4 Scene::GetTransformRelativeToParent(Entity entity)
 	{
-		glm::mat4 transform(1.0F);
+		glm::mat4 transform(1.0f);
 
 		Entity parent = FindEntityByUUID(entity.GetParentUUID());
 		if (parent)
@@ -650,8 +684,8 @@ namespace Key {
 
 		return transform * entity.Transform().GetTransform();
 	}
-
-	glm::mat4 Scene::GetWorldSpaceTransform(Entity entity)
+	
+	glm::mat4 Scene::GetWorldSpaceTransformMatrix(Entity entity)
 	{
 		glm::mat4 transform = entity.Transform().GetTransform();
 
@@ -664,6 +698,63 @@ namespace Key {
 		return transform;
 	}
 
+	// TODO: Definitely cache this at some point
+	TransformComponent Scene::GetWorldSpaceTransform(Entity entity)
+	{
+		glm::mat4 transform = GetWorldSpaceTransformMatrix(entity);
+		TransformComponent transformComponent;
+
+		Math::DecomposeTransform(transform, transformComponent.Translation, transformComponent.Rotation, transformComponent.Scale);
+
+		glm::quat rotationQuat = glm::quat(transformComponent.Rotation);
+		transformComponent.Up = glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0f, 1.0f, 0.0f)));
+		transformComponent.Right = glm::normalize(glm::rotate(rotationQuat, glm::vec3(1.0f, 0.0f, 0.0f)));
+		transformComponent.Forward = glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0f, 0.0f, -1.0f)));
+
+		return transformComponent;
+	}
+
+	void Scene::ParentEntity(Entity entity, Entity parent)
+	{
+		if (parent.IsDescendantOf(entity))
+		{
+			UnparentEntity(parent);
+
+			Entity newParent = FindEntityByUUID(entity.GetParentUUID());
+			if (newParent)
+			{
+				UnparentEntity(entity);
+				ParentEntity(parent, newParent);
+			}
+		}
+		else
+		{
+			Entity previousParent = FindEntityByUUID(entity.GetParentUUID());
+
+			if (previousParent)
+				UnparentEntity(entity);
+		}
+
+		entity.SetParentUUID(parent.GetUUID());
+		parent.Children().push_back(entity.GetUUID());
+
+		ConvertToLocalSpace(entity);
+	}
+
+	void Scene::UnparentEntity(Entity entity)
+	{
+		Entity parent = FindEntityByUUID(entity.GetParentUUID());
+
+		if (!parent)
+			return;
+
+		auto& parentChildren = parent.Children();
+		parentChildren.erase(std::remove(parentChildren.begin(), parentChildren.end(), entity.GetUUID()), parentChildren.end());
+
+		ConvertToWorldSpace(entity);
+
+		entity.SetParentUUID(0);
+	}
 
 	// Copy to runtime
 	void Scene::CopyTo(Ref<Scene>& target)
@@ -723,5 +814,4 @@ namespace Key {
 	{
 		m_Registry.get<Box2DWorldComponent>(m_SceneEntity).World->SetGravity({ 0.0f, gravity });
 	}
-
 }

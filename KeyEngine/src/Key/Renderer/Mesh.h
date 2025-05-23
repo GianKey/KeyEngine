@@ -3,8 +3,10 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-#include "Key/Core/TimeStep.h"
+#include "Key/Core/Timestep.h"
+
 #include "Key/Asset/Assets.h"
+
 #include "Key/Renderer/Pipeline.h"
 #include "Key/Renderer/IndexBuffer.h"
 #include "Key/Renderer/VertexBuffer.h"
@@ -99,7 +101,7 @@ namespace Key {
 					return;
 				}
 			}
-
+			
 			// should never get here - more bones than we have space for
 			KEY_CORE_ASSERT(false, "Too many bones!");
 		}
@@ -128,14 +130,17 @@ namespace Key {
 		std::string NodeName, MeshName;
 	};
 
-	class Mesh : public Asset
+	//
+	// MeshAsset is a representation of an actual asset file on disk
+	// Meshes are created from MeshAssets
+	//
+	class MeshAsset : public Asset
 	{
 	public:
-		Mesh(const std::string& filename);
-		Mesh(const std::vector<Vertex>& vertices, const std::vector<Index>& indices, const glm::mat4& transform);
-		~Mesh();
+		MeshAsset(const std::string& filename);
+		MeshAsset(const std::vector<Vertex>& vertices, const std::vector<Index>& indices, const glm::mat4& transform);
+		virtual ~MeshAsset();
 
-		void OnUpdate(TimeStep ts);
 		void DumpVertexBuffer();
 
 		std::vector<Submesh>& GetSubmeshes() { return m_Submeshes; }
@@ -150,12 +155,14 @@ namespace Key {
 		const std::vector<Ref<Texture2D>>& GetTextures() const { return m_Textures; }
 		const std::string& GetFilePath() const { return m_FilePath; }
 
-
 		const std::vector<Triangle> GetTriangleCache(uint32_t index) const { return m_TriangleCache.at(index); }
-		
+
 		Ref<VertexBuffer> GetVertexBuffer() { return m_VertexBuffer; }
 		Ref<IndexBuffer> GetIndexBuffer() { return m_IndexBuffer; }
 		const VertexBufferLayout& GetVertexBufferLayout() const { return m_VertexBufferLayout; }
+
+		static AssetType GetStaticType() { return AssetType::MeshAsset; }
+		virtual AssetType GetAssetType() const override { return GetStaticType(); }
 	private:
 		void BoneTransform(float time);
 		void ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const glm::mat4& ParentTransform);
@@ -170,7 +177,7 @@ namespace Key {
 		glm::vec3 InterpolateScale(float animationTime, const aiNodeAnim* nodeAnim);
 	private:
 		std::vector<Submesh> m_Submeshes;
-
+		
 		std::unique_ptr<Assimp::Importer> m_Importer;
 
 		glm::mat4 m_InverseTransform;
@@ -199,12 +206,56 @@ namespace Key {
 
 		// Animation
 		bool m_IsAnimated = false;
-		float m_AnimationTime = 0.0f;
-		float m_WorldTime = 0.0f;
 		float m_TimeMultiplier = 1.0f;
 		bool m_AnimationPlaying = true;
 
 		std::string m_FilePath;
+
+		friend class Renderer;
+		friend class VulkanRenderer;
+		friend class OpenGLRenderer;
+		friend class SceneHierarchyPanel;
+		friend class MeshViewerPanel;
+	};
+
+	class Mesh : public Asset
+	{
+	public:
+		explicit Mesh(Ref<MeshAsset> meshAsset);
+		Mesh(Ref<MeshAsset> meshAsset, const std::vector<uint32_t>& submeshes);
+		virtual ~Mesh();
+
+		void OnUpdate(TimeStep ts);
+
+		const std::vector<uint32_t>& GetSubmeshes() const { return m_Submeshes; }
+		void SetSubmeshes(const std::vector<uint32_t>& submeshes) { m_Submeshes = submeshes; }
+
+		Ref<MeshAsset> GetMeshAsset() { return m_MeshAsset; }
+		void SetMeshAsset(Ref<MeshAsset> meshAsset) { m_MeshAsset = meshAsset; }
+
+		Ref<Shader> GetMeshShader() { return m_MeshShader; }
+		std::vector<Ref<Material>>& GetMaterials() { return m_Materials; }
+		const std::vector<Ref<Material>>& GetMaterials() const { return m_Materials; }
+
+		static AssetType GetStaticType() { return AssetType::Mesh; }
+		virtual AssetType GetAssetType() const override { return GetStaticType(); }
+	private:
+		Ref<MeshAsset> m_MeshAsset;
+		std::vector<uint32_t> m_Submeshes; // TODO(Yan): physics/render masks
+
+		uint32_t m_BoneCount = 0;
+		std::vector<BoneInfo> m_BoneInfo;
+
+		// Materials
+		Ref<Shader> m_MeshShader;
+		std::vector<Ref<Material>> m_Materials;
+
+		// Animation
+		bool m_IsAnimated = false;
+		float m_AnimationTime = 0.0f;
+		float m_WorldTime = 0.0f;
+		float m_TimeMultiplier = 1.0f;
+		bool m_AnimationPlaying = true;
 
 		friend class Renderer;
 		friend class VulkanRenderer;

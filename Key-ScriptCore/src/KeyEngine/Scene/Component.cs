@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -22,7 +22,7 @@ namespace Key
             }
             set
             {
-                SetTag_Native(value);
+                SetTag_Native(Entity.ID, value);
             }
         }
 
@@ -30,12 +30,13 @@ namespace Key
         public static extern string GetTag_Native(ulong entityID);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void SetTag_Native(string tag);
+        public static extern void SetTag_Native(ulong entityID, string tag);
 
     }
 
     public class TransformComponent : Component
     {
+
         public Transform Transform
         {
             get
@@ -51,21 +52,21 @@ namespace Key
         }
 
         public Vector3 Translation
-        {
-            get
-            {
-                GetTranslation_Native(Entity.ID, out Vector3 result);
-                return result;
-            }
+		{
+			get
+			{
+				GetTranslation_Native(Entity.ID, out Vector3 result);
+				return result;
+			}
 
-            set
-            {
+			set
+			{
                 SetTranslation_Native(Entity.ID, ref value);
-            }
-        }
+			}
+		}
 
-        public Vector3 Rotation
-        {
+		public Vector3 Rotation
+		{
             get
             {
                 GetRotation_Native(Entity.ID, out Vector3 result);
@@ -78,8 +79,8 @@ namespace Key
             }
         }
 
-        public Vector3 Scale
-        {
+		public Vector3 Scale
+		{
             get
             {
                 GetScale_Native(Entity.ID, out Vector3 result);
@@ -92,7 +93,13 @@ namespace Key
             }
         }
 
-        [MethodImpl(MethodImplOptions.InternalCall)]
+        public Transform GetWorldSpaceTransform()
+		{
+            GetWorldSpaceTransform_Native(Entity.ID, out Transform transform);
+            return transform;
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void GetTransform_Native(ulong entityID, out Transform outTransform);
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void SetTransform_Native(ulong entityID, ref Transform inTransform);
@@ -108,9 +115,11 @@ namespace Key
         internal static extern void GetScale_Native(ulong entityID, out Vector3 outScale);
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void SetScale_Native(ulong entityID, ref Vector3 inScale);
-    }
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void GetWorldSpaceTransform_Native(ulong entityID, out Transform outTransform);
+	}
 
-    public class MeshComponent : Component
+	public class MeshComponent : Component
     {
         public Mesh Mesh
         {
@@ -136,7 +145,7 @@ namespace Key
 
     public class CameraComponent : Component
     {
-        // TODO
+       // TODO
     }
 
     public class ScriptComponent : Component
@@ -181,5 +190,82 @@ namespace Key
     {
     }
 
+    public class RigidBodyComponent : Component
+	{
+        public enum Type
+		{
+            Static,
+            Dynamic
+		}
+
+        public Type BodyType
+        {
+            get
+			{
+                return GetBodyType_Native(Entity.ID);
+			}
+        }
+
+        public float Mass
+        {
+            get { return GetMass_Native(Entity.ID); }
+            set { SetMass_Native(Entity.ID, value); }
+        }
+
+        public uint Layer { get { return GetLayer_Native(Entity.ID); } }
+        
+
+        public Vector3 GetLinearVelocity()
+		{
+            GetLinearVelocity_Native(Entity.ID, out Vector3 velocity);
+            return velocity;
+		}
+
+		public void SetLinearVelocity(Vector3 velocity)
+		{
+            SetLinearVelocity_Native(Entity.ID, ref velocity);
+		}
+
+        public Vector3 GetAngularVelocity()
+		{
+            GetAngularVelocity_Native(Entity.ID, out Vector3 velocity);
+            return velocity;
+		}
+
+        public void SetAngularVelocity(Vector3 velocity)
+		{
+            SetAngularVelocity_Native(Entity.ID, ref velocity);
+		}
+
+        // Rotation should be in radians
+        public void Rotate(Vector3 rotation)
+		{
+            Rotate_Native(Entity.ID, ref rotation);
+		}
+        
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void GetLinearVelocity_Native(ulong entityID, out Vector3 velocity);
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void SetLinearVelocity_Native(ulong entityID, ref Vector3 velocity);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void GetAngularVelocity_Native(ulong entityID, out Vector3 velocity);
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void SetAngularVelocity_Native(ulong entityID, ref Vector3 velocity);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Rotate_Native(ulong entityID, ref Vector3 rotation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern uint GetLayer_Native(ulong entityID);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern float GetMass_Native(ulong entityID);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void SetMass_Native(ulong entityID, float mass);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern Type GetBodyType_Native(ulong entityID);
+    }
 
 }

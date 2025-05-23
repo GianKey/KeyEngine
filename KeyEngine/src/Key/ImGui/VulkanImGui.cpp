@@ -102,7 +102,7 @@ namespace Key::UI {
 			const VkDescriptorImageInfo& imageInfo = vulkanTexture->GetVulkanDescriptorInfo();
 			auto textureID = ImGui_ImplVulkan_AddTexture(imageInfo.sampler, imageInfo.imageView, imageInfo.imageLayout);
 			ImGuiID id = (ImGuiID)((((uint64_t)imageInfo.imageView) >> 32) ^ (uint32_t)imageInfo.imageView);
-			KEY_CORE_WARN("Rendering button id={0}, texture path = {1}", id, texture->GetPath());
+			//KEY_CORE_WARN("Rendering button id={0}, texture path = {1}", id, texture->GetPath());
 			return ImGui::ImageButtonEx(id, (ImTextureID)textureID, size, uv0, uv1, ImVec2{ (float)frame_padding, (float)frame_padding }, bg_col, tint_col);
 		}
 	}
