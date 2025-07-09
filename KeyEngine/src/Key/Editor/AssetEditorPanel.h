@@ -23,7 +23,9 @@ namespace Key {
 	protected:
 		void SetMinSize(uint32_t width, uint32_t height);
 		void SetMaxSize(uint32_t width, uint32_t height);
-
+		
+		void SetTitle(const char* newTitle);
+		const char* GetTitle(const char* newTitle) const;
 	private:
 		virtual void OnClose() = 0;
 		virtual void Render() = 0;

@@ -15,6 +15,7 @@
 #include "Key/Asset/AssetManager.h"
 #include <imgui/imgui.h>
 #include "imgui/imgui_internal.h"
+#include "Key/Utilities/StringUtils.h"
 
 extern bool g_ApplicationRunning;
 extern ImGuiContext* GImGui;

@@ -1,4 +1,5 @@
 #include "Kpch.h"
+#include "Key/Utilities/StringUtils.h"
 #include "VulkanAllocator.h"
 #include "VulkanContext.h"
 
@@ -12,25 +13,6 @@ namespace Key {
 
 	namespace Utils {
 
-		std::string BytesToString(uint64_t bytes)
-		{
-			static const float gb = 1024 * 1024 * 1024;
-			static const float mb = 1024 * 1024;
-			static const float kb = 1024;
-
-			char buffer[16];
-
-			if (bytes > gb)
-				sprintf_s(buffer, "%.2f GB", bytes / gb);
-			else if (bytes > mb)
-				sprintf_s(buffer, "%.2f MB", bytes / mb);
-			else if (bytes > kb)
-				sprintf_s(buffer, "%.2f KB", bytes / kb);
-			else
-				sprintf_s(buffer, "%.2f bytes", bytes);
-
-			return std::string(buffer);
-		}
 	}
 
 	struct VulkanAllocatorData

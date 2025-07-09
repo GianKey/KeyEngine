@@ -52,6 +52,16 @@ namespace Key {
 
 		m_MaxSize = ImVec2(width, height);
 	}
+	
+	void AssetEditor::SetTitle(const char* newTitle)
+	{
+		m_Title = newTitle;
+	}
+
+	const char* AssetEditor::GetTitle(const char* newTitle) const
+	{
+		return m_Title;
+	}
 
 	void AssetEditorPanel::RegisterDefaultEditors()
 	{
