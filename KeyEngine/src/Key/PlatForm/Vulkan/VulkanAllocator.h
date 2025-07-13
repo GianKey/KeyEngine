@@ -8,8 +8,6 @@
 namespace Key {
 	namespace Utils {
 
-		std::string BytesToString(uint64_t bytes);
-
 	}
 
 	struct GPUMemoryStats

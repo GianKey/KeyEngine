@@ -35,7 +35,6 @@ namespace Key {
 	struct RelationshipComponent
 	{
 		UUID ParentHandle = 0;
-
 		std::vector<UUID> Children;
 
 		RelationshipComponent() = default;
@@ -50,9 +49,9 @@ namespace Key {
 		glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f };
 		glm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
 
-		glm::vec3 Up = { 0.0F, 1.0F, 0.0F };
-		glm::vec3 Right = { 1.0F, 0.0F, 0.0F };
-		glm::vec3 Forward = { 0.0F, 0.0F, -1.0F };
+		glm::vec3 Up = { 0.0f, 1.0f, 0.0f };
+		glm::vec3 Right = { 1.0f, 0.0f, 0.0f };
+		glm::vec3 Forward = { 0.0f, 0.0f, -1.0f };
 
 		TransformComponent() = default;
 		TransformComponent(const TransformComponent& other) = default;
@@ -76,7 +75,7 @@ namespace Key {
 		MeshComponent(const Ref<Key::Mesh>& mesh)
 			: Mesh(mesh) {}
 
-		operator Ref<Key::Mesh>() { return Mesh; }
+		operator Ref<Key::Mesh> () { return Mesh; }
 	};
 
 	struct ScriptComponent
@@ -154,9 +153,6 @@ namespace Key {
 		CircleCollider2DComponent(const CircleCollider2DComponent& other) = default;
 	};
 
-	// Lights
-
-	// TODO: Move to renderer
 	enum class LightType
 	{
 		None = 0, Directional = 1, Point = 2, Spot = 3

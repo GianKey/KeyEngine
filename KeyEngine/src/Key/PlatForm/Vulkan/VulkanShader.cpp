@@ -2,6 +2,7 @@
 #include "VulkanShader.h"
 
 #include "Key/Renderer/Renderer.h"
+#include "Key/Core/Hash.h"
 
 #include "Key/Platform/Vulkan/VulkanContext.h"
 #include <shaderc/shaderc.hpp>
@@ -98,30 +99,35 @@ namespace Key {
 	{
 		Ref<VulkanShader> instance = this;
 		Renderer::Submit([instance, forceCompile]() mutable
-			{
-				// Clear old shader
-				instance->m_ShaderDescriptorSets.clear();
-				instance->m_Resources.clear();
-				instance->m_PushConstantRanges.clear();
-				instance->m_PipelineShaderStageCreateInfos.clear();
-				instance->m_DescriptorSetLayouts.clear();
-				instance->m_ShaderSource.clear();
-				instance->m_Buffers.clear();
-				instance->m_TypeCounts.clear();
+		{
+			// Clear old shader
+			instance->m_ShaderDescriptorSets.clear();
+			instance->m_Resources.clear();
+			instance->m_PushConstantRanges.clear();
+			instance->m_PipelineShaderStageCreateInfos.clear();
+			instance->m_DescriptorSetLayouts.clear();
+			instance->m_ShaderSource.clear();
+			instance->m_Buffers.clear();
+			instance->m_TypeCounts.clear();
 
-				Utils::CreateCacheDirectoryIfNeeded();
+			Utils::CreateCacheDirectoryIfNeeded();
+			
+			// Vertex and Fragment for now
+			std::string source = ReadShaderFromFile(instance->m_AssetPath);
 
-				// Vertex and Fragment for now
-				std::string source = ReadShaderFromFile(instance->m_AssetPath);
-				instance->m_ShaderSource = instance->PreProcess(source);
-				std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>> shaderData;
-				instance->CompileOrGetVulkanBinary(shaderData, forceCompile);
-				instance->LoadAndCreateShaders(shaderData);
-				instance->ReflectAllShaderStages(shaderData);
-				instance->CreateDescriptors();
+			// TODO(Yan): save shader hashes in asset registry so we know
+			//            when to re-compile out-of-date shaders
+			uint32_t hash = Hash::GenerateFNVHash(source.c_str());
 
-				Renderer::OnShaderReloaded(instance->GetHash());
-			});
+			instance->m_ShaderSource = instance->PreProcess(source);
+			std::unordered_map<VkShaderStageFlagBits, std::vector<uint32_t>> shaderData;
+			instance->CompileOrGetVulkanBinary(shaderData, forceCompile);
+			instance->LoadAndCreateShaders(shaderData);
+			instance->ReflectAllShaderStages(shaderData);
+			instance->CreateDescriptors();
+
+			Renderer::OnShaderReloaded(instance->GetHash());
+		});
 	}
 
 	size_t VulkanShader::GetHash() const
@@ -203,7 +209,7 @@ namespace Key {
 				UniformBuffer* uniformBuffer = s_UniformBuffers.at(descriptorSet).at(binding);
 				if (size > uniformBuffer->Size)
 					uniformBuffer->Size = size;
-
+				
 			}
 
 			shaderDescriptorSet.UniformBuffers[binding] = s_UniformBuffers.at(descriptorSet).at(binding);
@@ -304,7 +310,7 @@ namespace Key {
 
 		KEY_CORE_TRACE("===========================");
 
-
+	
 	}
 
 	void VulkanShader::CreateDescriptors()
@@ -354,8 +360,8 @@ namespace Key {
 			//////////////////////////////////////////////////////////////////////
 			// Descriptor Set Layout
 			//////////////////////////////////////////////////////////////////////
-
-
+		
+		
 			std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
 			for (auto& [binding, uniformBuffer] : shaderDescriptorSet.UniformBuffers)
 			{
@@ -423,9 +429,9 @@ namespace Key {
 			descriptorLayout.pBindings = layoutBindings.data();
 
 			KEY_CORE_INFO("Creating descriptor set {0} with {1} ubos, {2} samplers and {3} storage images", set,
-				shaderDescriptorSet.UniformBuffers.size(),
-				shaderDescriptorSet.ImageSamplers.size(),
-				shaderDescriptorSet.StorageImages.size());
+			shaderDescriptorSet.UniformBuffers.size(),
+			shaderDescriptorSet.ImageSamplers.size(),
+			shaderDescriptorSet.StorageImages.size());
 			if (set >= m_DescriptorSetLayouts.size())
 				m_DescriptorSetLayouts.resize(set + 1);
 			VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &m_DescriptorSetLayouts[set]));
@@ -570,7 +576,7 @@ namespace Key {
 			VK_CHECK_RESULT(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &m_DescriptorPool));
 		}
 #endif
-
+		
 		// TODO: remove
 		result.Pool = nullptr;
 
@@ -611,9 +617,9 @@ namespace Key {
 	{
 		switch (stage)
 		{
-		case VK_SHADER_STAGE_VERTEX_BIT:    return ".cached_vulkan.vert";
-		case VK_SHADER_STAGE_FRAGMENT_BIT:  return ".cached_vulkan.frag";
-		case VK_SHADER_STAGE_COMPUTE_BIT:   return ".cached_vulkan.comp";
+			case VK_SHADER_STAGE_VERTEX_BIT:    return ".cached_vulkan.vert";
+			case VK_SHADER_STAGE_FRAGMENT_BIT:  return ".cached_vulkan.frag";
+			case VK_SHADER_STAGE_COMPUTE_BIT:   return ".cached_vulkan.comp";
 		}
 		KEY_CORE_ASSERT(false);
 		return "";
@@ -623,9 +629,9 @@ namespace Key {
 	{
 		switch (stage)
 		{
-		case VK_SHADER_STAGE_VERTEX_BIT:    return shaderc_vertex_shader;
-		case VK_SHADER_STAGE_FRAGMENT_BIT:  return shaderc_fragment_shader;
-		case VK_SHADER_STAGE_COMPUTE_BIT:   return shaderc_compute_shader;
+			case VK_SHADER_STAGE_VERTEX_BIT:    return shaderc_vertex_shader;
+			case VK_SHADER_STAGE_FRAGMENT_BIT:  return shaderc_fragment_shader;
+			case VK_SHADER_STAGE_COMPUTE_BIT:   return shaderc_compute_shader;
 		}
 		KEY_CORE_ASSERT(false);
 		return (shaderc_shader_kind)0;
@@ -676,7 +682,7 @@ namespace Key {
 					if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 					{
 						KEY_CORE_ERROR(module.GetErrorMessage());
-						KEY_CORE_ASSERT(false);
+						KEY_CORE_VERIFY(false);
 					}
 
 					const uint8_t* begin = (const uint8_t*)module.cbegin();

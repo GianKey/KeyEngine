@@ -14,7 +14,8 @@
 #include "Key/ImGui/ImGui.h"
 
 namespace Key {
-
+	static std::vector<std::thread> s_ThreadPool;
+	
 	SceneRenderer::SceneRenderer(Ref<Scene> scene)
 		: m_Scene(scene)
 	{
@@ -415,8 +416,24 @@ namespace Key {
 	void SceneRenderer::EndScene()
 	{
 		KEY_CORE_ASSERT(m_Active);
+#if MULTI_THREAD
+		Ref<SceneRenderer> instance = this;
+		s_ThreadPool.emplace_back(([instance]() mutable
+		{
+			instance->FlushDrawList();
+		}));
+#else 
 		FlushDrawList();
+#endif
 		m_Active = false;
+	}
+
+	void SceneRenderer::WaitForThreads()
+	{
+		for (uint32_t i = 0; i < s_ThreadPool.size(); i++)
+			s_ThreadPool[i].join();
+
+		s_ThreadPool.clear();
 	}
 
 	void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<Material> overrideMaterial)

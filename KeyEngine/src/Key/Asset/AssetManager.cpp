@@ -5,10 +5,12 @@
 #include "Key/Renderer/SceneRenderer.h"
 
 #include "yaml-cpp/yaml.h"
+
 #include <filesystem>
 
 namespace Key {
 
+	static const char* s_AssetRegistryPath = "assets/AssetRegistry.hzr";
 
 	void AssetManager::Init()
 	{
@@ -17,7 +19,7 @@ namespace Key {
 		LoadAssetRegistry();
 		FileSystem::SetChangeCallback(AssetManager::OnFileSystemChanged);
 		ReloadAssets();
-		UpdateRegistryCache();
+		WriteRegistryToFile();
 	}
 
 	void AssetManager::SetAssetChangeCallback(const AssetsChangeEventFn& callback)
@@ -27,225 +29,153 @@ namespace Key {
 
 	void AssetManager::Shutdown()
 	{
+		WriteRegistryToFile();
+
 		s_AssetRegistry.clear();
 		s_LoadedAssets.clear();
-	}
-
-	std::vector<Ref<Asset>> AssetManager::GetAssetsInDirectory(AssetHandle directoryHandle)
-	{
-		std::vector<Ref<Asset>> results;
-
-		for (auto& asset : s_LoadedAssets)
-		{
-			if (asset.second && asset.second->ParentDirectory == directoryHandle && asset.second->Handle != directoryHandle)
-				results.push_back(asset.second);
-		}
-
-		return results;
-	}
-
-	// Utility function to find the parent of an unprocessed directory
-	AssetHandle AssetManager::FindParentHandleInChildren(Ref<Directory>& dir, const std::string& dirName)
-	{
-		if (dir->FileName == dirName)
-			return dir->Handle;
-
-		for (AssetHandle childHandle : dir->ChildDirectories)
-		{
-			Ref<Directory> child = GetAsset<Directory>(childHandle);
-			AssetHandle dirHandle = FindParentHandleInChildren(child, dirName);
-
-			if (IsAssetHandleValid(dirHandle))
-				return dirHandle;
-		}
-
-		return 0;
-	}
-
-	AssetHandle AssetManager::FindParentHandle(const std::string& filepath)
-	{
-		std::vector<std::string> parts = Utils::SplitString(filepath, "/\\");
-		std::string parentFolder = parts[parts.size() - 2];
-		Ref<Directory>& assetsDirectory = GetAsset<Directory>(GetAssetHandleFromFilePath("assets"));
-		return FindParentHandleInChildren(assetsDirectory, parentFolder);
 	}
 
 	void AssetManager::OnFileSystemChanged(FileSystemChangedEvent e)
 	{
 		e.NewName = Utils::RemoveExtension(e.NewName);
-		e.OldName = Utils::RemoveExtension(e.OldName);
 
-		AssetHandle parentHandle = FindParentHandle(e.FilePath);
+		s_AssetsChangeCallback(e);
 
-		if (e.Action == FileSystemAction::Added)
+		switch (e.Action)
+		{
+		case FileSystemAction::Added:
+			if (!e.IsDirectory)
+				ImportAsset(e.FilePath);
+			break;
+		case FileSystemAction::Delete:
+			RemoveAsset(GetAssetHandleFromFilePath(e.FilePath));
+			break;
+		case FileSystemAction::Modified:
+			// TODO: Reload data if loaded
+			break;
+		case FileSystemAction::Rename:
 		{
 			if (e.IsDirectory)
-				ProcessDirectory(e.FilePath, parentHandle);
-			else
-				ImportAsset(e.FilePath, parentHandle);
+				return;
+
+			std::filesystem::path oldFilePath = e.FilePath;
+			oldFilePath = oldFilePath.parent_path() / e.OldName;
+			OnAssetRenamed(GetAssetHandleFromFilePath(oldFilePath.string()), e.FilePath);
+
+			s_AssetsChangeCallback(e);
+			break;
 		}
-
-		// TODO: Re import data if loaded
-		/*if (e.Action == FileSystemAction::Modified)
-		{
-			if (!e.IsDirectory)
-				ImportAsset(e.FilePath, parentHandle);
-		}*/
-
-		if (e.Action == FileSystemAction::Rename)
-		{
-			
-			for (auto it = s_LoadedAssets.begin(); it != s_LoadedAssets.end(); it++)
-			{
-				if (it->second->FileName == e.OldName)
-				{
-					it->second->FilePath = e.FilePath;
-					it->second->FileName = e.NewName;
-				}
-			}
 		}
-
-		if (e.Action == FileSystemAction::Delete)
-		{
-			for (auto it = s_LoadedAssets.begin(); it != s_LoadedAssets.end(); it++)
-			{
-				if (it->second->FilePath != e.FilePath)
-					continue;
-
-				RemoveAsset(it->first);
-				break;
-			}
-
-		}
-
-		s_AssetsChangeCallback();
 	}
 
-	std::vector<Ref<Asset>> AssetManager::SearchAssets(const std::string& query, const std::string& searchPath, AssetType desiredType)
+	// NOTE: Most likely temporary
+	static AssetMetadata s_NullMetadata;
+
+	AssetMetadata& AssetManager::GetMetadata(AssetHandle handle)
 	{
-		std::vector<Ref<Asset>> results;
-
-		if (!searchPath.empty())
+		for (auto&[filepath, metadata] : s_AssetRegistry)
 		{
-			for (const auto& [key, asset] : s_LoadedAssets)
-			{
-				if (desiredType == AssetType::None && asset->Type == AssetType::Directory)
-					continue;
-
-				if (desiredType != AssetType::None && asset->Type != desiredType)
-					continue;
-
-				if (asset->FileName.find(query) != std::string::npos && asset->FilePath.find(searchPath) != std::string::npos) {
-					results.push_back(asset);
-				}
-
-
-				// Search extensions
-				if (query[0] == '.')
-				{
-					if (asset->Extension.find(std::string(&query[1])) != std::string::npos && asset->FilePath.find(searchPath) != std::string::npos)
-					{
-						results.push_back(asset);
-					}
-				}
-			}
+			if (metadata.Handle == handle)
+				return metadata;
 		}
 
-		return results;
+		return s_NullMetadata;
 	}
 
-	bool AssetManager::IsDirectory(const std::string& filepath)
+	AssetMetadata& AssetManager::GetMetadata(const std::string& filepath)
 	{
-		for (auto& [handle, asset] : s_LoadedAssets)
-		{
-			if (asset->Type == AssetType::Directory && asset->FilePath == filepath)
-				return true;
-		}
+		std::string fixedFilePath = filepath;
+		std::replace(fixedFilePath.begin(), fixedFilePath.end(), '\\', '/');
 
-		return false;
+		if (s_AssetRegistry.find(fixedFilePath) != s_AssetRegistry.end())
+			return s_AssetRegistry[fixedFilePath];
+
+		return s_NullMetadata;
 	}
 
 	AssetHandle AssetManager::GetAssetHandleFromFilePath(const std::string& filepath)
 	{
 		std::string fixedFilepath = filepath;
 		std::replace(fixedFilepath.begin(), fixedFilepath.end(), '\\', '/');
-		for (auto& [id, asset] : s_LoadedAssets)
-		{
-			if (asset->FilePath == fixedFilepath)
-				return id;
-		}
+		
+		if (s_AssetRegistry.find(fixedFilepath) != s_AssetRegistry.end())
+			return s_AssetRegistry[fixedFilepath].Handle;
 
 		return 0;
 	}
 
-	bool AssetManager::IsAssetHandleValid(AssetHandle assetHandle)
-	{
-		return assetHandle != 0 && s_LoadedAssets.find(assetHandle) != s_LoadedAssets.end();
-	}
 	void AssetManager::Rename(AssetHandle assetHandle, const std::string& newName)
 	{
-		Ref<Asset>& asset = s_LoadedAssets[assetHandle];
-		AssetMetadata& metadata = s_AssetRegistry[asset->FilePath];
-		std::string newFilePath = FileSystem::Rename(asset->FilePath, newName);
+		AssetMetadata metadata = GetMetadata(assetHandle);
+		std::string newFilePath = FileSystem::Rename(metadata.FilePath, newName);
+		OnAssetRenamed(assetHandle, newFilePath);
+	}
 
-		asset->FilePath = newFilePath;
-		asset->FileName = newName;
-
+	void AssetManager::OnAssetRenamed(AssetHandle assetHandle, const std::string& newFilePath)
+	{
+		AssetMetadata metadata = GetMetadata(assetHandle);
+		s_AssetRegistry.erase(metadata.FilePath);
 		metadata.FilePath = newFilePath;
-		UpdateRegistryCache();
+		metadata.FileName = Utils::RemoveExtension(Utils::GetFilename(newFilePath));
+		s_AssetRegistry[metadata.FilePath] = metadata;
+		WriteRegistryToFile();
 	}
 
-	 void AssetManager::RemoveAsset(AssetHandle assetHandle)
+	/*void AssetManager::MoveAsset(AssetHandle assetHandle, const std::string& filepath)
 	{
-		 Ref<Asset> asset = s_LoadedAssets[assetHandle];
-		 if (asset->Type == AssetType::Directory)
-		{
-			 if (IsAssetHandleValid(asset->ParentDirectory))
-			{
-				 auto& childList = s_LoadedAssets[asset->ParentDirectory].As<Directory>()->ChildDirectories;
-				 childList.erase(std::remove(childList.begin(), childList.end(), assetHandle), childList.end());
-			 }
+		Ref<Asset>& asset = s_LoadedAssets[assetHandle];
+		Ref<Directory> directory = s_LoadedAssets[newDirectory].As<Directory>();
+		Ref<Directory> currentDirectory = s_LoadedAssets[asset->ParentDirectory].As<Directory>();
+		AssetMetadata metadata = s_AssetRegistry[asset->FilePath];
 
-			 for (auto child : asset.As<Directory>()->ChildDirectories)
-				 RemoveAsset(child);
+		bool result = FileSystem::MoveFile(asset->FilePath, directory->FilePath);
 
-			 for (auto it = s_LoadedAssets.begin(); it != s_LoadedAssets.end(); )
-			 {
-				 if (it->second->ParentDirectory != assetHandle)
-				{
-					 it++;
-					 continue;
-				}
-				 s_AssetRegistry.erase(it->second->FilePath);
-				 it = s_LoadedAssets.erase(it);
-			}
-		}
-		 s_AssetRegistry.erase(asset->FilePath);
-		s_LoadedAssets.erase(assetHandle);
-
-		UpdateRegistryCache();
-	}
-
-	 AssetType AssetManager::GetAssetTypeForFileType(const std::string& extension)
-	{
-		 if (extension == "hsc") return AssetType::Scene;
-		 if (extension == "fbx") return AssetType::Mesh;
-		 if (extension == "obj") return AssetType::Mesh;
-		 if (extension == "png") return AssetType::Texture;
-		 if (extension == "hdr") return AssetType::EnvMap;
-		 if (extension == "hpm") return AssetType::PhysicsMat;
-		 if (extension == "wav") return AssetType::Audio;
-		 if (extension == "ogg") return AssetType::Audio;
-		 if (extension == "cs")  return AssetType::Script;
-		 return AssetType::None;
-	 }
-
-	 void AssetManager::LoadAssetRegistry()
-	 {
-		 if (!FileSystem::Exists("assets/cache/AssetRegistryCache.hzr"))
+		if (!result)
 			return;
 
-		 std::ifstream stream("assets/cache/AssetRegistryCache.hzr");
+		asset->FilePath = directory->FilePath + "/" + asset->FileName + "." + asset->Extension;
+
+		s_AssetRegistry.erase(metadata.FilePath);
+		metadata.FilePath = asset->FilePath;
+
+		s_AssetRegistry[metadata.FilePath] = metadata;
+
+		asset->ParentDirectory = currentDirectory->Handle;
+		directory->Assets.push_back(assetHandle);
+		currentDirectory->Assets.erase(std::remove(currentDirectory->Assets.begin(), currentDirectory->Assets.end(), assetHandle), currentDirectory->Assets.end());
+
+		WriteRegistryToFile();
+	}*/
+
+	void AssetManager::RemoveAsset(AssetHandle assetHandle)
+	{
+		AssetMetadata metadata = GetMetadata(assetHandle);
+		s_AssetRegistry.erase(metadata.FilePath);
+		s_LoadedAssets.erase(assetHandle);
+
+		WriteRegistryToFile();
+	}
+
+	AssetType AssetManager::GetAssetTypeForFileType(const std::string& extension)
+	{
+		if (extension == "hsc") return AssetType::Scene;
+		if (extension == "fbx") return AssetType::MeshAsset;
+		if (extension == "obj") return AssetType::MeshAsset;
+		if (extension == "hzm") return AssetType::Mesh;
+		if (extension == "png") return AssetType::Texture;
+		if (extension == "hdr") return AssetType::EnvMap;
+		if (extension == "hpm") return AssetType::PhysicsMat;
+		if (extension == "wav") return AssetType::Audio;
+		if (extension == "ogg") return AssetType::Audio;
+		return AssetType::None;
+	}
+
+	void AssetManager::LoadAssetRegistry()
+	{
+		if (!FileSystem::Exists(s_AssetRegistryPath))
+			return;
+
+		std::ifstream stream(s_AssetRegistryPath);
 		KEY_CORE_ASSERT(stream);
 		std::stringstream strStream;
 		strStream << stream.rdbuf();
@@ -254,157 +184,128 @@ namespace Key {
 		auto handles = data["Assets"];
 		if (!handles)
 		{
-			 KEY_CORE_ERROR("Failed to read Asset Registry file.");
-			 return;
-		}
-
-		 for (auto entry : handles)
-		{
-			 AssetMetadata metadata;
-			 metadata.Handle = entry["Handle"].as<uint64_t>();
-			 metadata.FilePath = entry["FilePath"].as<std::string>();
-			 metadata.Type = (AssetType)entry["Type"].as<int>();
-
-			 if (!FileSystem::Exists(metadata.FilePath))
-			 {
-				 KEY_CORE_WARN("Tried to load metadata for non-existing asset: {0}", metadata.FilePath);
-				 continue;
-			 }
-
-			 if (metadata.Handle == 0)
-			 {
-				 KEY_CORE_WARN("AssetHandle for {0} is 0, this shouldn't happen.", metadata.FilePath);
-				 continue;
-			 }
-
-			 s_AssetRegistry[metadata.FilePath] = metadata;
-		}
-	 }
-
-	 Ref<Asset> AssetManager::CreateAsset(const std::string& filepath, AssetType type, AssetHandle parentHandle)
-	 {
-		Ref<Asset> asset = Ref<Asset>::Create();
-
-		if (type == AssetType::Directory)
-			 asset = Ref<Directory>::Create();
-
-		std::string extension = Utils::GetExtension(filepath);
-		asset->FilePath = filepath;
-		std::replace(asset->FilePath.begin(), asset->FilePath.end(), '\\', '/');
-
-		if (s_AssetRegistry.find(asset->FilePath) != s_AssetRegistry.end())
-		{
-			 asset->Handle = s_AssetRegistry[asset->FilePath].Handle;
-			 asset->Type = s_AssetRegistry[asset->FilePath].Type;
-
-			 if (asset->Type != type)
-			 {
-				 KEY_CORE_WARN("AssetType for '{0}' was different than the metadata. Did the file type change?", asset->FilePath);
-				 asset->Type = AssetType::None;
-			 }
-		 }
-		 else
-		 {
-			 asset->Handle = AssetHandle();
-			 asset->Type = type;
-		 }
-
-		 asset->FileName = Utils::RemoveExtension(Utils::GetFilename(asset->FilePath));
-		 asset->Extension = extension;
-		 asset->ParentDirectory = parentHandle;
-		 asset->IsDataLoaded = false;
-		 return asset;
-	}
-
-	void AssetManager::ImportAsset(const std::string& filepath, AssetHandle parentHandle)
-	{
-		std::string extension = Utils::GetExtension(filepath);
-		AssetType type = GetAssetTypeForFileType(extension);
-		Ref<Asset> asset = CreateAsset(filepath, type, parentHandle);
-
-		if (asset->Type == AssetType::None)
+			KEY_CORE_ERROR("AssetRegistry appears to be corrupted!");
 			return;
-
-		if (s_AssetRegistry.find(asset->FilePath) == s_AssetRegistry.end())
-		{
-			AssetMetadata metadata;
-			metadata.Handle = asset->Handle;
-			metadata.FilePath = asset->FilePath;
-			metadata.Type = asset->Type;
-			s_AssetRegistry[asset->FilePath] = metadata;
 		}
 
+		for (auto entry : handles)
+		{
+			AssetMetadata metadata;
+			metadata.Handle = entry["Handle"].as<uint64_t>();
+			metadata.FilePath = entry["FilePath"].as<std::string>();
+			metadata.FileName = Utils::RemoveExtension(Utils::GetFilename(metadata.FilePath));
+			metadata.Extension = Utils::GetExtension(Utils::GetFilename(metadata.FilePath));
+			metadata.Type = (AssetType)Utils::AssetTypeFromString(entry["Type"].as<std::string>());
 
-		s_LoadedAssets[asset->Handle] = asset;
+			// TODO: Improve this
+			if (metadata.Type == AssetType::None)
+				continue;
+
+			if (!FileSystem::Exists(metadata.FilePath))
+			{
+				KEY_CORE_WARN("Missing asset '{0}' detected in registry file, trying to locate...", metadata.FilePath);
+
+				std::string mostLikelyCandiate;
+				uint32_t bestScore = 0;
+
+				for (auto& pathEntry : std::filesystem::recursive_directory_iterator("assets/"))
+				{
+					const std::filesystem::path& path = pathEntry.path();
+
+					if (path.filename() != Utils::GetFilename(metadata.FilePath))
+						continue;
+
+					if (bestScore > 0)
+						KEY_CORE_WARN("Multiple candiates found...");
+
+					std::vector<std::string> candiateParts = Utils::SplitString(path.string(), "/\\");
+
+					uint32_t score = 0;
+					for (const auto& part : candiateParts)
+					{
+						if (metadata.FilePath.find(part) != std::string::npos)
+							score++;
+					}
+
+					KEY_CORE_WARN("'{0}' has a score of {1}, best score is {2}", path.string(), score, bestScore);
+
+					if (bestScore > 0 && score == bestScore)
+					{
+						// TODO: How do we handle this?
+					}
+
+					if (score <= bestScore)
+						continue;
+
+					bestScore = score;
+					mostLikelyCandiate = path.string();
+				}
+
+				if (mostLikelyCandiate.empty() && bestScore == 0)
+				{
+					KEY_CORE_ERROR("Failed to locate a potential match for '{0}'", metadata.FilePath);
+					continue;
+				}
+
+				metadata.FilePath = mostLikelyCandiate;
+				std::replace(metadata.FilePath.begin(), metadata.FilePath.end(), '\\', '/');
+				KEY_CORE_WARN("Found most likely match '{0}'", metadata.FilePath);
+			}
+
+			if (metadata.Handle == 0)
+			{
+				KEY_CORE_WARN("AssetHandle for {0} is 0, this shouldn't happen.", metadata.FilePath);
+				continue;
+			}
+
+			s_AssetRegistry[metadata.FilePath] = metadata;
+		}
 	}
 
-	AssetHandle AssetManager::ProcessDirectory(const std::string& directoryPath, AssetHandle parentHandle)
+	AssetHandle AssetManager::ImportAsset(const std::string& filepath)
 	{
-		Ref<Directory> dirInfo = CreateAsset(directoryPath, AssetType::Directory, parentHandle).As<Directory>();
-		dirInfo->IsDataLoaded = true;
+		std::string fixedFilePath = filepath;
+		std::replace(fixedFilePath.begin(), fixedFilePath.end(), '\\', '/');
 
-		if (s_AssetRegistry.find(dirInfo->FilePath) == s_AssetRegistry.end())
-		{
-			AssetMetadata metadata;
-			metadata.Handle = dirInfo->Handle;
-			metadata.FilePath = dirInfo->FilePath;
-			metadata.Type = dirInfo->Type;
-			s_AssetRegistry[dirInfo->FilePath] = metadata;
-		}
+		// Already in the registry
+		if (s_AssetRegistry.find(fixedFilePath) != s_AssetRegistry.end())
+			return 0;
 
-		s_LoadedAssets[dirInfo->Handle] = dirInfo;
+		AssetType type = GetAssetTypeForFileType(Utils::GetExtension(fixedFilePath));
 
-		if (IsAssetHandleValid(parentHandle))
-			s_LoadedAssets[parentHandle].As<Directory>()->ChildDirectories.push_back(dirInfo->Handle);
+		// TODO: Improve this
+		if (type == AssetType::None)
+			return 0;
 
+		AssetMetadata metadata;
+		metadata.Handle = AssetHandle();
+		metadata.FilePath = fixedFilePath;
+		metadata.FileName = Utils::RemoveExtension(Utils::GetFilename(fixedFilePath));
+		metadata.Extension = Utils::GetExtension(fixedFilePath);
+		metadata.Type = type;
+		s_AssetRegistry[fixedFilePath] = metadata;
+
+		return metadata.Handle;
+	}
+
+	void AssetManager::ProcessDirectory(const std::string& directoryPath)
+	{
 		for (auto entry : std::filesystem::directory_iterator(directoryPath))
 		{
 			if (entry.is_directory())
-				ProcessDirectory(entry.path().string(), dirInfo->Handle);
+				ProcessDirectory(entry.path().string());
 			else
-				ImportAsset(entry.path().string(), dirInfo->Handle);
+				ImportAsset(entry.path().string());
 		}
-
-		return dirInfo->Handle;
 	}
 
 	void AssetManager::ReloadAssets()
 	{
-		ProcessDirectory("assets", 0);
-
-		// Sort the assets alphabetically (not the best impl)
-		std::vector<std::pair<std::string, Ref<Asset>>> sortedVec;
-		for (auto& [handle, asset] : s_LoadedAssets)
-		{
-			std::string filename = asset->FileName;
-			std::for_each(filename.begin(), filename.end(), [](char& c)
-				{
-					c = std::tolower(c);
-				});
-			sortedVec.push_back(std::make_pair(filename, asset));
-		}
-
-		std::sort(sortedVec.begin(), sortedVec.end());
-		s_LoadedAssets.clear();
-
-		for (auto& p : sortedVec)
-			s_LoadedAssets[p.second->Handle] = p.second;
-
-		// Remove any non-existent assets from the asset registry
-		for (auto it = s_AssetRegistry.begin(); it != s_AssetRegistry.end(); )
-		{
-			if (s_LoadedAssets.find(it->second.Handle) == s_LoadedAssets.end())
-			{
-				it = s_AssetRegistry.erase(it);
-			}
-			else
-			{
-				it++;
-			}
-		}
+		ProcessDirectory("assets");
+		WriteRegistryToFile();
 	}
 
-	void AssetManager::UpdateRegistryCache()
+	void AssetManager::WriteRegistryToFile()
 	{
 		YAML::Emitter out;
 		out << YAML::BeginMap;
@@ -415,18 +316,18 @@ namespace Key {
 			out << YAML::BeginMap;
 			out << YAML::Key << "Handle" << YAML::Value << metadata.Handle;
 			out << YAML::Key << "FilePath" << YAML::Value << metadata.FilePath;
-			out << YAML::Key << "Type" << YAML::Value << (int)metadata.Type;
+			out << YAML::Key << "Type" << YAML::Value << Utils::AssetTypeToString(metadata.Type);
 			out << YAML::EndMap;
 		}
 		out << YAML::EndSeq;
 		out << YAML::EndMap;
 
-		std::ofstream fout("assets/cache/AssetRegistryCache.hzr");
+		std::ofstream fout(s_AssetRegistryPath);
 		fout << out.c_str();
 	}
 
 	std::unordered_map<AssetHandle, Ref<Asset>> AssetManager::s_LoadedAssets;
-	std::unordered_map<std::string, AssetManager::AssetMetadata> AssetManager::s_AssetRegistry;
+	std::unordered_map<std::string, AssetMetadata> AssetManager::s_AssetRegistry;
 	AssetManager::AssetsChangeEventFn AssetManager::s_AssetsChangeCallback;
 
 }

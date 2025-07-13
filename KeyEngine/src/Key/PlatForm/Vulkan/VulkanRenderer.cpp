@@ -57,10 +57,10 @@ namespace Key {
 		{
 			switch (vendorID)
 			{
-			case 0x10DE: return "NVIDIA";
-			case 0x1002: return "AMD";
-			case 0x8086: return "INTEL";
-			case 0x13B5: return "ARM";
+				case 0x10DE: return "NVIDIA";
+				case 0x1002: return "AMD";
+				case 0x8086: return "INTEL";
+				case 0x13B5: return "ARM";
 			}
 			return "Unknown";
 		}
@@ -84,37 +84,37 @@ namespace Key {
 
 		// Create descriptor pools
 		Renderer::Submit([]() mutable
+		{
+			// Create Descriptor Pool
+			VkDescriptorPoolSize pool_sizes[] =
 			{
-				// Create Descriptor Pool
-				VkDescriptorPoolSize pool_sizes[] =
-				{
-					{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-					{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-					{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
-					{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
-					{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
-					{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
-					{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-					{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-					{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
-					{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-					{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
-				};
-				VkDescriptorPoolCreateInfo pool_info = {};
-				pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-				pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-				pool_info.maxSets = 10000;
-				pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
-				pool_info.pPoolSizes = pool_sizes;
-				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-				uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
-				for (uint32_t i = 0; i < framesInFlight; i++)
-				{
-					VK_CHECK_RESULT(vkCreateDescriptorPool(device, &pool_info, nullptr, &s_Data->DescriptorPools[i]));
-					s_Data->DescriptorPoolAllocationCount[i] = 0;
-				}
+				{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+				{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+			};
+			VkDescriptorPoolCreateInfo pool_info = {};
+			pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+			pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+			pool_info.maxSets = 10000;
+			pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
+			pool_info.pPoolSizes = pool_sizes;
+			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
+			for (uint32_t i = 0; i < framesInFlight; i++)
+			{
+				VK_CHECK_RESULT(vkCreateDescriptorPool(device, &pool_info, nullptr, &s_Data->DescriptorPools[i]));
+				s_Data->DescriptorPoolAllocationCount[i] = 0;
+			}
 
-			});
+		});
 
 		// Create fullscreen quad
 		float x = -1;
@@ -209,59 +209,61 @@ namespace Key {
 	void VulkanRenderer::RenderMesh(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Mesh> mesh, const glm::mat4& transform)
 	{
 		Renderer::Submit([renderCommandBuffer, pipeline, uniformBufferSet, mesh, transform]() mutable
+		{
+			KEY_SCOPE_PERF("VulkanRenderer::RenderMesh");
+
+			uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+			VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+
+			Ref<MeshAsset> meshAsset = mesh->GetMeshAsset();
+			Ref<VulkanVertexBuffer> vulkanMeshVB = meshAsset->GetVertexBuffer().As<VulkanVertexBuffer>();
+			VkBuffer vbMeshBuffer = vulkanMeshVB->GetVulkanBuffer();
+			VkDeviceSize offsets[1] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vbMeshBuffer, offsets);
+
+			auto vulkanMeshIB = Ref<VulkanIndexBuffer>(meshAsset->GetIndexBuffer());
+			VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
+			vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+			Ref<VulkanPipeline> vulkanPipeline = pipeline.As<VulkanPipeline>();
+			VkPipeline pipeline = vulkanPipeline->GetVulkanPipeline();
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+			std::vector<std::vector<VkWriteDescriptorSet>> writeDescriptors;
+
+			auto& materials = mesh->GetMaterials();
+			for (auto& material : materials)
 			{
-				KEY_SCOPE_PERF("VulkanRenderer::RenderMesh");
+				Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
+				writeDescriptors = RT_RetrieveOrCreateWriteDescriptors(uniformBufferSet, vulkanMaterial);
+				vulkanMaterial->RT_UpdateForRendering(writeDescriptors);
+			}
 
-				uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
-				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+			const auto& meshAssetSubmeshes = meshAsset->GetSubmeshes();
+			auto& submeshes = mesh->GetSubmeshes();
+			for (uint32_t submeshIndex : submeshes)
+			{
+				const Submesh& submesh = meshAssetSubmeshes[submeshIndex];
+				auto& material = mesh->GetMaterials()[submesh.MaterialIndex].As<VulkanMaterial>();
+				VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
+				VkDescriptorSet descriptorSet = material->GetDescriptorSet(frameIndex);
 
-				Ref<VulkanVertexBuffer> vulkanMeshVB = mesh->GetVertexBuffer().As<VulkanVertexBuffer>();
-				VkBuffer vbMeshBuffer = vulkanMeshVB->GetVulkanBuffer();
-				VkDeviceSize offsets[1] = { 0 };
-				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vbMeshBuffer, offsets);
+				// NOTE: Descriptor Set 1 is owned by the renderer
+				std::array<VkDescriptorSet, 2> descriptorSets = {
+					descriptorSet,
+					s_Data->ActiveRendererDescriptorSet
+				};
 
-				auto vulkanMeshIB = Ref<VulkanIndexBuffer>(mesh->GetIndexBuffer());
-				VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
-				vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, (uint32_t)descriptorSets.size(), descriptorSets.data(), 0, nullptr);
 
-				Ref<VulkanPipeline> vulkanPipeline = pipeline.As<VulkanPipeline>();
-				VkPipeline pipeline = vulkanPipeline->GetVulkanPipeline();
-				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+				glm::mat4 worldTransform = transform * submesh.Transform;
 
-				std::vector<std::vector<VkWriteDescriptorSet>> writeDescriptors;
-
-
-				auto& materials = mesh->GetMaterials();
-				for (auto& material : materials)
-				{
-					Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
-					writeDescriptors = RT_RetrieveOrCreateWriteDescriptors(uniformBufferSet, vulkanMaterial);
-					vulkanMaterial->RT_UpdateForRendering(writeDescriptors);
-				}
-
-				auto& submeshes = mesh->GetSubmeshes();
-				for (Submesh& submesh : submeshes)
-				{
-					auto& material = mesh->GetMaterials()[submesh.MaterialIndex].As<VulkanMaterial>();
-					VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
-					VkDescriptorSet descriptorSet = material->GetDescriptorSet(frameIndex);
-
-					// NOTE: Descriptor Set 1 is owned by the renderer
-					std::array<VkDescriptorSet, 2> descriptorSets = {
-						descriptorSet,
-						s_Data->ActiveRendererDescriptorSet
-					};
-
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, (uint32_t)descriptorSets.size(), descriptorSets.data(), 0, nullptr);
-
-					glm::mat4 worldTransform = transform * submesh.Transform;
-
-					Buffer uniformStorageBuffer = material->GetUniformStorageBuffer();
-					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &worldTransform);
-					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), uniformStorageBuffer.Size, uniformStorageBuffer.Data);
-					vkCmdDrawIndexed(commandBuffer, submesh.IndexCount, 1, submesh.BaseIndex, submesh.BaseVertex, 0);
-				}
-			});
+				Buffer uniformStorageBuffer = material->GetUniformStorageBuffer();
+				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &worldTransform);
+				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), uniformStorageBuffer.Size, uniformStorageBuffer.Data);
+				vkCmdDrawIndexed(commandBuffer, submesh.IndexCount, 1, submesh.BaseIndex, submesh.BaseVertex, 0);
+			}
+		});
 	}
 
 	void VulkanRenderer::RenderMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Mesh> mesh, Ref<Material> material, const glm::mat4& transform, Buffer additionalUniforms)
@@ -273,84 +275,87 @@ namespace Key {
 
 		Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
 		Renderer::Submit([renderCommandBuffer, pipeline, uniformBufferSet, mesh, vulkanMaterial, transform, pushConstantBuffer]() mutable
+		{
+			KEY_SCOPE_PERF("VulkanRenderer::RenderMeshWithMaterial");
+
+			uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+			VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+
+			Ref<MeshAsset> meshAsset = mesh->GetMeshAsset();
+			auto vulkanMeshVB = meshAsset->GetVertexBuffer().As<VulkanVertexBuffer>();
+			VkBuffer vbMeshBuffer = vulkanMeshVB->GetVulkanBuffer();
+			VkDeviceSize offsets[1] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vbMeshBuffer, offsets);
+
+			auto vulkanMeshIB = Ref<VulkanIndexBuffer>(meshAsset->GetIndexBuffer());
+			VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
+			vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+			const auto& writeDescriptors = RT_RetrieveOrCreateWriteDescriptors(uniformBufferSet, vulkanMaterial);
+			vulkanMaterial->RT_UpdateForRendering(writeDescriptors);
+
+			Ref<VulkanPipeline> vulkanPipeline = pipeline.As<VulkanPipeline>();
+			VkPipeline pipeline = vulkanPipeline->GetVulkanPipeline();
+			VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+			// Bind descriptor sets describing shader binding points
+			VkDescriptorSet descriptorSet = vulkanMaterial->GetDescriptorSet(frameIndex);
+			if (descriptorSet)
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
+
+			const auto& meshAssetSubmeshes = meshAsset->GetSubmeshes();
+			auto& submeshes = mesh->GetSubmeshes();
+			for (uint32_t submeshIndex : submeshes)
 			{
-				KEY_SCOPE_PERF("VulkanRenderer::RenderMeshWithMaterial");
-
-				uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
-				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
-
-				auto vulkanMeshVB = mesh->GetVertexBuffer().As<VulkanVertexBuffer>();
-				VkBuffer vbMeshBuffer = vulkanMeshVB->GetVulkanBuffer();
-				VkDeviceSize offsets[1] = { 0 };
-				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vbMeshBuffer, offsets);
-
-				auto vulkanMeshIB = Ref<VulkanIndexBuffer>(mesh->GetIndexBuffer());
-				VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
-				vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
-
-				const auto& writeDescriptors = RT_RetrieveOrCreateWriteDescriptors(uniformBufferSet, vulkanMaterial);
-				vulkanMaterial->RT_UpdateForRendering(writeDescriptors);
-
-				Ref<VulkanPipeline> vulkanPipeline = pipeline.As<VulkanPipeline>();
-				VkPipeline pipeline = vulkanPipeline->GetVulkanPipeline();
-				VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
-				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
-				// Bind descriptor sets describing shader binding points
-				VkDescriptorSet descriptorSet = vulkanMaterial->GetDescriptorSet(frameIndex);
-				if (descriptorSet)
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
-
-				auto& submeshes = mesh->GetSubmeshes();
-				for (Submesh& submesh : submeshes)
-				{
-					glm::mat4 worldTransform = transform * submesh.Transform;
-					pushConstantBuffer.Write(&worldTransform, sizeof(glm::mat4));
-					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, pushConstantBuffer.Size, pushConstantBuffer.Data);
-					vkCmdDrawIndexed(commandBuffer, submesh.IndexCount, 1, submesh.BaseIndex, submesh.BaseVertex, 0);
-				}
-				pushConstantBuffer.Release();
-			});
+				const Submesh& submesh = meshAssetSubmeshes[submeshIndex];
+				glm::mat4 worldTransform = transform * submesh.Transform;
+				pushConstantBuffer.Write(&worldTransform, sizeof(glm::mat4));
+				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, pushConstantBuffer.Size, pushConstantBuffer.Data);
+				vkCmdDrawIndexed(commandBuffer, submesh.IndexCount, 1, submesh.BaseIndex, submesh.BaseVertex, 0);
+			}
+			pushConstantBuffer.Release();
+		});
 	}
 
 	void VulkanRenderer::RenderQuad(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Material> material, const glm::mat4& transform)
 	{
 		Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
 		Renderer::Submit([renderCommandBuffer, pipeline, uniformBufferSet, vulkanMaterial, transform]() mutable
-			{
-				uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
-				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+		{
+			uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+			VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
 
-				Ref<VulkanPipeline> vulkanPipeline = pipeline.As<VulkanPipeline>();
+			Ref<VulkanPipeline> vulkanPipeline = pipeline.As<VulkanPipeline>();
 
-				VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
+			VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
 
-				auto vulkanMeshVB = s_Data->QuadVertexBuffer.As<VulkanVertexBuffer>();
-				VkBuffer vbMeshBuffer = vulkanMeshVB->GetVulkanBuffer();
-				VkDeviceSize offsets[1] = { 0 };
-				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vbMeshBuffer, offsets);
+			auto vulkanMeshVB = s_Data->QuadVertexBuffer.As<VulkanVertexBuffer>();
+			VkBuffer vbMeshBuffer = vulkanMeshVB->GetVulkanBuffer();
+			VkDeviceSize offsets[1] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vbMeshBuffer, offsets);
 
-				auto vulkanMeshIB = s_Data->QuadIndexBuffer.As<VulkanIndexBuffer>();
-				VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
-				vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
+			auto vulkanMeshIB = s_Data->QuadIndexBuffer.As<VulkanIndexBuffer>();
+			VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
+			vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-				VkPipeline pipeline = vulkanPipeline->GetVulkanPipeline();
-				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+			VkPipeline pipeline = vulkanPipeline->GetVulkanPipeline();
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+			
+			const auto& writeDescriptors = RT_RetrieveOrCreateWriteDescriptors(uniformBufferSet, vulkanMaterial);
+			vulkanMaterial->RT_UpdateForRendering(writeDescriptors);
 
-				const auto& writeDescriptors = RT_RetrieveOrCreateWriteDescriptors(uniformBufferSet, vulkanMaterial);
-				vulkanMaterial->RT_UpdateForRendering(writeDescriptors);
+			uint32_t bufferIndex = Renderer::GetCurrentFrameIndex();
+			VkDescriptorSet descriptorSet = vulkanMaterial->GetDescriptorSet(bufferIndex);
+			if (descriptorSet)
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
 
-				uint32_t bufferIndex = Renderer::GetCurrentFrameIndex();
-				VkDescriptorSet descriptorSet = vulkanMaterial->GetDescriptorSet(bufferIndex);
-				if (descriptorSet)
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
+			Buffer uniformStorageBuffer = vulkanMaterial->GetUniformStorageBuffer();
 
-				Buffer uniformStorageBuffer = vulkanMaterial->GetUniformStorageBuffer();
-
-				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
-				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), uniformStorageBuffer.Size, uniformStorageBuffer.Data);
-				vkCmdDrawIndexed(commandBuffer, s_Data->QuadIndexBuffer->GetCount(), 1, 0, 0, 0);
-			});
+			vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
+			vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), uniformStorageBuffer.Size, uniformStorageBuffer.Data);
+			vkCmdDrawIndexed(commandBuffer, s_Data->QuadIndexBuffer->GetCount(), 1, 0, 0, 0);
+		});
 	}
 
 	VkDescriptorSet VulkanRenderer::RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& allocInfo)
@@ -368,25 +373,25 @@ namespace Key {
 	void VulkanRenderer::SetUniformBuffer(Ref<UniformBuffer> uniformBuffer, uint32_t set)
 	{
 		Renderer::Submit([uniformBuffer, set]()
-			{
+		{
 
 
-				KEY_CORE_ASSERT(set == 1); // Currently we only bind to Renderer-maintaned UBs, which are in descriptor set 1
+			KEY_CORE_ASSERT(set == 1); // Currently we only bind to Renderer-maintaned UBs, which are in descriptor set 1
 
-				Ref<VulkanUniformBuffer> vulkanUniformBuffer = uniformBuffer.As<VulkanUniformBuffer>();
+			Ref<VulkanUniformBuffer> vulkanUniformBuffer = uniformBuffer.As<VulkanUniformBuffer>();
 
-				VkWriteDescriptorSet writeDescriptorSet = {};
-				writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				writeDescriptorSet.descriptorCount = 1;
-				writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-				writeDescriptorSet.pBufferInfo = &vulkanUniformBuffer->GetDescriptorBufferInfo();
-				writeDescriptorSet.dstBinding = uniformBuffer->GetBinding();
-				writeDescriptorSet.dstSet = s_Data->RendererDescriptorSet.DescriptorSets[0];
+			VkWriteDescriptorSet writeDescriptorSet = {};
+			writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			writeDescriptorSet.descriptorCount = 1;
+			writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			writeDescriptorSet.pBufferInfo = &vulkanUniformBuffer->GetDescriptorBufferInfo();
+			writeDescriptorSet.dstBinding = uniformBuffer->GetBinding();
+			writeDescriptorSet.dstSet = s_Data->RendererDescriptorSet.DescriptorSets[0];
 
-				KEY_CORE_WARN("VulkanRenderer - Updating descriptor set (VulkanRenderer::SetUniformBuffer)");
-				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-				vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, nullptr);
-			});
+			KEY_CORE_WARN("VulkanRenderer - Updating descriptor set (VulkanRenderer::SetUniformBuffer)");
+			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, nullptr);
+		});
 	}
 #endif
 
@@ -394,47 +399,47 @@ namespace Key {
 	{
 		Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
 		Renderer::Submit([renderCommandBuffer, pipeline, uniformBufferSet, vulkanMaterial]() mutable
+		{
+			uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+			VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+
+			Ref<VulkanPipeline> vulkanPipeline = pipeline.As<VulkanPipeline>();
+
+			VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
+
+			auto vulkanMeshVB = s_Data->QuadVertexBuffer.As<VulkanVertexBuffer>();
+			VkBuffer vbMeshBuffer = vulkanMeshVB->GetVulkanBuffer();
+			VkDeviceSize offsets[1] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vbMeshBuffer, offsets);
+
+			auto vulkanMeshIB = s_Data->QuadIndexBuffer.As<VulkanIndexBuffer>();
+			VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
+			vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+			VkPipeline pipeline = vulkanPipeline->GetVulkanPipeline();
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+			if (uniformBufferSet)
 			{
-				uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
-				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+				const auto& writeDescriptors = RT_RetrieveOrCreateWriteDescriptors(uniformBufferSet, vulkanMaterial);
+				vulkanMaterial->RT_UpdateForRendering(writeDescriptors);
+			}
+			else
+			{
+				vulkanMaterial->RT_UpdateForRendering();
+			}
 
-				Ref<VulkanPipeline> vulkanPipeline = pipeline.As<VulkanPipeline>();
+			uint32_t bufferIndex = Renderer::GetCurrentFrameIndex();
+			VkDescriptorSet descriptorSet = vulkanMaterial->GetDescriptorSet(bufferIndex);
+			if (descriptorSet)
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
 
-				VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
+			Buffer uniformStorageBuffer = vulkanMaterial->GetUniformStorageBuffer();
+			if (uniformStorageBuffer.Size)
+				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, uniformStorageBuffer.Size, uniformStorageBuffer.Data);
 
-				auto vulkanMeshVB = s_Data->QuadVertexBuffer.As<VulkanVertexBuffer>();
-				VkBuffer vbMeshBuffer = vulkanMeshVB->GetVulkanBuffer();
-				VkDeviceSize offsets[1] = { 0 };
-				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vbMeshBuffer, offsets);
-
-				auto vulkanMeshIB = s_Data->QuadIndexBuffer.As<VulkanIndexBuffer>();
-				VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
-				vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
-
-				VkPipeline pipeline = vulkanPipeline->GetVulkanPipeline();
-				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
-				if (uniformBufferSet)
-				{
-					const auto& writeDescriptors = RT_RetrieveOrCreateWriteDescriptors(uniformBufferSet, vulkanMaterial);
-					vulkanMaterial->RT_UpdateForRendering(writeDescriptors);
-				}
-				else
-				{
-					vulkanMaterial->RT_UpdateForRendering();
-				}
-
-				uint32_t bufferIndex = Renderer::GetCurrentFrameIndex();
-				VkDescriptorSet descriptorSet = vulkanMaterial->GetDescriptorSet(bufferIndex);
-				if (descriptorSet)
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
-
-				Buffer uniformStorageBuffer = vulkanMaterial->GetUniformStorageBuffer();
-				if (uniformStorageBuffer.Size)
-					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, uniformStorageBuffer.Size, uniformStorageBuffer.Data);
-
-				vkCmdDrawIndexed(commandBuffer, s_Data->QuadIndexBuffer->GetCount(), 1, 0, 0, 0);
-			});
+			vkCmdDrawIndexed(commandBuffer, s_Data->QuadIndexBuffer->GetCount(), 1, 0, 0, 0);
+		});
 	}
 
 	void VulkanRenderer::SetSceneEnvironment(Ref<SceneRenderer> sceneRenderer, Ref<Environment> environment, Ref<Image2D> shadow)
@@ -443,152 +448,152 @@ namespace Key {
 			environment = Renderer::GetEmptyEnvironment();
 
 		Renderer::Submit([sceneRenderer, environment, shadow]() mutable
+		{
+			auto shader = Renderer::GetShaderLibrary()->Get("KeyPBR_Static");
+			Ref<VulkanShader> pbrShader = shader.As<VulkanShader>();
+			uint32_t bufferIndex = Renderer::GetCurrentFrameIndex();
+
+			if (s_Data->RendererDescriptorSet.find(sceneRenderer.Raw()) == s_Data->RendererDescriptorSet.end())
 			{
-				auto shader = Renderer::GetShaderLibrary()->Get("KeyPBR_Static");
-				Ref<VulkanShader> pbrShader = shader.As<VulkanShader>();
-				uint32_t bufferIndex = Renderer::GetCurrentFrameIndex();
+				uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
+				s_Data->RendererDescriptorSet[sceneRenderer.Raw()].resize(framesInFlight);
+				for (uint32_t i = 0; i < framesInFlight; i++)
+					s_Data->RendererDescriptorSet.at(sceneRenderer.Raw())[i] = pbrShader->CreateDescriptorSets(1);
 
-				if (s_Data->RendererDescriptorSet.find(sceneRenderer.Raw()) == s_Data->RendererDescriptorSet.end())
-				{
-					uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
-					s_Data->RendererDescriptorSet[sceneRenderer.Raw()].resize(framesInFlight);
-					for (uint32_t i = 0; i < framesInFlight; i++)
-						s_Data->RendererDescriptorSet.at(sceneRenderer.Raw())[i] = pbrShader->CreateDescriptorSets(1);
+			}
 
-				}
+			VkDescriptorSet descriptorSet = s_Data->RendererDescriptorSet.at(sceneRenderer.Raw())[bufferIndex].DescriptorSets[0];
+			s_Data->ActiveRendererDescriptorSet = descriptorSet;
 
-				VkDescriptorSet descriptorSet = s_Data->RendererDescriptorSet.at(sceneRenderer.Raw())[bufferIndex].DescriptorSets[0];
-				s_Data->ActiveRendererDescriptorSet = descriptorSet;
+			std::array<VkWriteDescriptorSet, 4> writeDescriptors;
 
-				std::array<VkWriteDescriptorSet, 4> writeDescriptors;
+			Ref<VulkanTextureCube> radianceMap = environment->RadianceMap.As<VulkanTextureCube>();
+			Ref<VulkanTextureCube> irradianceMap = environment->IrradianceMap.As<VulkanTextureCube>();
+		
+			writeDescriptors[0] = *pbrShader->GetDescriptorSet("u_EnvRadianceTex", 1);
+			writeDescriptors[0].dstSet = descriptorSet;
+			const auto& radianceMapImageInfo = radianceMap->GetVulkanDescriptorInfo();
+			writeDescriptors[0].pImageInfo = &radianceMapImageInfo;
 
-				Ref<VulkanTextureCube> radianceMap = environment->RadianceMap.As<VulkanTextureCube>();
-				Ref<VulkanTextureCube> irradianceMap = environment->IrradianceMap.As<VulkanTextureCube>();
+			writeDescriptors[1] = *pbrShader->GetDescriptorSet("u_EnvIrradianceTex", 1);
+			writeDescriptors[1].dstSet = descriptorSet;
+			const auto& irradianceMapImageInfo = irradianceMap->GetVulkanDescriptorInfo();
+			writeDescriptors[1].pImageInfo = &irradianceMapImageInfo;
 
-				writeDescriptors[0] = *pbrShader->GetDescriptorSet("u_EnvRadianceTex", 1);
-				writeDescriptors[0].dstSet = descriptorSet;
-				const auto& radianceMapImageInfo = radianceMap->GetVulkanDescriptorInfo();
-				writeDescriptors[0].pImageInfo = &radianceMapImageInfo;
+			writeDescriptors[2] = *pbrShader->GetDescriptorSet("u_BRDFLUTTexture", 1);
+			writeDescriptors[2].dstSet = descriptorSet;
+			const auto& brdfLutImageInfo = s_Data->BRDFLut.As<VulkanTexture2D>()->GetVulkanDescriptorInfo();
+			writeDescriptors[2].pImageInfo = &brdfLutImageInfo;
 
-				writeDescriptors[1] = *pbrShader->GetDescriptorSet("u_EnvIrradianceTex", 1);
-				writeDescriptors[1].dstSet = descriptorSet;
-				const auto& irradianceMapImageInfo = irradianceMap->GetVulkanDescriptorInfo();
-				writeDescriptors[1].pImageInfo = &irradianceMapImageInfo;
+			writeDescriptors[3] = *pbrShader->GetDescriptorSet("u_ShadowMapTexture", 1);
+			writeDescriptors[3].dstSet = descriptorSet;
+			const auto& shadowImageInfo = shadow.As<VulkanImage2D>()->GetDescriptor();
+			writeDescriptors[3].pImageInfo = &shadowImageInfo;
 
-				writeDescriptors[2] = *pbrShader->GetDescriptorSet("u_BRDFLUTTexture", 1);
-				writeDescriptors[2].dstSet = descriptorSet;
-				const auto& brdfLutImageInfo = s_Data->BRDFLut.As<VulkanTexture2D>()->GetVulkanDescriptorInfo();
-				writeDescriptors[2].pImageInfo = &brdfLutImageInfo;
-
-				writeDescriptors[3] = *pbrShader->GetDescriptorSet("u_ShadowMapTexture", 1);
-				writeDescriptors[3].dstSet = descriptorSet;
-				const auto& shadowImageInfo = shadow.As<VulkanImage2D>()->GetDescriptor();
-				writeDescriptors[3].pImageInfo = &shadowImageInfo;
-
-				auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-				vkUpdateDescriptorSets(vulkanDevice, (uint32_t)writeDescriptors.size(), writeDescriptors.data(), 0, nullptr);
-			});
+			auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			vkUpdateDescriptorSets(vulkanDevice, (uint32_t)writeDescriptors.size(), writeDescriptors.data(), 0, nullptr);
+		});
 	}
 
 	void VulkanRenderer::BeginFrame()
 	{
 		Renderer::Submit([]()
-			{
-				VulkanSwapChain& swapChain = Application::Get().GetWindow().GetSwapChain();
+		{
+			VulkanSwapChain& swapChain = Application::Get().GetWindow().GetSwapChain();
 
-				// Reset descriptor pools here
-				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-				uint32_t bufferIndex = swapChain.GetCurrentBufferIndex();
-				vkResetDescriptorPool(device, s_Data->DescriptorPools[bufferIndex], 0);
-				memset(s_Data->DescriptorPoolAllocationCount.data(), 0, s_Data->DescriptorPoolAllocationCount.size() * sizeof(uint32_t));
+			// Reset descriptor pools here
+			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			uint32_t bufferIndex = swapChain.GetCurrentBufferIndex();
+			vkResetDescriptorPool(device, s_Data->DescriptorPools[bufferIndex], 0);
+			memset(s_Data->DescriptorPoolAllocationCount.data(), 0, s_Data->DescriptorPoolAllocationCount.size() * sizeof(uint32_t));
 
 #if 0
-				VkCommandBufferBeginInfo cmdBufInfo = {};
-				cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-				cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-				cmdBufInfo.pNext = nullptr;
+			VkCommandBufferBeginInfo cmdBufInfo = {};
+			cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+			cmdBufInfo.pNext = nullptr;
 
-				VkCommandBuffer drawCommandBuffer = swapChain.GetCurrentDrawCommandBuffer();
-				commandBuffer = drawCommandBuffer;
-				KEY_CORE_ASSERT(commandBuffer);
-				VK_CHECK_RESULT(vkBeginCommandBuffer(drawCommandBuffer, &cmdBufInfo));
+			VkCommandBuffer drawCommandBuffer = swapChain.GetCurrentDrawCommandBuffer();
+			commandBuffer = drawCommandBuffer;
+			KEY_CORE_ASSERT(commandBuffer);
+			VK_CHECK_RESULT(vkBeginCommandBuffer(drawCommandBuffer, &cmdBufInfo));
 #endif
-			});
+		});
 	}
 
 	void VulkanRenderer::EndFrame()
 	{
 #if 0
 		Renderer::Submit([]()
-			{
-				VK_CHECK_RESULT(vkEndCommandBuffer(commandBuffer));
-				commandBuffer = nullptr;
-			});
+		{
+			VK_CHECK_RESULT(vkEndCommandBuffer(commandBuffer));
+			commandBuffer = nullptr;
+		});
 #endif
 	}
 
 	void VulkanRenderer::BeginRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer, const Ref<RenderPass>& renderPass)
 	{
 		Renderer::Submit([renderCommandBuffer, renderPass]()
-			{
-				uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
-				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+		{
+			uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+			VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
 
-				auto fb = renderPass->GetSpecification().TargetFramebuffer;
-				Ref<VulkanFramebuffer> framebuffer = fb.As<VulkanFramebuffer>();
-				const auto& fbSpec = framebuffer->GetSpecification();
+			auto fb = renderPass->GetSpecification().TargetFramebuffer;
+			Ref<VulkanFramebuffer> framebuffer = fb.As<VulkanFramebuffer>();
+			const auto& fbSpec = framebuffer->GetSpecification();
 
-				uint32_t width = framebuffer->GetWidth();
-				uint32_t height = framebuffer->GetHeight();
+			uint32_t width = framebuffer->GetWidth();
+			uint32_t height = framebuffer->GetHeight();
 
-				VkRenderPassBeginInfo renderPassBeginInfo = {};
-				renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-				renderPassBeginInfo.pNext = nullptr;
-				renderPassBeginInfo.renderPass = framebuffer->GetRenderPass();
-				renderPassBeginInfo.renderArea.offset.x = 0;
-				renderPassBeginInfo.renderArea.offset.y = 0;
-				renderPassBeginInfo.renderArea.extent.width = width;
-				renderPassBeginInfo.renderArea.extent.height = height;
+			VkRenderPassBeginInfo renderPassBeginInfo = {};
+			renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			renderPassBeginInfo.pNext = nullptr;
+			renderPassBeginInfo.renderPass = framebuffer->GetRenderPass();
+			renderPassBeginInfo.renderArea.offset.x = 0;
+			renderPassBeginInfo.renderArea.offset.y = 0;
+			renderPassBeginInfo.renderArea.extent.width = width;
+			renderPassBeginInfo.renderArea.extent.height = height;
 
-				// TODO:framebuffer have a depth attachment
+			// TODO: Does our framebuffer have a depth attachment?
 
-				const auto& clearValues = framebuffer->GetVulkanClearValues();
+			const auto& clearValues = framebuffer->GetVulkanClearValues();
+			
+			renderPassBeginInfo.clearValueCount = (uint32_t)clearValues.size();
+			renderPassBeginInfo.pClearValues = clearValues.data();
+			renderPassBeginInfo.framebuffer = framebuffer->GetVulkanFramebuffer();
 
-				renderPassBeginInfo.clearValueCount = (uint32_t)clearValues.size();
-				renderPassBeginInfo.pClearValues = clearValues.data();
-				renderPassBeginInfo.framebuffer = framebuffer->GetVulkanFramebuffer();
+			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-				vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+			// Update dynamic viewport state
+			VkViewport viewport = {};
+			viewport.x = 0.0f;
+			viewport.y = 0.0f;
+			viewport.height = (float)height;
+			viewport.width = (float)width;
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-				// Update dynamic viewport state
-				VkViewport viewport = {};
-				viewport.x = 0.0f;
-				viewport.y = 0.0f;
-				viewport.height = (float)height;
-				viewport.width = (float)width;
-				viewport.minDepth = 0.0f;
-				viewport.maxDepth = 1.0f;
-				vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-				// Update dynamic scissor state
-				VkRect2D scissor = {};
-				scissor.extent.width = width;
-				scissor.extent.height = height;
-				scissor.offset.x = 0;
-				scissor.offset.y = 0;
-				vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-			});
+			// Update dynamic scissor state
+			VkRect2D scissor = {};
+			scissor.extent.width = width;
+			scissor.extent.height = height;
+			scissor.offset.x = 0;
+			scissor.offset.y = 0;
+			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+		});
 	}
 
 	void VulkanRenderer::EndRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer)
 	{
 		Renderer::Submit([renderCommandBuffer]()
-			{
-				uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
-				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+		{
+			uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+			VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
 
-				vkCmdEndRenderPass(commandBuffer);
-			});
+			vkCmdEndRenderPass(commandBuffer);
+		});
 	}
 
 	std::pair<Ref<TextureCube>, Ref<TextureCube>> VulkanRenderer::CreateEnvironmentMap(const std::string& filepath)
@@ -604,112 +609,111 @@ namespace Key {
 
 		Ref<TextureCube> envUnfiltered = TextureCube::Create(ImageFormat::RGBA32F, cubemapSize, cubemapSize);
 		Ref<TextureCube> envFiltered = TextureCube::Create(ImageFormat::RGBA32F, cubemapSize, cubemapSize);
-
+		
 		// Convert equirectangular to cubemap
 		Ref<Shader> equirectangularConversionShader = Renderer::GetShaderLibrary()->Get("EquirectangularToCubeMap");
 		Ref<VulkanComputePipeline> equirectangularConversionPipeline = Ref<VulkanComputePipeline>::Create(equirectangularConversionShader);
 
 		Renderer::Submit([equirectangularConversionPipeline, envEquirect, envUnfiltered, cubemapSize]() mutable
-			{
-				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-				Ref<VulkanShader> shader = equirectangularConversionPipeline->GetShader();
+		{
+			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			Ref<VulkanShader> shader = equirectangularConversionPipeline->GetShader();
 
-				std::array<VkWriteDescriptorSet, 2> writeDescriptors;
-				auto descriptorSet = shader->CreateDescriptorSets();
-				Ref<VulkanTextureCube> envUnfilteredCubemap = envUnfiltered.As<VulkanTextureCube>();
-				writeDescriptors[0] = *shader->GetDescriptorSet("o_CubeMap");
-				writeDescriptors[0].dstSet = descriptorSet.DescriptorSets[0]; // Should this be set inside the shader?
-				writeDescriptors[0].pImageInfo = &envUnfilteredCubemap->GetVulkanDescriptorInfo();
+			std::array<VkWriteDescriptorSet, 2> writeDescriptors;
+			auto descriptorSet = shader->CreateDescriptorSets();
+			Ref<VulkanTextureCube> envUnfilteredCubemap = envUnfiltered.As<VulkanTextureCube>();
+			writeDescriptors[0] = *shader->GetDescriptorSet("o_CubeMap");
+			writeDescriptors[0].dstSet = descriptorSet.DescriptorSets[0]; // Should this be set inside the shader?
+			writeDescriptors[0].pImageInfo = &envUnfilteredCubemap->GetVulkanDescriptorInfo();
 
-				Ref<VulkanTexture2D> envEquirectVK = envEquirect.As<VulkanTexture2D>();
-				writeDescriptors[1] = *shader->GetDescriptorSet("u_EquirectangularTex");
-				writeDescriptors[1].dstSet = descriptorSet.DescriptorSets[0]; // Should this be set inside the shader?
-				writeDescriptors[1].pImageInfo = &envEquirectVK->GetVulkanDescriptorInfo();
+			Ref<VulkanTexture2D> envEquirectVK = envEquirect.As<VulkanTexture2D>();
+			writeDescriptors[1] = *shader->GetDescriptorSet("u_EquirectangularTex");
+			writeDescriptors[1].dstSet = descriptorSet.DescriptorSets[0]; // Should this be set inside the shader?
+			writeDescriptors[1].pImageInfo = &envEquirectVK->GetVulkanDescriptorInfo();
 
-				vkUpdateDescriptorSets(device, (uint32_t)writeDescriptors.size(), writeDescriptors.data(), 0, NULL);
-				equirectangularConversionPipeline->Execute(descriptorSet.DescriptorSets.data(), (uint32_t)descriptorSet.DescriptorSets.size(), cubemapSize / 32, cubemapSize / 32, 6);
+			vkUpdateDescriptorSets(device, (uint32_t)writeDescriptors.size(), writeDescriptors.data(), 0, NULL);
+			equirectangularConversionPipeline->Execute(descriptorSet.DescriptorSets.data(), (uint32_t)descriptorSet.DescriptorSets.size(), cubemapSize / 32, cubemapSize / 32, 6);
 
-				envUnfilteredCubemap->GenerateMips(true);
-			});
+			envUnfilteredCubemap->GenerateMips(true);
+		});
 
 		Ref<Shader> environmentMipFilterShader = Renderer::GetShaderLibrary()->Get("EnvironmentMipFilter");
 		Ref<VulkanComputePipeline> environmentMipFilterPipeline = Ref<VulkanComputePipeline>::Create(environmentMipFilterShader);
 
 		Renderer::Submit([environmentMipFilterPipeline, envUnfiltered, envFiltered, cubemapSize]() mutable
+		{
+			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			Ref<VulkanShader> shader = environmentMipFilterPipeline->GetShader();
+
+			Ref<VulkanTextureCube> envFilteredCubemap = envFiltered.As<VulkanTextureCube>();
+			VkDescriptorImageInfo imageInfo = envFilteredCubemap->GetVulkanDescriptorInfo();
+
+			uint32_t mipCount = Utils::CalculateMipCount(cubemapSize, cubemapSize);
+
+			std::vector<VkWriteDescriptorSet> writeDescriptors(mipCount * 2);
+			std::vector<VkDescriptorImageInfo> mipImageInfos(mipCount);
+			auto descriptorSet = shader->CreateDescriptorSets(0, 12);
+			for (uint32_t i = 0; i < mipCount; i++)
 			{
-				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-				Ref<VulkanShader> shader = environmentMipFilterPipeline->GetShader();
+				VkDescriptorImageInfo& mipImageInfo = mipImageInfos[i];
+				mipImageInfo = imageInfo;
+				mipImageInfo.imageView = envFilteredCubemap->CreateImageViewSingleMip(i);
 
-				Ref<VulkanTextureCube> envFilteredCubemap = envFiltered.As<VulkanTextureCube>();
-				VkDescriptorImageInfo imageInfo = envFilteredCubemap->GetVulkanDescriptorInfo();
+				writeDescriptors[i * 2 + 0] = *shader->GetDescriptorSet("outputTexture");
+				writeDescriptors[i * 2 + 0].dstSet = descriptorSet.DescriptorSets[i]; // Should this be set inside the shader?
+				writeDescriptors[i * 2 + 0].pImageInfo = &mipImageInfo;
 
-				uint32_t mipCount = Utils::CalculateMipCount(cubemapSize, cubemapSize);
+				Ref<VulkanTextureCube> envUnfilteredCubemap = envUnfiltered.As<VulkanTextureCube>();
+				writeDescriptors[i * 2 + 1] = *shader->GetDescriptorSet("inputTexture");
+				writeDescriptors[i * 2 + 1].dstSet = descriptorSet.DescriptorSets[i]; // Should this be set inside the shader?
+				writeDescriptors[i * 2 + 1].pImageInfo = &envUnfilteredCubemap->GetVulkanDescriptorInfo();
+			}
 
-				std::vector<VkWriteDescriptorSet> writeDescriptors(mipCount * 2);
-				std::vector<VkDescriptorImageInfo> mipImageInfos(mipCount);
-				auto descriptorSet = shader->CreateDescriptorSets(0, 12);
-				for (uint32_t i = 0; i < mipCount; i++)
-				{
-					VkDescriptorImageInfo& mipImageInfo = mipImageInfos[i];
-					mipImageInfo = imageInfo;
-					mipImageInfo.imageView = envFilteredCubemap->CreateImageViewSingleMip(i);
+			vkUpdateDescriptorSets(device, (uint32_t)writeDescriptors.size(), writeDescriptors.data(), 0, NULL);
 
-					writeDescriptors[i * 2 + 0] = *shader->GetDescriptorSet("outputTexture");
-					writeDescriptors[i * 2 + 0].dstSet = descriptorSet.DescriptorSets[i]; // Should this be set inside the shader?
-					writeDescriptors[i * 2 + 0].pImageInfo = &mipImageInfo;
-
-					Ref<VulkanTextureCube> envUnfilteredCubemap = envUnfiltered.As<VulkanTextureCube>();
-					writeDescriptors[i * 2 + 1] = *shader->GetDescriptorSet("inputTexture");
-					writeDescriptors[i * 2 + 1].dstSet = descriptorSet.DescriptorSets[i]; // Should this be set inside the shader?
-					writeDescriptors[i * 2 + 1].pImageInfo = &envUnfilteredCubemap->GetVulkanDescriptorInfo();
-				}
-
-				vkUpdateDescriptorSets(device, (uint32_t)writeDescriptors.size(), writeDescriptors.data(), 0, NULL);
-
-				environmentMipFilterPipeline->Begin(); // begin compute pass
-				const float deltaRoughness = 1.0f / glm::max((float)envFiltered->GetMipLevelCount() - 1.0f, 1.0f);
-				for (uint32_t i = 0, size = cubemapSize; i < mipCount; i++, size /= 2)
-				{
-					uint32_t numGroups = glm::max(1u, size / 32);
-					float roughness = i * deltaRoughness;
-					roughness = glm::max(roughness, 0.05f);
-					environmentMipFilterPipeline->SetPushConstants(&roughness, sizeof(float));
-					environmentMipFilterPipeline->Dispatch(descriptorSet.DescriptorSets[i], numGroups, numGroups, 6);
-				}
-				environmentMipFilterPipeline->End();
-			});
+			environmentMipFilterPipeline->Begin(); // begin compute pass
+			const float deltaRoughness = 1.0f / glm::max((float)envFiltered->GetMipLevelCount() - 1.0f, 1.0f);
+			for (uint32_t i = 0, size = cubemapSize; i < mipCount; i++, size /= 2)
+			{
+				uint32_t numGroups = glm::max(1u, size / 32);
+				float roughness = i * deltaRoughness;
+				roughness = glm::max(roughness, 0.05f);
+				environmentMipFilterPipeline->SetPushConstants(&roughness, sizeof(float));
+				environmentMipFilterPipeline->Dispatch(descriptorSet.DescriptorSets[i], numGroups, numGroups, 6);
+			}
+			environmentMipFilterPipeline->End();
+		});
 
 		Ref<Shader> environmentIrradianceShader = Renderer::GetShaderLibrary()->Get("EnvironmentIrradiance");
 		Ref<VulkanComputePipeline> environmentIrradiancePipeline = Ref<VulkanComputePipeline>::Create(environmentIrradianceShader);
 		Ref<TextureCube> irradianceMap = TextureCube::Create(ImageFormat::RGBA32F, irradianceMapSize, irradianceMapSize);
 
 		Renderer::Submit([environmentIrradiancePipeline, irradianceMap, envFiltered]() mutable
-			{
-				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-				Ref<VulkanShader> shader = environmentIrradiancePipeline->GetShader();
+		{
+			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			Ref<VulkanShader> shader = environmentIrradiancePipeline->GetShader();
 
-				Ref<VulkanTextureCube> envFilteredCubemap = envFiltered.As<VulkanTextureCube>();
-				Ref<VulkanTextureCube> irradianceCubemap = irradianceMap.As<VulkanTextureCube>();
-				auto descriptorSet = shader->CreateDescriptorSets();
+			Ref<VulkanTextureCube> envFilteredCubemap = envFiltered.As<VulkanTextureCube>();
+			Ref<VulkanTextureCube> irradianceCubemap = irradianceMap.As<VulkanTextureCube>();
+			auto descriptorSet = shader->CreateDescriptorSets();
 
-				std::array<VkWriteDescriptorSet, 2> writeDescriptors;
-				writeDescriptors[0] = *shader->GetDescriptorSet("o_IrradianceMap");
-				writeDescriptors[0].dstSet = descriptorSet.DescriptorSets[0];
-				writeDescriptors[0].pImageInfo = &irradianceCubemap->GetVulkanDescriptorInfo();
+			std::array<VkWriteDescriptorSet, 2> writeDescriptors;
+			writeDescriptors[0] = *shader->GetDescriptorSet("o_IrradianceMap");
+			writeDescriptors[0].dstSet = descriptorSet.DescriptorSets[0];
+			writeDescriptors[0].pImageInfo = &irradianceCubemap->GetVulkanDescriptorInfo();
 
-				writeDescriptors[1] = *shader->GetDescriptorSet("u_RadianceMap");
-				writeDescriptors[1].dstSet = descriptorSet.DescriptorSets[0];
-				writeDescriptors[1].pImageInfo = &envFilteredCubemap->GetVulkanDescriptorInfo();
+			writeDescriptors[1] = *shader->GetDescriptorSet("u_RadianceMap");
+			writeDescriptors[1].dstSet = descriptorSet.DescriptorSets[0];
+			writeDescriptors[1].pImageInfo = &envFilteredCubemap->GetVulkanDescriptorInfo();
 
-				vkUpdateDescriptorSets(device, (uint32_t)writeDescriptors.size(), writeDescriptors.data(), 0, NULL);
-				environmentIrradiancePipeline->Execute(descriptorSet.DescriptorSets.data(), descriptorSet.DescriptorSets.size(), irradianceMap->GetWidth() / 32, irradianceMap->GetHeight() / 32, 6);
-			/*	environmentIrradiancePipeline->Begin();
-				environmentIrradiancePipeline->SetPushConstants(&Renderer::GetConfig().IrradianceMapComputeSamples, sizeof(uint32_t));
-				environmentIrradiancePipeline->Dispatch(descriptorSet.DescriptorSets[0], irradianceMap->GetWidth() / 32, irradianceMap->GetHeight() / 32, 6);
-				environmentIrradiancePipeline->End();*/
+			vkUpdateDescriptorSets(device, (uint32_t)writeDescriptors.size(), writeDescriptors.data(), 0, NULL);
+			environmentIrradiancePipeline->Begin();
+			environmentIrradiancePipeline->SetPushConstants(&Renderer::GetConfig().IrradianceMapComputeSamples, sizeof(uint32_t));
+			environmentIrradiancePipeline->Dispatch(descriptorSet.DescriptorSets[0], irradianceMap->GetWidth() / 32, irradianceMap->GetHeight() / 32, 6);
+			environmentIrradiancePipeline->End();
 
-				irradianceCubemap->GenerateMips();
-			});
+			irradianceCubemap->GenerateMips();
+		});
 
 		return { envFiltered, irradianceMap };
 	}
@@ -726,26 +730,26 @@ namespace Key {
 
 		glm::vec3 params = { turbidity, azimuth, inclination };
 		Renderer::Submit([preethamSkyComputePipeline, environmentMap, cubemapSize, params]() mutable
-			{
-				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-				Ref<VulkanShader> shader = preethamSkyComputePipeline->GetShader();
+		{
+			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			Ref<VulkanShader> shader = preethamSkyComputePipeline->GetShader();
 
-				std::array<VkWriteDescriptorSet, 1> writeDescriptors;
-				auto descriptorSet = shader->CreateDescriptorSets();
-				Ref<VulkanTextureCube> envUnfilteredCubemap = environmentMap.As<VulkanTextureCube>();
-				writeDescriptors[0] = *shader->GetDescriptorSet("o_CubeMap");
-				writeDescriptors[0].dstSet = descriptorSet.DescriptorSets[0]; // Should this be set inside the shader?
-				writeDescriptors[0].pImageInfo = &envUnfilteredCubemap->GetVulkanDescriptorInfo();
+			std::array<VkWriteDescriptorSet, 1> writeDescriptors;
+			auto descriptorSet = shader->CreateDescriptorSets();
+			Ref<VulkanTextureCube> envUnfilteredCubemap = environmentMap.As<VulkanTextureCube>();
+			writeDescriptors[0] = *shader->GetDescriptorSet("o_CubeMap");
+			writeDescriptors[0].dstSet = descriptorSet.DescriptorSets[0]; // Should this be set inside the shader?
+			writeDescriptors[0].pImageInfo = &envUnfilteredCubemap->GetVulkanDescriptorInfo();
 
-				vkUpdateDescriptorSets(device, (uint32_t)writeDescriptors.size(), writeDescriptors.data(), 0, NULL);
+			vkUpdateDescriptorSets(device, (uint32_t)writeDescriptors.size(), writeDescriptors.data(), 0, NULL);
 
-				preethamSkyComputePipeline->Begin();
-				preethamSkyComputePipeline->SetPushConstants(&params, sizeof(glm::vec3));
-				preethamSkyComputePipeline->Dispatch(descriptorSet.DescriptorSets[0], cubemapSize / 32, cubemapSize / 32, 6);
-				preethamSkyComputePipeline->End();
+			preethamSkyComputePipeline->Begin();
+			preethamSkyComputePipeline->SetPushConstants(&params, sizeof(glm::vec3));
+			preethamSkyComputePipeline->Dispatch(descriptorSet.DescriptorSets[0], cubemapSize / 32, cubemapSize / 32, 6);
+			preethamSkyComputePipeline->End();
 
-				envUnfilteredCubemap->GenerateMips(true);
-			});
+			envUnfilteredCubemap->GenerateMips(true);
+		});
 
 		return environmentMap;
 	}

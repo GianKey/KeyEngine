@@ -15,6 +15,7 @@
 #include "Key/Asset/AssetManager.h"
 #include <imgui/imgui.h>
 #include "imgui/imgui_internal.h"
+#include "Key/Utilities/StringUtils.h"
 
 extern bool g_ApplicationRunning;
 extern ImGuiContext* GImGui;
@@ -57,7 +58,11 @@ namespace Key {
 		Renderer::WaitAndRender();
 
 		m_ImGuiLayer = ImGuiLayer::Create();
-		PushOverlay(m_ImGuiLayer);
+		if (m_EnableImGui)
+		{
+			m_ImGuiLayer = ImGuiLayer::Create();
+			PushOverlay(m_ImGuiLayer);
+		}
 
 		ScriptEngine::Init("assets/scripts/ExampleApp.dll");
 
@@ -76,6 +81,12 @@ namespace Key {
 
 		AssetManager::Shutdown();
 		Renderer::WaitAndRender();
+		for (uint32_t i = 0; i < Renderer::GetConfig().FramesInFlight; i++)
+		{
+			auto& queue = Renderer::GetRenderResourceReleaseQueue(i);
+			queue.Execute();
+		}
+		
 		Renderer::Shutdown();
 
 		delete m_Profiler;
@@ -301,8 +312,11 @@ namespace Key {
 
 					// Render ImGui on render threads
 				Application* app = this;
-				Renderer::Submit([app]() { app->RenderImGui(); });
-				Renderer::Submit([=]() {m_ImGuiLayer->End(); });
+				if (m_EnableImGui)
+				{
+					Renderer::Submit([app]() { app->RenderImGui(); });
+					Renderer::Submit([=]() {m_ImGuiLayer->End(); });
+				}
 				Renderer::EndFrame();
 
 				// On Render thread

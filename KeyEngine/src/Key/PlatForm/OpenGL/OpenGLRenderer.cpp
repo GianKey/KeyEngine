@@ -95,45 +95,45 @@ namespace Key {
 	{
 		s_Data = new OpenGLRendererData();
 		Renderer::Submit([]()
+		{
+			glDebugMessageCallback(Utils::OpenGLLogMessage, nullptr);
+			glEnable(GL_DEBUG_OUTPUT);
+			glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+			auto& caps = s_Data->RenderCaps;
+			caps.Vendor = (const char*)glGetString(GL_VENDOR);
+			caps.Device = (const char*)glGetString(GL_RENDERER);
+			caps.Version = (const char*)glGetString(GL_VERSION);
+			KEY_CORE_TRACE("OpenGLRendererData::Init");
+			Utils::DumpGPUInfo();
+
+			unsigned int vao;
+			glGenVertexArrays(1, &vao);
+			glBindVertexArray(vao);
+
+			glEnable(GL_DEPTH_TEST);
+			//glEnable(GL_CULL_FACE);
+			glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+			glFrontFace(GL_CCW);
+
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+			glEnable(GL_MULTISAMPLE);
+			glEnable(GL_STENCIL_TEST);
+
+			glGetIntegerv(GL_MAX_SAMPLES, &caps.MaxSamples);
+			glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &caps.MaxAnisotropy);
+
+			glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &caps.MaxTextureUnits);
+
+			GLenum error = glGetError();
+			while (error != GL_NO_ERROR)
 			{
-				glDebugMessageCallback(Utils::OpenGLLogMessage, nullptr);
-				glEnable(GL_DEBUG_OUTPUT);
-				glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-
-				auto& caps = s_Data->RenderCaps;
-				caps.Vendor = (const char*)glGetString(GL_VENDOR);
-				caps.Device = (const char*)glGetString(GL_RENDERER);
-				caps.Version = (const char*)glGetString(GL_VERSION);
-				KEY_CORE_TRACE("OpenGLRendererData::Init");
-				Utils::DumpGPUInfo();
-
-				unsigned int vao;
-				glGenVertexArrays(1, &vao);
-				glBindVertexArray(vao);
-
-				glEnable(GL_DEPTH_TEST);
-				//glEnable(GL_CULL_FACE);
-				glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-				glFrontFace(GL_CCW);
-
-				glEnable(GL_BLEND);
-				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-				glEnable(GL_MULTISAMPLE);
-				glEnable(GL_STENCIL_TEST);
-
-				glGetIntegerv(GL_MAX_SAMPLES, &caps.MaxSamples);
-				glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &caps.MaxAnisotropy);
-
-				glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &caps.MaxTextureUnits);
-
-				GLenum error = glGetError();
-				while (error != GL_NO_ERROR)
-				{
-					KEY_CORE_ERROR("OpenGL Error {0}", error);
-					error = glGetError();
-				}
-			});
+				KEY_CORE_ERROR("OpenGL Error {0}", error);
+				error = glGetError();
+			}
+		});
 
 		// Create fullscreen quad
 		float x = -1;
@@ -200,7 +200,7 @@ namespace Key {
 			const glm::vec4& clearColor = renderPass->GetSpecification().TargetFramebuffer->GetSpecification().ClearColor;
 			Renderer::Submit([=]() {
 				Utils::Clear(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-				});
+			});
 		}
 	}
 
@@ -225,9 +225,9 @@ namespace Key {
 		pipeline->Bind();
 		s_Data->m_FullscreenQuadIndexBuffer->Bind();
 		Renderer::Submit([depthTest]()
-			{
-				Utils::DrawIndexed(6, PrimitiveType::Triangles, depthTest);
-			});
+		{
+			Utils::DrawIndexed(6, PrimitiveType::Triangles, depthTest);
+		});
 
 	}
 
@@ -237,36 +237,36 @@ namespace Key {
 			environment = Renderer::GetEmptyEnvironment();
 
 		Renderer::Submit([environment, shadow]() mutable
+		{
+			auto shader = Renderer::GetShaderLibrary()->Get("KeyPBR_Static");
+			Ref<OpenGLShader> pbrShader = shader.As<OpenGLShader>();
+			
+			if (auto resource = pbrShader->GetShaderResource("u_EnvRadianceTex"))
 			{
-				auto shader = Renderer::GetShaderLibrary()->Get("KeyPBR_Static");
-				Ref<OpenGLShader> pbrShader = shader.As<OpenGLShader>();
+				Ref<OpenGLTextureCube> radianceMap = environment->RadianceMap.As<OpenGLTextureCube>();
+				glBindTextureUnit(resource->GetRegister(), radianceMap->GetRendererID());
+			}
 
-				if (auto resource = pbrShader->GetShaderResource("u_EnvRadianceTex"))
-				{
-					Ref<OpenGLTextureCube> radianceMap = environment->RadianceMap.As<OpenGLTextureCube>();
-					glBindTextureUnit(resource->GetRegister(), radianceMap->GetRendererID());
-				}
+			if (auto resource = pbrShader->GetShaderResource("u_EnvIrradianceTex"))
+			{
+				Ref<OpenGLTextureCube> irradianceMap = environment->IrradianceMap.As<OpenGLTextureCube>();
+				glBindTextureUnit(resource->GetRegister(), irradianceMap->GetRendererID());
+			}
 
-				if (auto resource = pbrShader->GetShaderResource("u_EnvIrradianceTex"))
-				{
-					Ref<OpenGLTextureCube> irradianceMap = environment->IrradianceMap.As<OpenGLTextureCube>();
-					glBindTextureUnit(resource->GetRegister(), irradianceMap->GetRendererID());
-				}
+			if (auto resource = pbrShader->GetShaderResource("u_BRDFLUTTexture"))
+			{
+				Ref<OpenGLImage2D> brdfLUTImage = s_Data->BRDFLut->GetImage();
+				glBindSampler(resource->GetRegister(), brdfLUTImage->GetSamplerRendererID());
+				glBindTextureUnit(resource->GetRegister(), brdfLUTImage->GetRendererID());
+			}
 
-				if (auto resource = pbrShader->GetShaderResource("u_BRDFLUTTexture"))
-				{
-					Ref<OpenGLImage2D> brdfLUTImage = s_Data->BRDFLut->GetImage();
-					glBindSampler(resource->GetRegister(), brdfLUTImage->GetSamplerRendererID());
-					glBindTextureUnit(resource->GetRegister(), brdfLUTImage->GetRendererID());
-				}
-
-				if (auto resource = pbrShader->GetShaderResource("u_ShadowMapTexture"))
-				{
-					Ref<OpenGLImage2D> shadowMapTexture = shadow.As<OpenGLTexture2D>();
-					glBindSampler(resource->GetRegister(), shadowMapTexture->GetSamplerRendererID());
-					glBindTextureUnit(resource->GetRegister(), shadowMapTexture->GetRendererID());
-				}
-			});
+			if (auto resource = pbrShader->GetShaderResource("u_ShadowMapTexture"))
+			{
+				Ref<OpenGLImage2D> shadowMapTexture = shadow.As<OpenGLTexture2D>();
+				glBindSampler(resource->GetRegister(), shadowMapTexture->GetSamplerRendererID());
+				glBindTextureUnit(resource->GetRegister(), shadowMapTexture->GetRendererID());
+			}
+		});
 	}
 
 	std::pair<Ref<TextureCube>, Ref<TextureCube>> OpenGLRenderer::CreateEnvironmentMap(const std::string& filepath)
@@ -285,22 +285,22 @@ namespace Key {
 		equirectangularConversionShader->Bind();
 		envEquirect->Bind(1);
 		Renderer::Submit([envUnfiltered, cubemapSize, envEquirect]()
-			{
-				glBindImageTexture(0, envUnfiltered->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-				glDispatchCompute(cubemapSize / 32, cubemapSize / 32, 6);
-				glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-				glGenerateTextureMipmap(envUnfiltered->GetRendererID());
-			});
+		{
+			glBindImageTexture(0, envUnfiltered->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+			glDispatchCompute(cubemapSize / 32, cubemapSize / 32, 6);
+			glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+			glGenerateTextureMipmap(envUnfiltered->GetRendererID());
+		});
 
 		Ref<OpenGLShader> envFilteringShader = Renderer::GetShaderLibrary()->Get("EnvironmentMipFilter").As<OpenGLShader>();
 		Ref<OpenGLTextureCube> envFiltered = TextureCube::Create(ImageFormat::RGBA32F, cubemapSize, cubemapSize).As<OpenGLTextureCube>();
 
 		Renderer::Submit([envUnfiltered, envFiltered]()
-			{
-				glCopyImageSubData(envUnfiltered->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
+		{
+			glCopyImageSubData(envUnfiltered->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
 				envFiltered->GetRendererID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0,
 				envFiltered->GetWidth(), envFiltered->GetHeight(), 6);
-			});
+		});
 
 		envFilteringShader->Bind();
 		envUnfiltered->Bind(1);
@@ -320,7 +320,7 @@ namespace Key {
 				glDispatchCompute(numGroups, numGroups, 6);
 				glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 			}
-			});
+		});
 
 		Ref<OpenGLShader> envIrradianceShader = Renderer::GetShaderLibrary()->Get("EnvironmentIrradiance").As<OpenGLShader>();
 
@@ -328,24 +328,25 @@ namespace Key {
 		envIrradianceShader->Bind();
 		envFiltered->Bind(1);
 		Renderer::Submit([irradianceMap, envIrradianceShader]()
-			{
-				glBindImageTexture(0, irradianceMap->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+		{
+			glBindImageTexture(0, irradianceMap->GetRendererID(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
-				GLint samplesUniformLocation = glGetUniformLocation(envIrradianceShader->GetRendererID(), "u_Uniforms.Samples");
-				KEY_CORE_ASSERT(samplesUniformLocation != -1);
-				uint32_t samples = Renderer::GetConfig().IrradianceMapComputeSamples;
-				glUniform1ui(samplesUniformLocation, samples);
+			GLint samplesUniformLocation = glGetUniformLocation(envIrradianceShader->GetRendererID(), "u_Uniforms.Samples");
+			KEY_CORE_ASSERT(samplesUniformLocation != -1);
+			uint32_t samples = Renderer::GetConfig().IrradianceMapComputeSamples;
+			glUniform1ui(samplesUniformLocation, samples);
 
-				glDispatchCompute(irradianceMap->GetWidth() / 32, irradianceMap->GetHeight() / 32, 6);
-				glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-				glGenerateTextureMipmap(irradianceMap->GetRendererID());
-			});
+			glDispatchCompute(irradianceMap->GetWidth() / 32, irradianceMap->GetHeight() / 32, 6);
+			glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+			glGenerateTextureMipmap(irradianceMap->GetRendererID());
+		});
 
 		return { envFiltered, irradianceMap };
 	}
 
 	void OpenGLRenderer::RenderMesh(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Mesh> mesh, const glm::mat4& transform)
 	{
+#if 0
 		mesh->m_VertexBuffer->Bind();
 		pipeline->Bind();
 		mesh->m_IndexBuffer->Bind();
@@ -373,19 +374,21 @@ namespace Key {
 			shader->SetUniform("u_Renderer.Transform", transformUniform);
 
 			Renderer::Submit([submesh, material]()
-				{
-					if (material->GetFlag(MaterialFlag::DepthTest))
-						glEnable(GL_DEPTH_TEST);
-					else
-						glDisable(GL_DEPTH_TEST);
+			{
+				if (material->GetFlag(MaterialFlag::DepthTest))
+					glEnable(GL_DEPTH_TEST);
+				else
+					glDisable(GL_DEPTH_TEST);
 
-					glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
-				});
+				glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
+			});
 		}
+#endif
 	}
 
 	void OpenGLRenderer::RenderMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Mesh> mesh, Ref<Material> material, const glm::mat4& transform, Buffer additionalUniforms)
 	{
+#if 0
 		mesh->m_VertexBuffer->Bind();
 		pipeline->Bind();
 		mesh->m_IndexBuffer->Bind();
@@ -410,10 +413,11 @@ namespace Key {
 			shader->SetUniform("u_Renderer.Transform", transformUniform);
 
 			Renderer::Submit([submesh]()
-				{
-					glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
-				});
+			{
+				glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
+			});
 		}
+#endif
 	}
 
 	void OpenGLRenderer::RenderQuad(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Material> material, const glm::mat4& transform)
@@ -423,19 +427,19 @@ namespace Key {
 		s_Data->m_FullscreenQuadIndexBuffer->Bind();
 		Ref<OpenGLMaterial> glMaterial = material.As<OpenGLMaterial>();
 		glMaterial->UpdateForRendering();
-
+		
 		auto shader = material->GetShader().As<OpenGLShader>();
 		shader->SetUniform("u_Renderer.Transform", transform);
 
 		Renderer::Submit([material]()
-			{
-				if (material->GetFlag(MaterialFlag::DepthTest))
-					glEnable(GL_DEPTH_TEST);
-				else
-					glDisable(GL_DEPTH_TEST);
+		{
+			if (material->GetFlag(MaterialFlag::DepthTest))
+				glEnable(GL_DEPTH_TEST);
+			else
+				glDisable(GL_DEPTH_TEST);
 
-				glDrawElements(GL_TRIANGLES, s_Data->m_FullscreenQuadIndexBuffer->GetCount(), GL_UNSIGNED_INT, nullptr);
-			});
+			glDrawElements(GL_TRIANGLES, s_Data->m_FullscreenQuadIndexBuffer->GetCount(), GL_UNSIGNED_INT, nullptr);
+		});
 	}
 
 }

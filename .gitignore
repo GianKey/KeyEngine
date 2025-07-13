@@ -415,3 +415,5 @@ FodyWeavers.xsd
 *.sln.iml
 codeviexml/
 Doxyfile
+.codemap
+.qodo

@@ -88,6 +88,7 @@ namespace Key {
 
 	void FileSystem::StartWatching()
 	{
+		s_Watching = true;
 		DWORD threadId;
 		s_WatcherThread = CreateThread(NULL, 0, Watch, 0, 0, &threadId);
 		KEY_CORE_ASSERT(s_WatcherThread != NULL);
@@ -100,6 +101,16 @@ namespace Key {
 		if (result == WAIT_TIMEOUT)
 			TerminateThread(s_WatcherThread, 0);
 		CloseHandle(s_WatcherThread);
+	}
+
+	bool FileSystem::IsDirectory(const std::string& filepath)
+	{
+		bool result = std::filesystem::is_directory(filepath);
+
+		if (!result)
+			result = Utils::GetExtension(filepath).empty();
+
+		return result;
 	}
 
 	static std::string wchar_to_string(wchar_t* input)
@@ -172,7 +183,6 @@ namespace Key {
 			{
 				FILE_NOTIFY_INFORMATION& fni = *(FILE_NOTIFY_INFORMATION*)buf;
 				ZeroMemory(fileName, sizeof(fileName));
-
 				WideCharToMultiByte(CP_ACP, 0, fni.FileName, fni.FileNameLength / sizeof(WCHAR), fileName, sizeof(fileName), NULL, NULL);
 				std::filesystem::path filepath = "assets/" + std::string(fileName);
 
@@ -180,41 +190,40 @@ namespace Key {
 				e.FilePath = filepath.string();
 				e.NewName = filepath.filename().string();
 				e.OldName = filepath.filename().string();
-				e.IsDirectory = std::filesystem::is_directory(filepath);
+				e.IsDirectory = IsDirectory(e.FilePath);
 
 				switch (fni.Action)
 				{
-					case FILE_ACTION_ADDED:
-					{
-						e.Action = FileSystemAction::Added;
-						s_Callback(e);
-						break;
-					}
-					case FILE_ACTION_REMOVED:
-					{
-						e.IsDirectory = AssetManager::IsDirectory(e.FilePath);
-						e.Action = FileSystemAction::Delete;
-						s_Callback(e);
-						break;
-					}
-					case FILE_ACTION_MODIFIED:
-					{
-						e.Action = FileSystemAction::Modified;
-						s_Callback(e);
-						break;
-					}
-					case FILE_ACTION_RENAMED_OLD_NAME:
-					{
-						oldName = filepath.filename().string();
-						break;
-					}
-					case FILE_ACTION_RENAMED_NEW_NAME:
-					{
-						e.OldName = oldName;
-						e.Action = FileSystemAction::Rename;
-						s_Callback(e);
-						break;
-					}
+				case FILE_ACTION_ADDED:
+				{
+					e.Action = FileSystemAction::Added;
+					s_Callback(e);
+					break;
+				}
+				case FILE_ACTION_REMOVED:
+				{
+					e.Action = FileSystemAction::Delete;
+					s_Callback(e);
+					break;
+				}
+				case FILE_ACTION_MODIFIED:
+				{
+					e.Action = FileSystemAction::Modified;
+					s_Callback(e);
+					break;
+				}
+				case FILE_ACTION_RENAMED_OLD_NAME:
+				{
+					oldName = filepath.filename().string();
+					break;
+				}
+				case FILE_ACTION_RENAMED_NEW_NAME:
+				{
+					e.OldName = oldName;
+					e.Action = FileSystemAction::Rename;
+					s_Callback(e);
+					break;
+				}
 				}
 
 				if (!fni.NextEntryOffset)

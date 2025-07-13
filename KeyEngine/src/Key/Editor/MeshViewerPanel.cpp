@@ -1,16 +1,21 @@
 #include "Kpch.h"
 #include "MeshViewerPanel.h"
-#include "Key/Math/Math.h"
+
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Key/Renderer/SceneRenderer.h"
+#include "Key/Math/Math.h"
 
 #include "Key/ImGui/ImGui.h"
-#include <assimp/scene.h>
+#include "Key/Asset/MeshSerializer.h"
+
 #include <stack>
+
+#include <assimp/scene.h>
+#include <filesystem>
 
 namespace Key {
 
@@ -101,7 +106,6 @@ namespace Key {
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 			ImGui::Begin(windowName, &m_WindowOpen, window_flags);
 			ImGui::PopStyleVar();
-
 		
 			auto window = ImGui::GetCurrentWindow();
 			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
@@ -151,7 +155,7 @@ namespace Key {
 
 	void MeshViewerPanel::SetAsset(const Ref<Asset>& asset)
 	{
-		Ref<Mesh> mesh = (Ref<Mesh>)asset;
+		Ref<MeshAsset> mesh = (Ref<MeshAsset>)asset;
 
 		const std::string& path = mesh->GetFilePath();
 		size_t found = path.find_last_of("/\\");
@@ -171,13 +175,14 @@ namespace Key {
 		sceneData->m_Name = name;
 		sceneData->m_Scene = Ref<Scene>::Create("MeshViewerPanel", true);
 		sceneData->m_MeshEntity = sceneData->m_Scene->CreateEntity("Mesh");
-		sceneData->m_MeshEntity.AddComponent<MeshComponent>(sceneData->m_Mesh);
+		sceneData->m_MeshEntity.AddComponent<MeshComponent>(Ref<Mesh>::Create(sceneData->m_Mesh));
 		sceneData->m_MeshEntity.AddComponent<SkyLightComponent>().DynamicSky = true;
 
 		sceneData->m_DirectionaLight = sceneData->m_Scene->CreateEntity("DirectionalLight");
 		sceneData->m_DirectionaLight.AddComponent<DirectionalLightComponent>();
 		sceneData->m_DirectionaLight.GetComponent<TransformComponent>().Rotation = glm::radians(glm::vec3{ 80.0f, 10.0f, 0.0f });
 		sceneData->m_SceneRenderer = Ref<SceneRenderer>::Create(sceneData->m_Scene);
+		sceneData->m_SceneRenderer->SetShadowSettings(-15.0f, 15.0f, 0.95f);
 
 		ResetCamera(sceneData->m_Camera);
 		m_TabToFocus = name.c_str();
@@ -247,11 +252,11 @@ namespace Key {
 				ImGui::SetNextWindowClass(&window_class);
 
 				ImGui::Begin(toolBarName.c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-				ImGui::Button("Tool A", ImVec2(32, 32));
+				ImGui::Button("Tool A", ImVec2(64, 64));
 				ImGui::SameLine();
-				ImGui::Button("Tool B", ImVec2(32, 32));
+				ImGui::Button("Tool B", ImVec2(64, 64));
 				ImGui::SameLine();
-				ImGui::Button("Tool C", ImVec2(32, 32));
+				ImGui::Button("Tool C", ImVec2(64, 64));
 				ImGui::End();
 
 				ImGui::SetNextWindowClass(&window_class);
@@ -300,14 +305,24 @@ namespace Key {
 		ImGui::PopID();
 	}
 
-	void MeshViewerPanel::DrawMeshNode(const Ref<Mesh>& mesh)
+	void MeshViewerPanel::DrawMeshNode(const Ref<MeshAsset>& mesh)
 	{
 		// Mesh Hierarchy
-		if (ImGui::TreeNode("Mesh Data"))
+		auto rootNode = mesh->m_Scene->mRootNode;
+		MeshNodeHierarchy(mesh, rootNode);
+
+		if (ImGui::Button("Create Mesh"))
 		{
-			auto rootNode = mesh->m_Scene->mRootNode;
-			MeshNodeHierarchy(mesh, rootNode);
-			ImGui::TreePop();
+			// TODO: AssetManager::CreateNewAsset()
+#if 0
+			MeshSerializer serializer(Ref<Mesh>::Create(mesh));
+			std::filesystem::path meshPath = mesh->GetFilePath();
+			KEY_CORE_WARN("Mesh Name = {0}", meshPath.stem().string());
+			KEY_CORE_WARN("Output filename = {0}", fmt::format("{0}.hzm", meshPath.stem().string()));
+			std::filesystem::path path = meshPath.parent_path() / fmt::format("{0}.hzm", meshPath.stem().string());
+			serializer.Serialize(path.string());
+#endif
+			KEY_CORE_ASSERT(false, "See above");
 		}
 	}
 
@@ -323,13 +338,20 @@ namespace Key {
 	}
 
 
-	void MeshViewerPanel::MeshNodeHierarchy(const Ref<Mesh>& mesh, aiNode* node, const glm::mat4& parentTransform, uint32_t level)
+	void MeshViewerPanel::MeshNodeHierarchy(const Ref<MeshAsset>& mesh, aiNode* node, const glm::mat4& parentTransform, uint32_t level)
 	{
 		glm::mat4 localTransform = Mat4FromAssimpMat4(node->mTransformation);
 		glm::mat4 transform = parentTransform * localTransform;
 
-		if (ImGui::TreeNode(node->mName.C_Str()))
+		static bool checked = true;
+		ImGui::Checkbox("##checkbox", &checked);
+		ImGui::SameLine();
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+		if (node->mNumChildren == 0)
+			flags |= ImGuiTreeNodeFlags_Leaf;
+		if (ImGui::TreeNodeEx(node->mName.C_Str(), flags))
 		{
+#if TRANSFORM_INFO
 			{
 				glm::vec3 translation, rotation, scale;
 				Math::DecomposeTransform(transform, translation, rotation, scale);
@@ -344,6 +366,7 @@ namespace Key {
 				ImGui::Text("  Translation: %.2f, %.2f, %.2f", translation.x, translation.y, translation.z);
 				ImGui::Text("  Scale: %.2f, %.2f, %.2f", scale.x, scale.y, scale.z);
 			}
+#endif
 
 			for (uint32_t i = 0; i < node->mNumChildren; i++)
 				MeshNodeHierarchy(mesh, node->mChildren[i], transform, level + 1);

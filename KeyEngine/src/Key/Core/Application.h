@@ -66,6 +66,7 @@ namespace Key {
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;
 		bool m_Minimized = false;
+		bool m_EnableImGui = true;
 		LayerStack m_LayerStack;
 		static Application* s_Instance;
 

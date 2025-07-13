@@ -2,8 +2,9 @@
 #include "VulkanDevice.h"
 
 #include "VulkanContext.h"
-#include "VulkanMemoryAllocator/vk_mem_alloc.h"
 #include "Debug/NsightAftermathGpuCrashTracker.h"
+#include "VulkanMemoryAllocator/vk_mem_alloc.h"
+
 namespace Key {
 
 	////////////////////////////////////////////////////////////////////////////////////
@@ -246,7 +247,8 @@ namespace Key {
 	VulkanDevice::VulkanDevice(const Ref<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures enabledFeatures)
 		: m_PhysicalDevice(physicalDevice), m_EnabledFeatures(enabledFeatures)
 	{
-		const bool enableAftermath = false;
+		const bool enableAftermath = true;
+
 		// Do we need to enable any other extensions (eg. NV_RAYTRACING?)
 		std::vector<const char*> deviceExtensions;
 		// If the device will be used for presenting to a display via a swapchain we need to request the swapchain extension
@@ -255,12 +257,10 @@ namespace Key {
 
 		if (m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME))
 			deviceExtensions.push_back(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME);
-
 		if (m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME))
 			deviceExtensions.push_back(VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME);
 
 		VkDeviceDiagnosticsConfigCreateInfoNV aftermathInfo = {};
-		//enable nvidiaAftermath on a compatible Nvidia GPU
 		bool canEnableAftermath = enableAftermath && m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME) && m_PhysicalDevice->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTICS_CONFIG_EXTENSION_NAME);
 		if (canEnableAftermath)
 		{

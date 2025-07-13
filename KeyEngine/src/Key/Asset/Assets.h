@@ -1,23 +1,9 @@
 #pragma once
 
 #include "Key/Core/UUID.h"
-#include <entt/entt.hpp>
-namespace Key {
+#include "Key/Asset/AssetTypes.h"
 
-	enum class AssetType : int8_t
-	{
-		Scene,
-		Mesh,
-		Texture,
-		EnvMap,
-		Audio,
-		Script,
-		PhysicsMat,
-		Directory,
-		Other,
-		None,
-		Missing
-	};
+namespace Key {
 
 	using AssetHandle = UUID;
 
@@ -25,31 +11,46 @@ namespace Key {
 	{
 	public:
 		AssetHandle Handle;
-		AssetType Type = AssetType::None;
+		uint16_t Flags = (uint16_t)AssetFlag::None;
 
-		std::string FilePath;
-		std::string FileName;
-		std::string Extension;
-		AssetHandle ParentDirectory;
-		bool IsDataLoaded = false;
+		virtual ~Asset() {}
+
+		virtual AssetType GetAssetType() const { return AssetType::None; }
 
 		virtual bool operator==(const Asset& other) const
 		{
 			return Handle == other.Handle;
 		}
-
+		
 		virtual bool operator!=(const Asset& other) const
 		{
 			return !(*this == other);
 		}
-		virtual ~Asset() {}
+
+		bool IsFlagSet(AssetFlag flag) const { return (uint16_t)flag & Flags; }
+		void SetFlag(AssetFlag flag, bool value)
+		{
+			if (value)
+				Flags |= (uint16_t)flag;
+			else
+				Flags &= ~(uint16_t)flag;
+		}
 	};
-	// Treating directories as assets simplifies the asset manager window rendering by a lot
-	class Directory : public Asset
+
+	class PhysicsMaterial : public Asset
 	{
 	public:
-		std::vector<AssetHandle> ChildDirectories;
+		float StaticFriction;
+		float DynamicFriction;
+		float Bounciness;
 
-		Directory() = default;
+		PhysicsMaterial() = default;
+		PhysicsMaterial(float staticFriction, float dynamicFriction, float bounciness)
+			: StaticFriction(staticFriction), DynamicFriction(dynamicFriction), Bounciness(bounciness)
+		{
+		}
+
+		static AssetType GetStaticType() { return AssetType::PhysicsMat; }
+		virtual AssetType GetAssetType() const override { return GetStaticType(); }
 	};
 }
